@@ -15,7 +15,6 @@ import {
   Settings,
   LogOut,
   User,
-  BarChart3
 } from 'lucide-react';
 
 export function Header() {
@@ -32,6 +31,23 @@ export function Header() {
   };
 
   const user = session?.user;
+  const isAuthenticated = !!user;
+
+  // Navigation items for authenticated users
+  const authenticatedNavItems = [
+    { href: '/dashboard', label: 'Dashboard' },
+    { href: '/templates', label: 'Templates' },
+    { href: '/platform-tools', label: 'Platform Tools' },
+    { href: '/resources', label: 'Resources' },
+    { href: '/achievements', label: 'Achievements' },
+  ];
+
+  // Navigation items for unauthenticated users (public pages)
+  const publicNavItems = [
+    { href: '/pricing', label: 'Pricing' },
+  ];
+
+  const navItems = isAuthenticated ? authenticatedNavItems : publicNavItems;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -48,66 +64,41 @@ export function Header() {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-6">
-          <Link 
-            href="/dashboard" 
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Dashboard
-          </Link>
-          <Link 
-            href="/templates" 
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Templates
-          </Link>
-          <Link 
-            href="/platform-tools" 
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Platform Tools
-          </Link>
-          <Link 
-            href="/resources" 
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Resources
-          </Link>
-          <Link 
-            href="/achievements" 
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Achievements
-          </Link>
-          <Link 
-            href="/analytics" 
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Analytics
-          </Link>
+          {navItems.map((item) => (
+            <Link 
+              key={item.href}
+              href={item.href} 
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {item.label}
+            </Link>
+          ))}
         </nav>
 
         {/* User Section */}
         <div className="flex items-center space-x-4">
-          {/* Subscription Badge */}
-          {subscription === 'premium' && (
+          {/* Subscription Badge - Only show for authenticated premium users */}
+          {isAuthenticated && subscription === 'premium' && (
             <Badge variant="secondary" className="hidden sm:flex items-center space-x-1">
               <Crown className="h-3 w-3" />
               <span>Premium</span>
             </Badge>
           )}
 
-          {/* Theme Toggle */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-            className="hidden sm:flex"
-          >
-            {theme === 'light' ? '🌙' : '☀️'}
-          </Button>
+          {/* Theme Toggle - Only show for authenticated users */}
+          {isAuthenticated && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+              className="hidden sm:flex"
+            >
+              {theme === 'light' ? '🌙' : '☀️'}
+            </Button>
+          )}
 
           {/* User Menu */}
-          {user ? (
+          {isAuthenticated ? (
             <div className="hidden md:flex items-center space-x-2">
               <Avatar className="h-8 w-8">
                 <AvatarImage src={user.image || ''} />
@@ -146,52 +137,20 @@ export function Header() {
           <div className="container py-4 space-y-4">
             {/* Navigation Links */}
             <div className="space-y-2">
-              <Link 
-                href="/dashboard" 
-                className="block px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                onClick={closeMenu}
-              >
-                Dashboard
-              </Link>
-              <Link 
-                href="/templates" 
-                className="block px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                onClick={closeMenu}
-              >
-                Templates
-              </Link>
-              <Link 
-                href="/platform-tools" 
-                className="block px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                onClick={closeMenu}
-              >
-                Platform Tools
-              </Link>
-              <Link 
-                href="/resources" 
-                className="block px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                onClick={closeMenu}
-              >
-                Resources
-              </Link>
-              <Link 
-                href="/achievements" 
-                className="block px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                onClick={closeMenu}
-              >
-                Achievements
-              </Link>
-              <Link 
-                href="/analytics" 
-                className="block px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                onClick={closeMenu}
-              >
-                Analytics
-              </Link>
+              {navItems.map((item) => (
+                <Link 
+                  key={item.href}
+                  href={item.href} 
+                  className="block px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={closeMenu}
+                >
+                  {item.label}
+                </Link>
+              ))}
             </div>
 
             {/* User Section */}
-            {user ? (
+            {isAuthenticated ? (
               <div className="border-t pt-4 space-y-3">
                 <div className="flex items-center space-x-3 px-3">
                   <Avatar className="h-8 w-8">
@@ -218,20 +177,9 @@ export function Header() {
                     onClick={closeMenu}
                     asChild
                   >
-                    <Link href="/profile">
+                    <Link href="/settings/billing">
                       <User className="h-4 w-4 mr-2" />
-                      Profile
-                    </Link>
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start"
-                    onClick={closeMenu}
-                    asChild
-                  >
-                    <Link href="/settings">
-                      <Settings className="h-4 w-4 mr-2" />
-                      Settings
+                      Account
                     </Link>
                   </Button>
                   <Button 

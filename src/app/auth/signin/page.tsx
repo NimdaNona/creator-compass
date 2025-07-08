@@ -159,30 +159,42 @@ export default function SignInPage() {
           <CardContent className="space-y-6">
             {providers ? (
               <div className="space-y-4">
-                {Object.values(providers).map((provider) => {
-                  const Icon = getProviderIcon(provider.id);
-                  const style = getProviderStyle(provider.id);
-                  
-                  return (
-                    <Button
-                      key={provider.name}
-                      onClick={() => handleSignIn(provider.id)}
-                      disabled={isLoading}
-                      className={`w-full h-14 social-button bg-gradient-to-r ${style.gradient} hover:scale-105 transition-all duration-300 text-white border-0 shadow-lg hover:shadow-xl relative overflow-hidden group`}
-                    >
-                      <div className="flex items-center justify-center space-x-3 relative z-10">
-                        <Icon className="w-5 h-5" />
-                        <span className="font-semibold">
-                          Continue with {provider.name}
-                        </span>
-                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                      </div>
-                      
-                      {/* Shine effect */}
-                      <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                    </Button>
-                  );
-                })}
+                {Object.values(providers).length > 0 ? (
+                  Object.values(providers).map((provider) => {
+                    const Icon = getProviderIcon(provider.id);
+                    const style = getProviderStyle(provider.id);
+                    
+                    return (
+                      <Button
+                        key={provider.name}
+                        onClick={() => handleSignIn(provider.id)}
+                        disabled={isLoading}
+                        className={`w-full h-14 social-button bg-gradient-to-r ${style.gradient} hover:scale-105 transition-all duration-300 text-white border-0 shadow-lg hover:shadow-xl relative overflow-hidden group`}
+                      >
+                        <div className="flex items-center justify-center space-x-3 relative z-10">
+                          <Icon className="w-5 h-5" />
+                          <span className="font-semibold">
+                            Continue with {provider.name}
+                          </span>
+                          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                        </div>
+                        
+                        {/* Shine effect */}
+                        <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                      </Button>
+                    );
+                  })
+                ) : (
+                  <div className="text-center p-4 text-muted-foreground border-2 border-dashed border-gray-300 rounded-lg">
+                    <p className="font-medium">No OAuth providers configured</p>
+                    <p className="text-sm mt-1">
+                      To enable OAuth sign-in, configure your provider credentials in environment variables.
+                    </p>
+                    <p className="text-xs mt-2 text-gray-500">
+                      Google OAuth is available • GitHub OAuth needs setup
+                    </p>
+                  </div>
+                )}
                 
                 {/* Mock Auth Button for Testing */}
                 <div className="relative">
