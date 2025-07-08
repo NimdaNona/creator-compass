@@ -57,6 +57,29 @@ export function TemplateGenerators() {
   const [generatedHashtags, setGeneratedHashtags] = useState<HashtagStrategy | null>(null);
   const [generatedCaption, setGeneratedCaption] = useState<string | null>(null);
   
+  // Loading and error states
+  const [isGenerating, setIsGenerating] = useState<{
+    bio: boolean;
+    ideas: boolean;
+    schedule: boolean;
+    hashtags: boolean;
+    caption: boolean;
+  }>({
+    bio: false,
+    ideas: false,
+    schedule: false,
+    hashtags: false,
+    caption: false
+  });
+  
+  const [errors, setErrors] = useState<{
+    bio?: string;
+    ideas?: string;
+    schedule?: string;
+    hashtags?: string;
+    caption?: string;
+  }>({});
+  
   // User preferences
   const [userPrefs, setUserPrefs] = useState({
     name: '',
@@ -85,54 +108,181 @@ export function TemplateGenerators() {
   }
 
   const handleGenerateBio = async () => {
-    const bio = await generateBio(selectedPlatform.id, selectedNiche.id, userPrefs);
-    setGeneratedBio(bio);
+    setIsGenerating(prev => ({ ...prev, bio: true }));
+    setErrors(prev => ({ ...prev, bio: undefined }));
+    
+    try {
+      const bio = await generateBio(selectedPlatform.id, selectedNiche.id, userPrefs);
+      if (!bio) {
+        throw new Error('Failed to generate bio. Please try again.');
+      }
+      setGeneratedBio(bio);
+    } catch (error) {
+      console.error('Error generating bio:', error);
+      setErrors(prev => ({ 
+        ...prev, 
+        bio: error instanceof Error ? error.message : 'Failed to generate bio. Please try again.'
+      }));
+    } finally {
+      setIsGenerating(prev => ({ ...prev, bio: false }));
+    }
   };
 
   const handleGenerateContentIdeas = async () => {
-    const ideas = await generateAdvancedContentIdeas(
-      selectedPlatform.id,
-      selectedNiche.id,
-      userPrefs,
-      isPremium ? 10 : 3
-    );
-    setGeneratedIdeas(ideas);
+    setIsGenerating(prev => ({ ...prev, ideas: true }));
+    setErrors(prev => ({ ...prev, ideas: undefined }));
+    
+    try {
+      const ideas = await generateAdvancedContentIdeas(
+        selectedPlatform.id,
+        selectedNiche.id,
+        userPrefs,
+        isPremium ? 10 : 3
+      );
+      if (!ideas || ideas.length === 0) {
+        throw new Error('Failed to generate content ideas. Please try again.');
+      }
+      setGeneratedIdeas(ideas);
+    } catch (error) {
+      console.error('Error generating content ideas:', error);
+      setErrors(prev => ({ 
+        ...prev, 
+        ideas: error instanceof Error ? error.message : 'Failed to generate content ideas. Please try again.'
+      }));
+    } finally {
+      setIsGenerating(prev => ({ ...prev, ideas: false }));
+    }
   };
 
   const handleGenerateSchedule = async () => {
-    const schedule = await generateSchedule(selectedPlatform.id, userPrefs.experience_level);
-    setGeneratedSchedule(schedule);
+    setIsGenerating(prev => ({ ...prev, schedule: true }));
+    setErrors(prev => ({ ...prev, schedule: undefined }));
+    
+    try {
+      const schedule = await generateSchedule(selectedPlatform.id, userPrefs.experience_level);
+      if (!schedule) {
+        throw new Error('Failed to generate schedule. Please try again.');
+      }
+      setGeneratedSchedule(schedule);
+    } catch (error) {
+      console.error('Error generating schedule:', error);
+      setErrors(prev => ({ 
+        ...prev, 
+        schedule: error instanceof Error ? error.message : 'Failed to generate schedule. Please try again.'
+      }));
+    } finally {
+      setIsGenerating(prev => ({ ...prev, schedule: false }));
+    }
   };
 
   const handleGenerateHashtags = async () => {
-    const hashtags = await generateHashtagStrategy(selectedPlatform.id, selectedNiche.id);
-    setGeneratedHashtags(hashtags);
+    setIsGenerating(prev => ({ ...prev, hashtags: true }));
+    setErrors(prev => ({ ...prev, hashtags: undefined }));
+    
+    try {
+      const hashtags = await generateHashtagStrategy(selectedPlatform.id, selectedNiche.id);
+      if (!hashtags) {
+        throw new Error('Failed to generate hashtag strategy. Please try again.');
+      }
+      setGeneratedHashtags(hashtags);
+    } catch (error) {
+      console.error('Error generating hashtags:', error);
+      setErrors(prev => ({ 
+        ...prev, 
+        hashtags: error instanceof Error ? error.message : 'Failed to generate hashtag strategy. Please try again.'
+      }));
+    } finally {
+      setIsGenerating(prev => ({ ...prev, hashtags: false }));
+    }
   };
 
   const handleGenerateCaption = async () => {
-    const caption = await generateCaption(selectedPlatform.id, selectedNiche.id);
-    setGeneratedCaption(caption);
+    setIsGenerating(prev => ({ ...prev, caption: true }));
+    setErrors(prev => ({ ...prev, caption: undefined }));
+    
+    try {
+      const caption = await generateCaption(selectedPlatform.id, selectedNiche.id);
+      if (!caption) {
+        throw new Error('Failed to generate caption. Please try again.');
+      }
+      setGeneratedCaption(caption);
+    } catch (error) {
+      console.error('Error generating caption:', error);
+      setErrors(prev => ({ 
+        ...prev, 
+        caption: error instanceof Error ? error.message : 'Failed to generate caption. Please try again.'
+      }));
+    } finally {
+      setIsGenerating(prev => ({ ...prev, caption: false }));
+    }
   };
 
   const handleGenerateAll = async () => {
     if (!isPremium) return;
     
-    const completePackage = await generateCompleteTemplatePackage(
-      selectedPlatform.id,
-      selectedNiche.id,
-      userPrefs
-    );
+    setIsGenerating({
+      bio: true,
+      ideas: true,
+      schedule: true,
+      hashtags: true,
+      caption: true
+    });
+    setErrors({});
     
-    setGeneratedBio(completePackage.bio);
-    setGeneratedIdeas(completePackage.contentIdeas);
-    setGeneratedSchedule(completePackage.schedule);
-    setGeneratedHashtags(completePackage.hashtagStrategy);
-    setGeneratedCaption(completePackage.sampleCaption);
+    try {
+      const completePackage = await generateCompleteTemplatePackage(
+        selectedPlatform.id,
+        selectedNiche.id,
+        userPrefs
+      );
+      
+      if (!completePackage) {
+        throw new Error('Failed to generate complete template package. Please try again.');
+      }
+      
+      setGeneratedBio(completePackage.bio);
+      setGeneratedIdeas(completePackage.contentIdeas);
+      setGeneratedSchedule(completePackage.schedule);
+      setGeneratedHashtags(completePackage.hashtagStrategy);
+      setGeneratedCaption(completePackage.sampleCaption);
+    } catch (error) {
+      console.error('Error generating complete package:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate complete template package. Please try again.';
+      setErrors({
+        bio: errorMessage,
+        ideas: errorMessage,
+        schedule: errorMessage,
+        hashtags: errorMessage,
+        caption: errorMessage
+      });
+    } finally {
+      setIsGenerating({
+        bio: false,
+        ideas: false,
+        schedule: false,
+        hashtags: false,
+        caption: false
+      });
+    }
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    // You could add a toast notification here
+  const copyToClipboard = async (text: string) => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+    }
   };
 
   return (

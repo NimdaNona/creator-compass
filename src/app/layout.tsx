@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import { CelebrationSystem } from "@/components/engagement/CelebrationSystem";
 import { PWAProvider } from "@/components/pwa/PWAProvider";
+// Error boundary handled at page level since root layout is server component
 
 const inter = Inter({
   subsets: ["latin"],
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL("https://creatorcompass.app"),
+  metadataBase: new URL("https://creatorsaicompass.com"),
   
   // PWA Configuration
   manifest: "/manifest.json",
@@ -52,7 +53,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://creatorcompass.app",
+    url: "https://creatorsaicompass.com",
     title: "CreatorCompass - Your Personalized Creator Roadmap",
     description: "Build your audience and grow your brand with personalized 90-day roadmaps for YouTube, TikTok, and Twitch.",
     siteName: "CreatorCompass",

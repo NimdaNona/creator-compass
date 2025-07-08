@@ -3,6 +3,7 @@
 import { PlatformFeatures } from '@/components/platform-features/PlatformFeatures';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
 
 export default function PlatformToolsPage() {
   return (
@@ -10,7 +11,9 @@ export default function PlatformToolsPage() {
       <Header />
       
       <main className="container mx-auto px-4 py-8">
-        <PlatformFeatures />
+        <ErrorBoundary>
+          <PlatformFeatures />
+        </ErrorBoundary>
       </main>
       
       <Footer />

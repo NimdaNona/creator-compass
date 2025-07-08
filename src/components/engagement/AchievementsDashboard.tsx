@@ -8,7 +8,6 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAppStore } from '@/store/useAppStore';
 import { Achievement, UserStats, LevelSystem } from '@/types/achievements';
-import { achievements, levels } from '@/data/achievements.json';
 import {
   Trophy,
   Star,
@@ -30,7 +29,45 @@ export function AchievementsDashboard() {
   const { progress } = useAppStore();
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Mock user stats - in real app this would come from the store
+  // Mock user stats and achievements for development
+  const mockAchievements: Achievement[] = [
+    {
+      id: 'first-task',
+      name: 'First Steps',
+      description: 'Complete your first task',
+      type: 'task',
+      icon: '🎯',
+      points: 50,
+      rarity: 'common',
+      category: 'progress',
+      requirements: { tasks: 1 },
+      unlockedAt: new Date()
+    },
+    {
+      id: 'week-streak',
+      name: 'Week Warrior',
+      description: 'Complete tasks for 7 days straight',
+      type: 'streak',
+      icon: '🔥',
+      points: 200,
+      rarity: 'rare',
+      category: 'consistency',
+      requirements: { streakDays: 7 },
+      unlockedAt: new Date()
+    },
+    {
+      id: 'power-user',
+      name: 'Power User',
+      description: 'Complete 50 tasks',
+      type: 'task',
+      icon: '⚡',
+      points: 500,
+      rarity: 'epic',
+      category: 'progress',
+      requirements: { tasks: 50 }
+    }
+  ];
+
   const userStats: UserStats = {
     totalTasksCompleted: progress?.completedTasks.length || 12,
     totalPoints: progress?.totalPoints || 420,
@@ -45,17 +82,26 @@ export function AchievementsDashboard() {
       weeklyGoal: 7,
       monthlyGoal: 30
     },
-    achievements: achievements.slice(0, 6).map(a => ({ ...a, unlockedAt: new Date() })) as Achievement[],
+    achievements: mockAchievements.slice(0, 2),
     badges: ['🎯', '🚀', '⚡', '🔥', '🏗️'],
     titles: ['Task Master', 'Consistent Creator', 'Foundation Builder'],
     currentTitle: 'Task Master'
   };
 
+  // Mock level system
+  const levels = [
+    { level: 1, name: 'Novice', minPoints: 0, maxPoints: 100, color: 'gray' },
+    { level: 2, name: 'Apprentice', minPoints: 100, maxPoints: 300, color: 'blue' },
+    { level: 3, name: 'Creator', minPoints: 300, maxPoints: 600, color: 'green' },
+    { level: 4, name: 'Expert', minPoints: 600, maxPoints: 1000, color: 'purple' },
+    { level: 5, name: 'Master', minPoints: 1000, maxPoints: 1500, color: 'gold' }
+  ];
+
   const currentLevel = levels.find(l => l.level === userStats.currentLevel) || levels[0];
   const nextLevel = levels.find(l => l.level === userStats.currentLevel + 1);
   const levelProgress = nextLevel ? 
-    ((userStats.totalPoints - currentLevel.pointsRequired) / 
-     (nextLevel.pointsRequired - currentLevel.pointsRequired)) * 100 : 100;
+    ((userStats.totalPoints - currentLevel.minPoints) / 
+     (nextLevel.minPoints - currentLevel.minPoints)) * 100 : 100;
 
   const categories = [
     { id: 'progress', name: 'Progress', icon: Target, count: 5 },
@@ -66,7 +112,7 @@ export function AchievementsDashboard() {
   ];
 
   const getAchievementsByCategory = (category: string) => {
-    return (achievements as Achievement[]).filter(a => a.category === category);
+    return mockAchievements.filter(a => a.category === category);
   };
 
   const isAchievementUnlocked = (achievementId: string) => {
@@ -74,14 +120,17 @@ export function AchievementsDashboard() {
   };
 
   const getAchievementProgress = (achievement: Achievement) => {
-    switch (achievement.requirement.type) {
-      case 'tasks_completed':
-        return Math.min((userStats.totalTasksCompleted / achievement.requirement.value) * 100, 100);
-      case 'streak_days':
-        return Math.min((userStats.streakData.currentDays / achievement.requirement.value) * 100, 100);
-      default:
-        return 0;
+    // Handle both requirements and requirement properties for compatibility
+    const requirements = achievement.requirements || achievement.requirement;
+    if (!requirements) return 0;
+    
+    if (requirements.tasks) {
+      return Math.min((userStats.totalTasksCompleted / requirements.tasks) * 100, 100);
     }
+    if (requirements.streakDays) {
+      return Math.min((userStats.streakData.currentDays / requirements.streakDays) * 100, 100);
+    }
+    return 0;
   };
 
   const getRarityColor = (rarity: string) => {
@@ -236,7 +285,7 @@ export function AchievementsDashboard() {
               <div>
                 <p className="text-sm text-muted-foreground">Achievements</p>
                 <p className="text-2xl font-bold">{userStats.achievements.length}</p>
-                <p className="text-xs text-muted-foreground">of {achievements.length} total</p>
+                <p className="text-xs text-muted-foreground">of {mockAchievements.length} total</p>
               </div>
             </div>
           </CardContent>

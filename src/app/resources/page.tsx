@@ -3,6 +3,7 @@
 import { ResourceLibrary } from '@/components/resources/ResourceLibrary';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
 
 export default function ResourcesPage() {
   return (
@@ -10,7 +11,9 @@ export default function ResourcesPage() {
       <Header />
       
       <main className="container mx-auto px-4 py-8">
-        <ResourceLibrary />
+        <ErrorBoundary>
+          <ResourceLibrary />
+        </ErrorBoundary>
       </main>
       
       <Footer />

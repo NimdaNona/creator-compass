@@ -69,24 +69,56 @@ export function PlatformFeatures() {
   };
 
   const renderPlatformFeatures = () => {
-    switch (selectedPlatform.id) {
-      case 'youtube':
-        return <YouTubeFeatures />;
-      case 'tiktok':
-        return <TikTokFeatures />;
-      case 'twitch':
-        return <TwitchFeatures />;
-      default:
+    try {
+      if (!selectedPlatform?.id) {
         return (
           <Card>
             <CardContent className="text-center py-12">
-              <h3 className="text-lg font-semibold mb-2">Platform Not Supported Yet</h3>
+              <Target className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Platform Not Selected</h3>
               <p className="text-muted-foreground">
-                We're still building features for this platform. Check back soon!
+                Please select a platform to access specialized features
               </p>
             </CardContent>
           </Card>
         );
+      }
+
+      switch (selectedPlatform.id) {
+        case 'youtube':
+          return <YouTubeFeatures />;
+        case 'tiktok':
+          return <TikTokFeatures />;
+        case 'twitch':
+          return <TwitchFeatures />;
+        default:
+          return (
+            <Card>
+              <CardContent className="text-center py-12">
+                <h3 className="text-lg font-semibold mb-2">Platform Not Supported Yet</h3>
+                <p className="text-muted-foreground">
+                  We're still building features for this platform. Check back soon!
+                </p>
+              </CardContent>
+            </Card>
+          );
+      }
+    } catch (error) {
+      console.error('Error rendering platform features:', error);
+      return (
+        <Card>
+          <CardContent className="text-center py-12">
+            <Target className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Unable to Load Features</h3>
+            <p className="text-muted-foreground mb-4">
+              There was an error loading platform features. Please try refreshing the page.
+            </p>
+            <Button onClick={() => window.location.reload()}>
+              Refresh Page
+            </Button>
+          </CardContent>
+        </Card>
+      );
     }
   };
 
@@ -102,7 +134,7 @@ export function PlatformFeatures() {
               <PlatformIcon className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold">{selectedPlatform.name} Tools</h1>
+              <h1 className="text-3xl font-bold">{selectedPlatform?.name || 'Platform'} Tools</h1>
               <div className="flex items-center space-x-2">
                 <p className="text-muted-foreground">
                   Specialized features for {selectedNiche?.name || 'creators'}
@@ -141,14 +173,17 @@ export function PlatformFeatures() {
               <div>
                 <h3 className="font-semibold mb-1">Platform-Specific Tools</h3>
                 <p className="text-sm text-muted-foreground">
-                  {selectedPlatform.id === 'youtube' && 
+                  {selectedPlatform?.id === 'youtube' && 
                     "Access YouTube-specific features like thumbnail designer, SEO optimizer, and trend analyzer to maximize your channel growth."
                   }
-                  {selectedPlatform.id === 'tiktok' && 
+                  {selectedPlatform?.id === 'tiktok' && 
                     "Discover viral sounds, hashtag strategies, content templates, and optimal posting times to boost your TikTok presence."
                   }
-                  {selectedPlatform.id === 'twitch' && 
+                  {selectedPlatform?.id === 'twitch' && 
                     "Set up professional stream overlays, chat commands, schedules, and goals to build an engaged streaming community."
+                  }
+                  {!selectedPlatform?.id && 
+                    "Please select a platform to access specialized features and tools."
                   }
                 </p>
               </div>

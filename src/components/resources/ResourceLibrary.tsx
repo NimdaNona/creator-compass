@@ -76,27 +76,77 @@ export function ResourceLibrary() {
   const [resourcesData, setResourcesData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   const isPremium = subscription === 'premium';
 
-  // Fetch resources data
-  useEffect(() => {
-    const fetchResources = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('/api/resources');
-        if (!response.ok) {
-          throw new Error('Failed to fetch resources');
-        }
-        const data = await response.json();
-        setResourcesData(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load resources');
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Validate resources data structure
+  const validateResourceData = (data: any): boolean => {
+    return data && 
+           typeof data === 'object' && 
+           data.resources && 
+           typeof data.resources === 'object';
+  };
 
+  // Fetch resources data with comprehensive error handling
+  const fetchResources = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch('/api/resources');
+      
+      if (response.status === 401) {
+        setError('Authentication required. Please sign in to access resources.');
+        return;
+      }
+      
+      if (response.status === 429) {
+        setError('Too many requests. Please try again in a moment.');
+        return;
+      }
+      
+      if (response.status === 500) {
+        setError('Server error. Please try again later.');
+        return;
+      }
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (!validateResourceData(data)) {
+        throw new Error('Invalid data structure received from server');
+      }
+      
+      setResourcesData(data);
+      setRetryCount(0);
+    } catch (err) {
+      console.error('Failed to fetch resources:', err);
+      
+      if (err instanceof TypeError) {
+        setError('Network error. Please check your internet connection and try again.');
+      } else if (err instanceof SyntaxError) {
+        setError('Invalid server response. Please try again.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to load resources');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Retry mechanism
+  const handleRetry = () => {
+    if (retryCount < 3) {
+      setRetryCount(prev => prev + 1);
+      fetchResources();
+    }
+  };
+
+  useEffect(() => {
     fetchResources();
   }, []);
 
@@ -128,24 +178,33 @@ export function ResourceLibrary() {
 
   const filterByBudget = (items: any[]) => {
     if (budgetFilter === 'all') return items;
-    return items.filter(item => getBudgetRange(item.price) === budgetFilter);
+    return items.filter(item => {
+      // Safe access to item properties
+      const price = typeof item?.price === 'number' ? item.price : 0;
+      return getBudgetRange(price) === budgetFilter;
+    });
   };
 
   const filterBySearch = (items: any[]) => {
     if (!searchQuery) return items;
-    return items.filter(item => 
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.type.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    return items.filter(item => {
+      // Safe string access with fallbacks
+      const name = item?.name?.toLowerCase() || '';
+      const description = item?.description?.toLowerCase() || '';
+      const type = item?.type?.toLowerCase() || '';
+      const query = searchQuery.toLowerCase();
+      
+      return name.includes(query) || description.includes(query) || type.includes(query);
+    });
   };
 
   const filterByPlatform = (items: any[]) => {
     if (!selectedPlatform) return items;
-    return items.filter(item => 
-      item.platforms.includes(selectedPlatform.id) || 
-      item.platforms.includes('all')
-    );
+    return items.filter(item => {
+      // Safe array access
+      const platforms = Array.isArray(item?.platforms) ? item.platforms : [];
+      return platforms.includes(selectedPlatform.id) || platforms.includes('all');
+    });
   };
 
   const renderEquipmentCard = (item: EquipmentItem, level: string) => (
@@ -421,6 +480,81 @@ export function ResourceLibrary() {
     );
   }
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="space-y-4">
+          <div>
+            <h1 className="text-3xl font-bold">Resource Library</h1>
+            <p className="text-muted-foreground">
+              Curated equipment, software, and guides for content creators
+            </p>
+          </div>
+        </div>
+        
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="text-muted-foreground">Loading resources...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="space-y-4">
+          <div>
+            <h1 className="text-3xl font-bold">Resource Library</h1>
+            <p className="text-muted-foreground">
+              Curated equipment, software, and guides for content creators
+            </p>
+          </div>
+        </div>
+        
+        <Card className="w-full max-w-md mx-auto">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2 text-destructive">
+              <ExternalLink className="h-5 w-5" />
+              <span>Unable to load resources</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              {error}
+            </p>
+            <div className="flex space-x-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => window.location.reload()}
+                className="flex items-center space-x-2"
+              >
+                <ExternalLink className="h-4 w-4" />
+                <span>Reload Page</span>
+              </Button>
+              {retryCount < 3 && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleRetry}
+                  className="flex items-center space-x-2"
+                >
+                  <Clock className="h-4 w-4" />
+                  <span>Try Again ({retryCount + 1}/3)</span>
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -522,19 +656,28 @@ export function ResourceLibrary() {
           </div>
 
           {/* Equipment Grid */}
-          {Object.entries(resourcesData?.resources?.equipment?.[activeSubcategory as keyof typeof resourcesData.resources.equipment] || {}).map(([level, items]) => (
-            <div key={level}>
-              <h3 className="text-xl font-semibold mb-4 capitalize flex items-center space-x-2">
-                <Target className="w-5 h-5" />
-                <span>{level} Level</span>
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filterByPlatform(filterBySearch(filterByBudget(items as EquipmentItem[]))).map((item) =>
-                  renderEquipmentCard(item, level)
-                )}
+          {Object.entries(resourcesData?.resources?.equipment?.[activeSubcategory as keyof typeof resourcesData.resources.equipment] || {}).map(([level, items]) => {
+            const safeItems = Array.isArray(items) ? items : [];
+            const filteredItems = filterByPlatform(filterBySearch(filterByBudget(safeItems)));
+            
+            return (
+              <div key={level}>
+                <h3 className="text-xl font-semibold mb-4 capitalize flex items-center space-x-2">
+                  <Target className="w-5 h-5" />
+                  <span>{level} Level</span>
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredItems.length > 0 ? (
+                    filteredItems.map((item) => renderEquipmentCard(item, level))
+                  ) : (
+                    <div className="col-span-full text-center py-8 text-muted-foreground">
+                      No items found for the current filters
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </TabsContent>
 
         {/* Software Tab */}
@@ -559,36 +702,54 @@ export function ResourceLibrary() {
           </div>
 
           {/* Software Grid */}
-          {Object.entries(resourcesData?.resources?.software?.[activeSubcategory as keyof typeof resourcesData.resources.software] || {}).map(([tier, items]) => (
-            <div key={tier}>
-              <h3 className="text-xl font-semibold mb-4 capitalize flex items-center space-x-2">
-                {tier === 'free' ? <Zap className="w-5 h-5" /> : <Crown className="w-5 h-5" />}
-                <span>{tier} Software</span>
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filterByPlatform(filterBySearch(filterByBudget(items as SoftwareItem[]))).map((item) =>
-                  renderSoftwareCard(item, tier)
-                )}
+          {Object.entries(resourcesData?.resources?.software?.[activeSubcategory as keyof typeof resourcesData.resources.software] || {}).map(([tier, items]) => {
+            const safeItems = Array.isArray(items) ? items : [];
+            const filteredItems = filterByPlatform(filterBySearch(filterByBudget(safeItems)));
+            
+            return (
+              <div key={tier}>
+                <h3 className="text-xl font-semibold mb-4 capitalize flex items-center space-x-2">
+                  {tier === 'free' ? <Zap className="w-5 h-5" /> : <Crown className="w-5 h-5" />}
+                  <span>{tier} Software</span>
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredItems.length > 0 ? (
+                    filteredItems.map((item) => renderSoftwareCard(item, tier))
+                  ) : (
+                    <div className="col-span-full text-center py-8 text-muted-foreground">
+                      No items found for the current filters
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </TabsContent>
 
         {/* Guides Tab */}
         <TabsContent value="guides" className="space-y-6">
-          {Object.entries(resourcesData?.resources?.guides || {}).map(([guideType, guides]) => (
-            <div key={guideType}>
-              <h3 className="text-xl font-semibold mb-4 capitalize flex items-center space-x-2">
-                <BookOpen className="w-5 h-5" />
-                <span>{guideType.replace('_', ' ')}</span>
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filterByPlatform(filterBySearch(guides as any[])).map((guide) =>
-                  renderGuideCard(guide)
-                )}
+          {Object.entries(resourcesData?.resources?.guides || {}).map(([guideType, guides]) => {
+            const safeGuides = Array.isArray(guides) ? guides : [];
+            const filteredGuides = filterByPlatform(filterBySearch(safeGuides));
+            
+            return (
+              <div key={guideType}>
+                <h3 className="text-xl font-semibold mb-4 capitalize flex items-center space-x-2">
+                  <BookOpen className="w-5 h-5" />
+                  <span>{guideType.replace('_', ' ')}</span>
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredGuides.length > 0 ? (
+                    filteredGuides.map((guide) => renderGuideCard(guide))
+                  ) : (
+                    <div className="col-span-full text-center py-8 text-muted-foreground">
+                      No guides found for the current filters
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </TabsContent>
       </Tabs>
     </div>
