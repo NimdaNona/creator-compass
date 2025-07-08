@@ -1,0 +1,501 @@
+{
+  "bestPractices": {
+    "youtube": {
+      "algorithm": {
+        "ranking_factors": [
+          {
+            "factor": "Watch Time",
+            "importance": "Critical",
+            "description": "Total time viewers spend watching your videos",
+            "optimization_tips": [
+              "Create engaging intros that hook viewers in first 15 seconds",
+              "Use pattern interrupts to maintain attention",
+              "End videos with strong CTAs to next video",
+              "Optimize video length based on audience retention graphs"
+            ]
+          },
+          {
+            "factor": "Click-Through Rate (CTR)",
+            "importance": "High",
+            "description": "Percentage of people who click on your video after seeing thumbnail",
+            "optimization_tips": [
+              "Use bright, contrasting colors in thumbnails",
+              "Include emotional expressions in thumbnails",
+              "Test different thumbnail styles",
+              "Use compelling, curiosity-driven titles"
+            ]
+          },
+          {
+            "factor": "Audience Retention",
+            "importance": "Critical",
+            "description": "How long viewers stay engaged with your content",
+            "optimization_tips": [
+              "Analyze retention graphs to identify drop-off points",
+              "Cut out slow or boring sections",
+              "Use jump cuts and fast pacing",
+              "Include visual elements to maintain engagement"
+            ]
+          },
+          {
+            "factor": "Engagement Rate",
+            "importance": "High",
+            "description": "Likes, comments, shares, and subscribers gained",
+            "optimization_tips": [
+              "Ask specific questions to encourage comments",
+              "Respond to comments within first hour",
+              "Use community posts to drive engagement",
+              "Create content that sparks discussion"
+            ]
+          }
+        ],
+        "posting_optimization": {
+          "optimal_times": {
+            "weekdays": ["2 PM", "4 PM", "6 PM"],
+            "weekends": ["10 AM", "2 PM", "4 PM"],
+            "note": "Test different times to find your audience's peak activity"
+          },
+          "frequency": {
+            "minimum": "1 video per week",
+            "recommended": "2-3 videos per week",
+            "maximum": "1 video per day",
+            "note": "Consistency is more important than frequency"
+          }
+        }
+      },
+      "seo": {
+        "title_optimization": [
+          "Include primary keyword in first 60 characters",
+          "Use emotional triggers (Amazing, Shocking, Secret)",
+          "Include numbers when relevant (5 Tips, 10 Ways)",
+          "Make titles specific and descriptive",
+          "Test different title formats"
+        ],
+        "description_optimization": [
+          "Include primary keyword in first 25 words",
+          "Use relevant secondary keywords naturally",
+          "Include timestamps for longer videos",
+          "Add links to related videos and playlists",
+          "Use call-to-actions to increase engagement"
+        ],
+        "tag_strategy": [
+          "Use 5-8 relevant tags",
+          "Include exact keyword match",
+          "Add related long-tail keywords",
+          "Use competitor analysis for tag ideas",
+          "Update tags based on performance"
+        ]
+      },
+      "content_strategy": {
+        "video_types": [
+          {
+            "type": "Evergreen Content",
+            "description": "Content that remains relevant over time",
+            "examples": ["How-to tutorials", "Tips and tricks", "Educational content"],
+            "benefits": ["Consistent long-term views", "Better SEO performance", "Compound growth"]
+          },
+          {
+            "type": "Trending Content",
+            "description": "Content based on current trends and news",
+            "examples": ["Reaction videos", "News commentary", "Trend participation"],
+            "benefits": ["Quick view spikes", "Algorithm boost", "Increased discoverability"]
+          },
+          {
+            "type": "Series Content",
+            "description": "Multi-part content that builds audience expectation",
+            "examples": ["Weekly series", "Multi-part tutorials", "Ongoing challenges"],
+            "benefits": ["Higher retention", "Subscriber loyalty", "Predictable content schedule"]
+          }
+        ]
+      }
+    },
+    "twitch": {
+      "algorithm": {
+        "discovery_factors": [
+          {
+            "factor": "Stream Category",
+            "importance": "High",
+            "description": "Choosing the right category for discoverability",
+            "optimization_tips": [
+              "Stream in categories with moderate competition",
+              "Use 'Just Chatting' for non-gaming content",
+              "Switch categories based on content",
+              "Monitor category viewer counts"
+            ]
+          },
+          {
+            "factor": "Viewer Engagement",
+            "importance": "Critical",
+            "description": "Chat activity and viewer interaction",
+            "optimization_tips": [
+              "Respond to every chat message when possible",
+              "Use chat commands and bots for interaction",
+              "Create subscriber-only perks",
+              "Host community events and games"
+            ]
+          },
+          {
+            "factor": "Stream Consistency",
+            "importance": "High",
+            "description": "Regular streaming schedule",
+            "optimization_tips": [
+              "Create and stick to a schedule",
+              "Use 'Going Live' notifications",
+              "Stream for at least 2-3 hours per session",
+              "Maintain consistent streaming days"
+            ]
+          }
+        ],
+        "growth_strategies": [
+          {
+            "strategy": "Networking",
+            "description": "Building relationships with other streamers",
+            "tactics": [
+              "Raid other streamers after your stream",
+              "Participate in streamer communities",
+              "Collaborate on content",
+              "Support other streamers in your niche"
+            ]
+          },
+          {
+            "strategy": "Content Diversification",
+            "description": "Varying your content to attract different audiences",
+            "tactics": [
+              "Mix gaming with Just Chatting",
+              "Host special events and challenges",
+              "Try different games and genres",
+              "Include viewer participation games"
+            ]
+          }
+        ]
+      },
+      "technical_optimization": {
+        "stream_quality": [
+          {
+            "setting": "Resolution",
+            "recommended": "1080p 60fps",
+            "minimum": "720p 30fps",
+            "note": "Higher quality requires better hardware and internet"
+          },
+          {
+            "setting": "Bitrate",
+            "recommended": "6000 kbps",
+            "minimum": "3000 kbps",
+            "note": "Depends on upload speed and Twitch affiliate/partner status"
+          },
+          {
+            "setting": "Audio",
+            "recommended": "48kHz, 160kbps",
+            "minimum": "44.1kHz, 128kbps",
+            "note": "Good audio is more important than video quality"
+          }
+        ],
+        "equipment_priorities": [
+          "Good microphone (most important)",
+          "Stable internet connection",
+          "Decent camera (if doing facecam)",
+          "Proper lighting",
+          "Gaming headset or speakers"
+        ]
+      }
+    },
+    "tiktok": {
+      "algorithm": {
+        "ranking_factors": [
+          {
+            "factor": "Completion Rate",
+            "importance": "Critical",
+            "description": "Percentage of viewers who watch your entire video",
+            "optimization_tips": [
+              "Hook viewers in first 3 seconds",
+              "Keep videos under 30 seconds when possible",
+              "Use pattern interrupts and visual changes",
+              "End with a strong payoff or punchline"
+            ]
+          },
+          {
+            "factor": "Engagement Rate",
+            "importance": "Critical",
+            "description": "Likes, comments, shares, and follows from video",
+            "optimization_tips": [
+              "Ask questions to encourage comments",
+              "Create content that sparks discussion",
+              "Use trending hashtags strategically",
+              "Respond to comments quickly"
+            ]
+          },
+          {
+            "factor": "Share Rate",
+            "importance": "High",
+            "description": "How often viewers share your content",
+            "optimization_tips": [
+              "Create highly relatable content",
+              "Use trending audio and effects",
+              "Make content that people want to show friends",
+              "Include shareable moments or quotes"
+            ]
+          },
+          {
+            "factor": "Audio Usage",
+            "importance": "High",
+            "description": "Using trending and popular audio clips",
+            "optimization_tips": [
+              "Use trending audio within first 24-48 hours",
+              "Create original audio that others can use",
+              "Match audio to your content style",
+              "Monitor audio performance in analytics"
+            ]
+          }
+        ],
+        "posting_optimization": {
+          "optimal_times": {
+            "general": ["6 AM", "10 AM", "2 PM", "7 PM", "9 PM"],
+            "weekdays": ["Best performance Tuesday-Thursday"],
+            "weekends": ["Saturday morning and Sunday evening work well"],
+            "note": "Test different times to find your audience's peak activity"
+          },
+          "frequency": {
+            "minimum": "1 video per day",
+            "recommended": "2-3 videos per day",
+            "maximum": "5 videos per day",
+            "note": "Consistency is key - better to post daily than sporadically"
+          }
+        }
+      },
+      "content_strategy": {
+        "viral_content_types": [
+          {
+            "type": "Trend Participation",
+            "description": "Participating in trending challenges and formats",
+            "tips": [
+              "Jump on trends early (within 24-48 hours)",
+              "Add your unique twist to trending formats",
+              "Use trending audio with original content",
+              "Study what's trending in your niche"
+            ]
+          },
+          {
+            "type": "Educational Content",
+            "description": "Teaching something valuable in short format",
+            "tips": [
+              "Start with a hook ('Did you know...')",
+              "Keep explanations simple and visual",
+              "Use text overlays for key points",
+              "End with call-to-action for more info"
+            ]
+          },
+          {
+            "type": "Relatable Content",
+            "description": "Content that viewers can relate to their own experiences",
+            "tips": [
+              "Use 'POV' format for relatable scenarios",
+              "Address common experiences or frustrations",
+              "Use facial expressions and reactions",
+              "Keep it authentic and genuine"
+            ]
+          }
+        ],
+        "hashtag_strategy": [
+          "Use 3-5 hashtags maximum",
+          "Mix trending and niche-specific hashtags",
+          "Research hashtag performance before using",
+          "Create branded hashtags for your content",
+          "Don't overuse the same hashtags"
+        ]
+      },
+      "technical_optimization": {
+        "video_specs": [
+          {
+            "aspect_ratio": "9:16 (vertical)",
+            "resolution": "1080x1920",
+            "frame_rate": "30 fps",
+            "duration": "15-60 seconds (30 seconds optimal)"
+          }
+        ],
+        "quality_tips": [
+          "Use good lighting (natural light is best)",
+          "Ensure clear audio quality",
+          "Keep camera steady or use deliberate movement",
+          "Use high-quality smartphone camera",
+          "Edit within TikTok app when possible"
+        ]
+      }
+    },
+    "cross_platform": {
+      "content_repurposing": [
+        {
+          "source": "YouTube",
+          "destinations": ["TikTok", "Instagram Reels", "YouTube Shorts"],
+          "strategy": "Cut long-form content into short, engaging clips",
+          "tips": [
+            "Identify best moments from longer videos",
+            "Add captions for social media consumption",
+            "Reformat for vertical aspect ratio",
+            "Use platform-specific hashtags"
+          ]
+        },
+        {
+          "source": "Twitch",
+          "destinations": ["TikTok", "YouTube", "Twitter"],
+          "strategy": "Create highlight reels and funny moments",
+          "tips": [
+            "Clip best moments during or after streams",
+            "Create compilation videos for YouTube",
+            "Share quick clips on TikTok",
+            "Use Twitter for stream announcements"
+          ]
+        },
+        {
+          "source": "TikTok",
+          "destinations": ["YouTube Shorts", "Instagram Reels"],
+          "strategy": "Expand successful short-form content",
+          "tips": [
+            "Create longer versions for YouTube",
+            "Batch create similar content",
+            "Use successful TikTok concepts for other platforms",
+            "Maintain vertical format for Reels and Shorts"
+          ]
+        }
+      ],
+      "audience_building": [
+        {
+          "strategy": "Cross-Promotion",
+          "description": "Promoting other platforms within your content",
+          "tactics": [
+            "Mention other platforms in videos",
+            "Create platform-specific content teasers",
+            "Use end screens and descriptions for cross-promotion",
+            "Share behind-the-scenes content across platforms"
+          ]
+        },
+        {
+          "strategy": "Content Adaptation",
+          "description": "Tailoring content for each platform's audience",
+          "tactics": [
+            "Understand each platform's culture",
+            "Adjust tone and style for platform",
+            "Use platform-specific features",
+            "Optimize posting times for each platform"
+          ]
+        }
+      ]
+    },
+    "monetization": {
+      "revenue_streams": [
+        {
+          "stream": "Ad Revenue",
+          "platforms": ["YouTube", "TikTok"],
+          "requirements": {
+            "YouTube": "1,000 subscribers + 4,000 watch hours",
+            "TikTok": "10,000 followers + 100,000 video views"
+          },
+          "earning_potential": "Low to Medium",
+          "tips": [
+            "Focus on longer videos for YouTube",
+            "Optimize for high watch time",
+            "Create advertiser-friendly content",
+            "Monitor demonetization risks"
+          ]
+        },
+        {
+          "stream": "Sponsorships",
+          "platforms": ["YouTube", "Twitch", "TikTok"],
+          "requirements": "Varies (typically 1,000+ engaged followers)",
+          "earning_potential": "Medium to High",
+          "tips": [
+            "Build authentic audience engagement",
+            "Create media kit with statistics",
+            "Reach out to brands in your niche",
+            "Maintain authentic voice in sponsored content"
+          ]
+        },
+        {
+          "stream": "Affiliate Marketing",
+          "platforms": ["YouTube", "Twitch", "TikTok"],
+          "requirements": "No minimum (but higher followers = better results)",
+          "earning_potential": "Low to High",
+          "tips": [
+            "Only promote products you genuinely use",
+            "Disclose affiliate relationships",
+            "Focus on products relevant to your audience",
+            "Track performance and optimize"
+          ]
+        }
+      ],
+      "pricing_guidelines": [
+        {
+          "metric": "CPM (Cost Per Mille)",
+          "YouTube": "$0.50-$3.00 per 1,000 views",
+          "TikTok": "$0.02-$0.04 per 1,000 views",
+          "note": "Varies significantly by niche and audience demographics"
+        },
+        {
+          "metric": "Sponsorship Rates",
+          "general_rule": "$10-$100 per 1,000 engaged followers",
+          "YouTube": "$100-$1,000 per 100,000 views",
+          "TikTok": "$20-$200 per 100,000 views",
+          "note": "Rates vary by niche, engagement rate, and audience quality"
+        }
+      ]
+    },
+    "analytics": {
+      "key_metrics": [
+        {
+          "metric": "Watch Time",
+          "importance": "Critical",
+          "platforms": ["YouTube", "TikTok"],
+          "good_benchmark": "Above 50% completion rate",
+          "how_to_improve": [
+            "Create stronger hooks",
+            "Cut unnecessary content",
+            "Use visual variety",
+            "Optimize video length"
+          ]
+        },
+        {
+          "metric": "Engagement Rate",
+          "importance": "High",
+          "platforms": ["YouTube", "Twitch", "TikTok"],
+          "good_benchmark": "Above 3% (likes + comments / views)",
+          "how_to_improve": [
+            "Ask questions in content",
+            "Respond to comments",
+            "Create controversial or discussion-worthy content",
+            "Use calls-to-action"
+          ]
+        },
+        {
+          "metric": "Growth Rate",
+          "importance": "High",
+          "platforms": ["YouTube", "Twitch", "TikTok"],
+          "good_benchmark": "5-10% monthly growth",
+          "how_to_improve": [
+            "Maintain consistent posting schedule",
+            "Optimize content for discovery",
+            "Collaborate with other creators",
+            "Analyze and replicate successful content"
+          ]
+        }
+      ],
+      "tracking_tools": [
+        {
+          "tool": "Native Analytics",
+          "platforms": ["YouTube Studio", "TikTok Analytics", "Twitch Analytics"],
+          "cost": "Free",
+          "features": ["Basic metrics", "Audience insights", "Performance tracking"]
+        },
+        {
+          "tool": "VidIQ",
+          "platforms": ["YouTube"],
+          "cost": "Free/Paid",
+          "features": ["Keyword research", "Competitor analysis", "SEO optimization"]
+        },
+        {
+          "tool": "Social Blade",
+          "platforms": ["YouTube", "Twitch", "TikTok"],
+          "cost": "Free/Paid",
+          "features": ["Growth tracking", "Earnings estimates", "Competitor tracking"]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  # PostgreSQL database for production
+  postgres:
+    image: postgres:15-alpine
+    container_name: creator-compass-db
+    environment:
+      POSTGRES_DB: creator_compass
+      POSTGRES_USER: creator_user
+      POSTGRES_PASSWORD: creator_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - creator-compass-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U creator_user -d creator_compass"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis for sessions and caching
+  redis:
+    image: redis:7-alpine
+    container_name: creator-compass-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - creator-compass-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Main application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: creator-compass-app
+    environment:
+      # Database
+      DATABASE_URL: postgresql://creator_user:creator_password@postgres:5432/creator_compass
+      
+      # NextAuth
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: your-nextauth-secret-here-change-in-production
+      
+      # OAuth Providers (set these in production)
+      GOOGLE_CLIENT_ID: your-google-client-id
+      GOOGLE_CLIENT_SECRET: your-google-client-secret
+      GITHUB_CLIENT_ID: your-github-client-id
+      GITHUB_CLIENT_SECRET: your-github-client-secret
+      
+      # Redis
+      REDIS_URL: redis://redis:6379
+      
+      # App Environment
+      NODE_ENV: production
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - creator-compass-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  creator-compass-network:
+    driver: bridge

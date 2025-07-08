@@ -1,0 +1,111 @@
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { SessionProvider } from "@/components/providers/SessionProvider";
+import { CelebrationSystem } from "@/components/engagement/CelebrationSystem";
+import { PWAProvider } from "@/components/pwa/PWAProvider";
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+});
+
+export const metadata: Metadata = {
+  title: "CreatorCompass - Your Personalized Creator Roadmap",
+  description: "Build your audience and grow your brand with personalized 90-day roadmaps for YouTube, TikTok, and Twitch. Get proven strategies, templates, and analytics.",
+  keywords: ["content creation", "youtube growth", "tiktok strategy", "twitch streaming", "creator tools", "social media"],
+  authors: [{ name: "CreatorCompass Team" }],
+  creator: "CreatorCompass",
+  publisher: "CreatorCompass",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  metadataBase: new URL("https://creatorcompass.app"),
+  
+  // PWA Configuration
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "CreatorCompass",
+    startupImage: [
+      {
+        url: "/icon-512x512.png",
+        media: "(device-width: 768px) and (device-height: 1024px)",
+      },
+    ],
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "black-translucent",
+    "msapplication-TileColor": "#8b5cf6",
+    "msapplication-config": "/browserconfig.xml",
+    "theme-color": "#8b5cf6",
+  },
+  
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://creatorcompass.app",
+    title: "CreatorCompass - Your Personalized Creator Roadmap",
+    description: "Build your audience and grow your brand with personalized 90-day roadmaps for YouTube, TikTok, and Twitch.",
+    siteName: "CreatorCompass",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "CreatorCompass - Your Personalized Creator Roadmap",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CreatorCompass - Your Personalized Creator Roadmap",
+    description: "Build your audience and grow your brand with personalized 90-day roadmaps for YouTube, TikTok, and Twitch.",
+    creator: "@creatorcompass",
+    images: ["/og-image.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.className} antialiased min-h-screen flex flex-col`}>
+        <SessionProvider>
+          <ThemeProvider>
+            <PWAProvider>
+              <Header />
+              <main className="flex-1">
+                {children}
+              </main>
+              <Footer />
+              <CelebrationSystem />
+            </PWAProvider>
+          </ThemeProvider>
+        </SessionProvider>
+      </body>
+    </html>
+  );
+}
