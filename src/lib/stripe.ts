@@ -61,9 +61,9 @@ export const SUBSCRIPTION_PLANS = {
       'Early access to new features'
     ],
     limitations: [],
-    stripeProductId: process.env.STRIPE_PREMIUM_PRODUCT_ID,
-    stripePriceId: process.env.STRIPE_PREMIUM_PRICE_ID,
-    stripePriceYearlyId: process.env.STRIPE_PREMIUM_YEARLY_PRICE_ID,
+    stripeProductId: 'prod_SdwSdTSNDK29DJ',
+    stripePriceId: 'price_1Riea4G48MbDPfJlHADqH4iP',
+    stripePriceYearlyId: 'price_1Riea4G48MbDPfJlHADqH4iP', // Same for now, you can create yearly pricing later
   },
   enterprise: {
     name: 'Creator Studio',
@@ -83,9 +83,9 @@ export const SUBSCRIPTION_PLANS = {
       'Advanced A/B testing'
     ],
     limitations: [],
-    stripeProductId: process.env.STRIPE_ENTERPRISE_PRODUCT_ID,
-    stripePriceId: process.env.STRIPE_ENTERPRISE_PRICE_ID,
-    stripePriceYearlyId: process.env.STRIPE_ENTERPRISE_YEARLY_PRICE_ID,
+    stripeProductId: 'prod_SdwXKELOkZJ1kV',
+    stripePriceId: 'price_1RieesG48MbDPfJlKCv1X4hS',
+    stripePriceYearlyId: 'price_1RieesG48MbDPfJlKCv1X4hS', // Same for now, you can create yearly pricing later
   },
 } as const;
 
