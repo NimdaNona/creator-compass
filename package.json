@@ -16,7 +16,6 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
     "analyze": "ANALYZE=true npm run build",
-    "postbuild": "npx next-bundle-analyzer",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts"
   },
