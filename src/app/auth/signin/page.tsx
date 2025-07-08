@@ -16,7 +16,6 @@ import {
   Zap,
   AlertCircle
 } from 'lucide-react';
-import { MockAuthButton } from '@/components/auth/MockAuthButton';
 
 type Provider = {
   id: string;
@@ -195,18 +194,6 @@ export default function SignInPage() {
                     </p>
                   </div>
                 )}
-                
-                {/* Mock Auth Button for Testing */}
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-muted-foreground/20" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">Or for testing</span>
-                  </div>
-                </div>
-                
-                <MockAuthButton />
               </div>
             ) : (
               <div className="space-y-4">

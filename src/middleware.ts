@@ -31,7 +31,7 @@ export default withAuth(
     // Redirect to onboarding if user hasn't completed setup
     if (token && !pathname.startsWith('/onboarding')) {
       // Check if user has completed onboarding
-      const hasCompletedOnboarding = token.profile?.selectedPlatform;
+      const hasCompletedOnboarding = (token as any)?.profile?.selectedPlatform;
       
       if (!hasCompletedOnboarding) {
         const url = req.nextUrl.clone();
