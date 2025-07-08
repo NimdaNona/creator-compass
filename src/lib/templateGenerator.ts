@@ -1,5 +1,7 @@
-import { templates } from '@/data/templates.json';
 import { Platform, Niche } from '@/types';
+
+// Template data will be fetched from API
+let templatesCache: any = null;
 
 export interface GeneratedBio {
   id: string;
@@ -45,8 +47,25 @@ export interface HashtagStrategy {
   optimal_count: number;
 }
 
+// Helper function to fetch templates data
+async function getTemplatesData() {
+  if (templatesCache) return templatesCache;
+  
+  try {
+    const response = await fetch('/api/templates');
+    if (!response.ok) {
+      throw new Error('Failed to fetch templates');
+    }
+    templatesCache = await response.json();
+    return templatesCache;
+  } catch (error) {
+    console.error('Error fetching templates:', error);
+    return null;
+  }
+}
+
 // Bio Generator
-export function generateBio(
+export async function generateBio(
   platform: string, 
   niche: string, 
   userPreferences?: {
@@ -56,8 +75,11 @@ export function generateBio(
     schedule?: string;
     personality?: string;
   }
-): GeneratedBio | null {
-  const platformBios = templates.bios[platform as keyof typeof templates.bios];
+): Promise<GeneratedBio | null> {
+  const templates = await getTemplatesData();
+  if (!templates) return null;
+
+  const platformBios = templates.templates?.bios?.[platform as keyof typeof templates.templates.bios];
   if (!platformBios) return null;
 
   const nicheBios = platformBios[niche as keyof typeof platformBios] as any[];
@@ -101,12 +123,15 @@ export function generateBio(
 }
 
 // Content Ideas Generator
-export function generateContentIdeas(
+export async function generateContentIdeas(
   platform: string, 
   niche: string, 
   count: number = 5
-): GeneratedContentIdea[] {
-  const platformIdeas = templates.content_ideas[platform as keyof typeof templates.content_ideas];
+): Promise<GeneratedContentIdea[]> {
+  const templates = await getTemplatesData();
+  if (!templates) return [];
+
+  const platformIdeas = templates.templates?.content_ideas?.[platform as keyof typeof templates.templates.content_ideas];
   if (!platformIdeas) return [];
 
   const nicheIdeas = platformIdeas[niche as keyof typeof platformIdeas] as any[];
@@ -122,7 +147,7 @@ export function generateContentIdeas(
 }
 
 // Advanced Content Ideas with variations
-export function generateAdvancedContentIdeas(
+export async function generateAdvancedContentIdeas(
   platform: string,
   niche: string,
   userPreferences: {
@@ -131,8 +156,8 @@ export function generateAdvancedContentIdeas(
     target_audience?: string;
   },
   count: number = 10
-): GeneratedContentIdea[] {
-  const baseIdeas = generateContentIdeas(platform, niche, count);
+): Promise<GeneratedContentIdea[]> {
+  const baseIdeas = await generateContentIdeas(platform, niche, count);
   
   // Generate variations based on user preferences
   const variations: GeneratedContentIdea[] = [];
@@ -180,11 +205,14 @@ export function generateAdvancedContentIdeas(
 }
 
 // Schedule Generator
-export function generateSchedule(
+export async function generateSchedule(
   platform: string, 
   experienceLevel: 'beginner' | 'intermediate' | 'advanced' = 'beginner'
-): GeneratedSchedule | null {
-  const platformSchedules = templates.schedules[platform as keyof typeof templates.schedules];
+): Promise<GeneratedSchedule | null> {
+  const templates = await getTemplatesData();
+  if (!templates) return null;
+
+  const platformSchedules = templates.templates?.schedules?.[platform as keyof typeof templates.templates.schedules];
   if (!platformSchedules) return null;
 
   const schedule = platformSchedules[experienceLevel as keyof typeof platformSchedules] as any;
@@ -205,12 +233,15 @@ export function generateSchedule(
 }
 
 // Hashtag Strategy Generator
-export function generateHashtagStrategy(
+export async function generateHashtagStrategy(
   platform: string, 
   niche: string,
   contentType?: string
-): HashtagStrategy | null {
-  const platformHashtags = templates.hashtags[platform as keyof typeof templates.hashtags];
+): Promise<HashtagStrategy | null> {
+  const templates = await getTemplatesData();
+  if (!templates) return null;
+
+  const platformHashtags = templates.templates?.hashtags?.[platform as keyof typeof templates.templates.hashtags];
   if (!platformHashtags) return null;
 
   const nicheHashtags = platformHashtags[niche as keyof typeof platformHashtags];
@@ -248,12 +279,15 @@ export function generateHashtagStrategy(
 }
 
 // Caption Generator
-export function generateCaption(
+export async function generateCaption(
   platform: string,
   niche: string,
   contentTitle?: string
-): string | null {
-  const platformCaptions = templates.captions[platform as keyof typeof templates.captions];
+): Promise<string | null> {
+  const templates = await getTemplatesData();
+  if (!templates) return null;
+
+  const platformCaptions = templates.templates?.captions?.[platform as keyof typeof templates.templates.captions];
   if (!platformCaptions) return null;
 
   const nicheCaptions = platformCaptions[niche as keyof typeof platformCaptions] as string[];
@@ -275,7 +309,7 @@ export function generateCaption(
 }
 
 // Complete Template Package Generator
-export function generateCompleteTemplatePackage(
+export async function generateCompleteTemplatePackage(
   platform: string,
   niche: string,
   userPreferences?: {
@@ -288,8 +322,8 @@ export function generateCompleteTemplatePackage(
     content_style?: 'educational' | 'entertainment' | 'promotional';
   }
 ) {
-  const bio = generateBio(platform, niche, userPreferences);
-  const contentIdeas = generateAdvancedContentIdeas(
+  const bio = await generateBio(platform, niche, userPreferences);
+  const contentIdeas = await generateAdvancedContentIdeas(
     platform, 
     niche, 
     {
@@ -298,9 +332,9 @@ export function generateCompleteTemplatePackage(
     },
     8
   );
-  const schedule = generateSchedule(platform, userPreferences?.experience_level || 'beginner');
-  const hashtagStrategy = generateHashtagStrategy(platform, niche);
-  const sampleCaption = generateCaption(platform, niche);
+  const schedule = await generateSchedule(platform, userPreferences?.experience_level || 'beginner');
+  const hashtagStrategy = await generateHashtagStrategy(platform, niche);
+  const sampleCaption = await generateCaption(platform, niche);
 
   return {
     bio,

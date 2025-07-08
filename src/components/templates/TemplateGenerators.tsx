@@ -84,13 +84,13 @@ export function TemplateGenerators() {
     );
   }
 
-  const handleGenerateBio = () => {
-    const bio = generateBio(selectedPlatform.id, selectedNiche.id, userPrefs);
+  const handleGenerateBio = async () => {
+    const bio = await generateBio(selectedPlatform.id, selectedNiche.id, userPrefs);
     setGeneratedBio(bio);
   };
 
-  const handleGenerateContentIdeas = () => {
-    const ideas = generateAdvancedContentIdeas(
+  const handleGenerateContentIdeas = async () => {
+    const ideas = await generateAdvancedContentIdeas(
       selectedPlatform.id,
       selectedNiche.id,
       userPrefs,
@@ -99,25 +99,25 @@ export function TemplateGenerators() {
     setGeneratedIdeas(ideas);
   };
 
-  const handleGenerateSchedule = () => {
-    const schedule = generateSchedule(selectedPlatform.id, userPrefs.experience_level);
+  const handleGenerateSchedule = async () => {
+    const schedule = await generateSchedule(selectedPlatform.id, userPrefs.experience_level);
     setGeneratedSchedule(schedule);
   };
 
-  const handleGenerateHashtags = () => {
-    const hashtags = generateHashtagStrategy(selectedPlatform.id, selectedNiche.id);
+  const handleGenerateHashtags = async () => {
+    const hashtags = await generateHashtagStrategy(selectedPlatform.id, selectedNiche.id);
     setGeneratedHashtags(hashtags);
   };
 
-  const handleGenerateCaption = () => {
-    const caption = generateCaption(selectedPlatform.id, selectedNiche.id);
+  const handleGenerateCaption = async () => {
+    const caption = await generateCaption(selectedPlatform.id, selectedNiche.id);
     setGeneratedCaption(caption);
   };
 
-  const handleGenerateAll = () => {
+  const handleGenerateAll = async () => {
     if (!isPremium) return;
     
-    const completePackage = generateCompleteTemplatePackage(
+    const completePackage = await generateCompleteTemplatePackage(
       selectedPlatform.id,
       selectedNiche.id,
       userPrefs

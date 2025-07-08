@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PaywallBanner } from '@/components/paywall/PaywallBanner';
 import { useAppStore } from '@/store/useAppStore';
-import { resources } from '@/data/resources.json';
+// Resources will be fetched from API
 import {
   Monitor,
   Mic,
@@ -73,8 +73,32 @@ export function ResourceLibrary() {
   const [activeSubcategory, setActiveSubcategory] = useState('cameras');
   const [budgetFilter, setBudgetFilter] = useState<'all' | 'budget' | 'mid' | 'premium'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [resourcesData, setResourcesData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const isPremium = subscription === 'premium';
+
+  // Fetch resources data
+  useEffect(() => {
+    const fetchResources = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/resources');
+        if (!response.ok) {
+          throw new Error('Failed to fetch resources');
+        }
+        const data = await response.json();
+        setResourcesData(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load resources');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchResources();
+  }, []);
 
   const categories = [
     { id: 'equipment', name: 'Equipment', icon: Monitor },
@@ -369,6 +393,34 @@ export function ResourceLibrary() {
     </Card>
   );
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading resources...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="text-center py-12">
+            <div className="text-red-500 mb-4">
+              <ExternalLink className="w-16 h-16 mx-auto" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Failed to Load Resources</h3>
+            <p className="text-muted-foreground mb-4">{error}</p>
+            <Button onClick={() => window.location.reload()}>Try Again</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -470,7 +522,7 @@ export function ResourceLibrary() {
           </div>
 
           {/* Equipment Grid */}
-          {Object.entries(resources.equipment[activeSubcategory as keyof typeof resources.equipment] || {}).map(([level, items]) => (
+          {Object.entries(resourcesData?.resources?.equipment?.[activeSubcategory as keyof typeof resourcesData.resources.equipment] || {}).map(([level, items]) => (
             <div key={level}>
               <h3 className="text-xl font-semibold mb-4 capitalize flex items-center space-x-2">
                 <Target className="w-5 h-5" />
@@ -507,7 +559,7 @@ export function ResourceLibrary() {
           </div>
 
           {/* Software Grid */}
-          {Object.entries(resources.software[activeSubcategory as keyof typeof resources.software] || {}).map(([tier, items]) => (
+          {Object.entries(resourcesData?.resources?.software?.[activeSubcategory as keyof typeof resourcesData.resources.software] || {}).map(([tier, items]) => (
             <div key={tier}>
               <h3 className="text-xl font-semibold mb-4 capitalize flex items-center space-x-2">
                 {tier === 'free' ? <Zap className="w-5 h-5" /> : <Crown className="w-5 h-5" />}
@@ -524,7 +576,7 @@ export function ResourceLibrary() {
 
         {/* Guides Tab */}
         <TabsContent value="guides" className="space-y-6">
-          {Object.entries(resources.guides).map(([guideType, guides]) => (
+          {Object.entries(resourcesData?.resources?.guides || {}).map(([guideType, guides]) => (
             <div key={guideType}>
               <h3 className="text-xl font-semibold mb-4 capitalize flex items-center space-x-2">
                 <BookOpen className="w-5 h-5" />
