@@ -20,10 +20,10 @@ export const ratelimiters = redis
         analytics: true,
       }),
 
-      // Authentication endpoints - 10 requests per minute
+      // Authentication endpoints - 60 requests per minute
       auth: new Ratelimit({
         redis,
-        limiter: Ratelimit.slidingWindow(10, '1 m'),
+        limiter: Ratelimit.slidingWindow(60, '1 m'),
         analytics: true,
       }),
 

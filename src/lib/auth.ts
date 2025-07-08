@@ -27,7 +27,6 @@ export const authOptions: NextAuthOptions = {
     signIn: '/auth/signin',
     error: '/auth/error',
   },
-  site: process.env.NEXTAUTH_URL || (process.env.NODE_ENV === 'production' ? 'https://creatorsaicompass.com' : 'http://localhost:3000'),
   callbacks: {
     async session({ session, user }) {
       if (session.user) {

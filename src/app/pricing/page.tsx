@@ -41,9 +41,16 @@ export default function PricingPage() {
       if (response.ok) {
         const data = await response.json();
         setUserSubscription(data.subscription);
+      } else if (response.status === 401) {
+        // User not authenticated - this is normal for pricing page
+        setUserSubscription(null);
+      } else {
+        console.error('Error fetching subscription:', response.statusText);
       }
     } catch (error) {
       console.error('Error fetching subscription:', error);
+      // Don't block the pricing page if subscription fetch fails
+      setUserSubscription(null);
     }
   };
 
