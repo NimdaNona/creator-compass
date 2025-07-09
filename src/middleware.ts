@@ -15,7 +15,9 @@ export default withAuth(
       pathname.startsWith('/pricing') ||
       pathname.startsWith('/_next') ||
       pathname.startsWith('/favicon') ||
-      pathname.startsWith('/offline')
+      pathname.startsWith('/offline') ||
+      pathname.startsWith('/manifest') ||
+      pathname.startsWith('/icon')
     ) {
       return NextResponse.next();
     }
@@ -55,7 +57,9 @@ export default withAuth(
           pathname.startsWith('/pricing') ||
           pathname.startsWith('/_next') ||
           pathname.startsWith('/favicon') ||
-          pathname.startsWith('/offline')
+          pathname.startsWith('/offline') ||
+          pathname.startsWith('/manifest') ||
+          pathname.startsWith('/icon')
         ) {
           return true;
         }

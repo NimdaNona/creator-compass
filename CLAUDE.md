@@ -13,7 +13,7 @@ CreatorCompass is a comprehensive creator growth platform built with Next.js 15,
 **Key Technologies:**
 - Next.js 15 with App Router and TypeScript
 - Prisma ORM with PostgreSQL (Neon via Vercel)
-- NextAuth.js for authentication (Google OAuth - GitHub OAuth pending configuration)
+- NextAuth.js for authentication (Google OAuth and Email/Password)
 - Zustand for state management with database persistence
 - Tailwind CSS with Shadcn/UI components
 - Stripe for payments and subscriptions
@@ -74,7 +74,7 @@ src/
 
 **Authentication System:**
 - NextAuth.js with Google OAuth (production)
-- GitHub OAuth (pending configuration)
+
 - Protected routes via middleware
 - Session-based authentication
 
@@ -111,9 +111,8 @@ DATABASE_URL="postgres://neondb_owner:..."
 GOOGLE_CLIENT_ID="920464094401-..."
 GOOGLE_CLIENT_SECRET="GOCSPX-..."
 
-# GitHub OAuth (pending configuration)
-# GITHUB_CLIENT_ID="your-production-github-client-id"
-# GITHUB_CLIENT_SECRET="your-production-github-client-secret"
+# Email Configuration (Resend SMTP)
+RESEND_API_KEY="your-resend-api-key"
 
 # Stripe (Production Live Keys)
 STRIPE_SECRET_KEY="sk_live_..."
@@ -175,7 +174,7 @@ npx prisma studio
 ### Production Authentication
 1. Users visit protected routes
 2. Middleware redirects to `/auth/signin` if not authenticated
-3. OAuth flow with Google (GitHub pending)
+3. OAuth flow with Google or Email/Password
 4. Successful authentication redirects to intended page
 5. Session persisted via NextAuth.js
 
