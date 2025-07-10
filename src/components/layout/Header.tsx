@@ -36,6 +36,7 @@ export function Header() {
   // Navigation items for authenticated users
   const authenticatedNavItems = [
     { href: '/dashboard', label: 'Dashboard' },
+    { href: '/foryou', label: 'For You' },
     { href: '/templates', label: 'Templates' },
     { href: '/platform-tools', label: 'Platform Tools' },
     { href: '/analytics', label: 'Analytics' },
