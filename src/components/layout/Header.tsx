@@ -38,6 +38,7 @@ export function Header() {
     { href: '/dashboard', label: 'Dashboard' },
     { href: '/templates', label: 'Templates' },
     { href: '/platform-tools', label: 'Platform Tools' },
+    { href: '/analytics', label: 'Analytics' },
     { href: '/resources', label: 'Resources' },
     { href: '/achievements', label: 'Achievements' },
   ];

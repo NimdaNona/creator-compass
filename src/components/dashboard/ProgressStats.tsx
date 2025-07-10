@@ -55,11 +55,11 @@ export function ProgressStats() {
     },
     {
       title: 'Days Active',
-      value: `${daysElapsed + 1}`,
-      subtitle: 'of 90 days',
+      value: `${currentDay}`,
+      subtitle: isFreeTier ? `of ${maxProgressDays} days (Free)` : 'of 90 days',
       icon: Calendar,
-      progress: ((daysElapsed + 1) / 90) * 100,
-      color: 'bg-green-500',
+      progress: isFreeTier ? (currentDay / maxProgressDays) * 100 : (currentDay / 90) * 100,
+      color: isLocked ? 'bg-red-500' : 'bg-green-500',
       trend: 'neutral'
     }
   ];
@@ -97,12 +97,53 @@ export function ProgressStats() {
   };
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-      {stats.map((stat, index) => {
-        const Icon = stat.icon;
+    <>
+      {/* Free tier warning banner */}
+      {isFreeTier && currentDay >= maxProgressDays - 5 && !isLoading && (
+        <div className="mb-4 p-4 bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <AlertCircle className="w-5 h-5 text-orange-600" />
+              <div>
+                <p className="text-sm font-semibold text-orange-800 dark:text-orange-200">
+                  {isLocked ? (
+                    <>Free tier limit reached! Your progress tracking has been locked.</>  
+                  ) : (
+                    <>Only {daysRemaining} days remaining on your free plan!</>
+                  )}
+                </p>
+                <p className="text-xs text-orange-700 dark:text-orange-300 mt-1">
+                  Free users can track progress for {maxProgressDays} days. Upgrade to continue your 90-day journey.
+                </p>
+              </div>
+            </div>
+            <Button 
+              size="sm" 
+              variant="outline"
+              className="border-orange-300 hover:bg-orange-100"
+              onClick={() => setShowPaywall(true)}
+            >
+              <Crown className="w-4 h-4 mr-2" />
+              Upgrade
+            </Button>
+          </div>
+        </div>
+      )}
+      
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {stats.map((stat, index) => {
+          const Icon = stat.icon;
+        
+        const statIsLocked = (isLocked && index === 0) || (stat.title === 'Days Active' && isLocked);
         
         return (
-          <Card key={index} className="relative overflow-hidden">
+          <Card 
+            key={index} 
+            className={`relative overflow-hidden ${
+              statIsLocked ? 'opacity-60 cursor-not-allowed' : ''
+            }`}
+            onClick={() => statIsLocked && setShowPaywall(true)}
+          >
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <div className={`p-2 rounded-lg ${stat.color} text-white`}>
@@ -116,6 +157,11 @@ export function ProgressStats() {
               </div>
             </CardHeader>
             <CardContent>
+              {statIsLocked && (
+                <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-10">
+                  <Lock className="w-8 h-8 text-muted-foreground" />
+                </div>
+              )}
               <div className="space-y-1">
                 <div className="text-2xl font-bold">{stat.value}</div>
                 <div className="text-xs text-muted-foreground">{stat.subtitle}</div>
@@ -135,5 +181,22 @@ export function ProgressStats() {
         );
       })}
     </div>
+    
+    {/* Paywall Modal */}
+    <PaywallModal
+      isOpen={showPaywall}
+      onClose={() => setShowPaywall(false)}
+      feature="Extended Progress Tracking"
+      title="Continue Your Creator Journey"
+      description="You've reached the 30-day limit for free users. Upgrade to Premium to continue tracking your progress for the full 90-day roadmap and unlock all features."
+      benefits={[
+        'Track progress for the full 90-day journey',
+        'Unlock advanced analytics and insights',
+        'Export your progress reports',
+        'Access all premium templates',
+        'Get priority support and updates'
+      ]}
+    />
+  </>
   );
 }

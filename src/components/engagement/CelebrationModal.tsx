@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Celebration } from '@/types/achievements';
+import { AchievementUpgradeTrigger } from '@/components/upgrade/SmartUpgradeTrigger';
 import {
   Crown,
   Star,
@@ -21,6 +22,7 @@ interface CelebrationModalProps {
 export function CelebrationModal({ celebration, onClose }: CelebrationModalProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [showUpgradeTrigger, setShowUpgradeTrigger] = useState(false);
 
   useEffect(() => {
     // Trigger entrance animation
@@ -48,6 +50,11 @@ export function CelebrationModal({ celebration, onClose }: CelebrationModalProps
 
   const handleClose = () => {
     setIsVisible(false);
+    // Show upgrade trigger after achievement celebration for certain achievements
+    if (celebration.type === 'achievement' && 
+        ['first-task', 'week-streak', 'content-creator'].includes(celebration.title.toLowerCase())) {
+      setShowUpgradeTrigger(true);
+    }
     setTimeout(onClose, 300);
   };
 
@@ -283,6 +290,14 @@ export function CelebrationModal({ celebration, onClose }: CelebrationModalProps
           border-radius: 50%;
         }
       `}</style>
+      
+      {/* Achievement Upgrade Trigger */}
+      {showUpgradeTrigger && celebration.type === 'achievement' && (
+        <AchievementUpgradeTrigger
+          achievementName={celebration.title}
+          onDismiss={() => setShowUpgradeTrigger(false)}
+        />
+      )}
     </div>
   );
 }

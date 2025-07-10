@@ -9,6 +9,7 @@ import { ProgressStats } from '@/components/dashboard/ProgressStats';
 import { TodaysTasks } from '@/components/dashboard/TodaysTasks';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { AchievementsBanner } from '@/components/dashboard/AchievementsBanner';
+import { UsageWidget } from '@/components/dashboard/UsageWidget';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -110,9 +111,10 @@ export default function DashboardPage() {
             <TodaysTasks />
           </div>
           
-          {/* Quick Actions Sidebar */}
-          <div>
+          {/* Quick Actions & Usage Sidebar */}
+          <div className="space-y-6">
             <QuickActions />
+            <UsageWidget />
           </div>
         </div>
 

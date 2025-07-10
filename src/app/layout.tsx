@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/Footer";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import { CelebrationSystem } from "@/components/engagement/CelebrationSystem";
+import { SmartUpgradeTrigger } from "@/components/upgrade/SmartUpgradeTrigger";
 import { PWAProvider } from "@/components/pwa/PWAProvider";
 // Error boundary handled at page level since root layout is server component
 
@@ -103,6 +104,7 @@ export default function RootLayout({
               </main>
               <Footer />
               <CelebrationSystem />
+              <SmartUpgradeTrigger />
             </PWAProvider>
           </ThemeProvider>
         </SessionProvider>

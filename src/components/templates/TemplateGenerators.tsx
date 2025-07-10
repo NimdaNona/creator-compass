@@ -2,11 +2,15 @@
 
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PaywallModal } from '@/components/paywall/PaywallModal';
+import { ExportButton } from '@/components/export/ExportButton';
+import { useUsageTracking } from '@/hooks/useUsageTracking';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { exportTemplatesToPDF } from '@/lib/export';
 import { 
   Select,
   SelectContent,
@@ -43,7 +47,8 @@ import {
   Target,
   Clock,
   TrendingUp,
-  Users
+  Users,
+  FileText
 } from 'lucide-react';
 
 export function TemplateGenerators() {
@@ -91,7 +96,10 @@ export function TemplateGenerators() {
     content_style: 'entertainment' as 'educational' | 'entertainment' | 'promotional'
   });
 
-  const isPremium = subscription === 'premium';
+  const isPremium = subscription === 'premium' || subscription === 'enterprise' || subscription === 'pro';
+  const { trackUsage, canUseFeature, getRemainingUsage } = useUsageTracking();
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [blockedFeature, setBlockedFeature] = useState<string>('');
 
   if (!selectedPlatform || !selectedNiche) {
     return (
@@ -108,10 +116,25 @@ export function TemplateGenerators() {
   }
 
   const handleGenerateBio = async () => {
+    // Check usage limits
+    if (!canUseFeature('templates')) {
+      setBlockedFeature('Bio Generator');
+      setShowPaywall(true);
+      return;
+    }
+    
     setIsGenerating(prev => ({ ...prev, bio: true }));
     setErrors(prev => ({ ...prev, bio: undefined }));
     
     try {
+      // Track usage
+      const tracked = await trackUsage('templates');
+      if (!tracked) {
+        setBlockedFeature('Bio Generator');
+        setShowPaywall(true);
+        return;
+      }
+      
       const bio = await generateBio(selectedPlatform.id, selectedNiche.id, userPrefs);
       if (!bio) {
         throw new Error('Failed to generate bio. Please try again.');
@@ -129,10 +152,25 @@ export function TemplateGenerators() {
   };
 
   const handleGenerateContentIdeas = async () => {
+    // Check usage limits
+    if (!canUseFeature('templates')) {
+      setBlockedFeature('Content Ideas');
+      setShowPaywall(true);
+      return;
+    }
+    
     setIsGenerating(prev => ({ ...prev, ideas: true }));
     setErrors(prev => ({ ...prev, ideas: undefined }));
     
     try {
+      // Track usage
+      const tracked = await trackUsage('templates');
+      if (!tracked) {
+        setBlockedFeature('Content Ideas');
+        setShowPaywall(true);
+        return;
+      }
+      
       const ideas = await generateAdvancedContentIdeas(
         selectedPlatform.id,
         selectedNiche.id,
@@ -155,10 +193,25 @@ export function TemplateGenerators() {
   };
 
   const handleGenerateSchedule = async () => {
+    // Check usage limits
+    if (!canUseFeature('templates')) {
+      setBlockedFeature('Schedule Generator');
+      setShowPaywall(true);
+      return;
+    }
+    
     setIsGenerating(prev => ({ ...prev, schedule: true }));
     setErrors(prev => ({ ...prev, schedule: undefined }));
     
     try {
+      // Track usage
+      const tracked = await trackUsage('templates');
+      if (!tracked) {
+        setBlockedFeature('Schedule Generator');
+        setShowPaywall(true);
+        return;
+      }
+      
       const schedule = await generateSchedule(selectedPlatform.id, userPrefs.experience_level);
       if (!schedule) {
         throw new Error('Failed to generate schedule. Please try again.');
@@ -176,10 +229,25 @@ export function TemplateGenerators() {
   };
 
   const handleGenerateHashtags = async () => {
+    // Check usage limits
+    if (!canUseFeature('templates')) {
+      setBlockedFeature('Hashtag Strategy');
+      setShowPaywall(true);
+      return;
+    }
+    
     setIsGenerating(prev => ({ ...prev, hashtags: true }));
     setErrors(prev => ({ ...prev, hashtags: undefined }));
     
     try {
+      // Track usage
+      const tracked = await trackUsage('templates');
+      if (!tracked) {
+        setBlockedFeature('Hashtag Strategy');
+        setShowPaywall(true);
+        return;
+      }
+      
       const hashtags = await generateHashtagStrategy(selectedPlatform.id, selectedNiche.id);
       if (!hashtags) {
         throw new Error('Failed to generate hashtag strategy. Please try again.');
@@ -197,10 +265,25 @@ export function TemplateGenerators() {
   };
 
   const handleGenerateCaption = async () => {
+    // Check usage limits
+    if (!canUseFeature('templates')) {
+      setBlockedFeature('Caption Generator');
+      setShowPaywall(true);
+      return;
+    }
+    
     setIsGenerating(prev => ({ ...prev, caption: true }));
     setErrors(prev => ({ ...prev, caption: undefined }));
     
     try {
+      // Track usage
+      const tracked = await trackUsage('templates');
+      if (!tracked) {
+        setBlockedFeature('Caption Generator');
+        setShowPaywall(true);
+        return;
+      }
+      
       const caption = await generateCaption(selectedPlatform.id, selectedNiche.id);
       if (!caption) {
         throw new Error('Failed to generate caption. Please try again.');
@@ -220,6 +303,13 @@ export function TemplateGenerators() {
   const handleGenerateAll = async () => {
     if (!isPremium) return;
     
+    // Check usage limits for premium users (they get more but not unlimited)
+    if (!canUseFeature('templates')) {
+      setBlockedFeature('Complete Template Package');
+      setShowPaywall(true);
+      return;
+    }
+    
     setIsGenerating({
       bio: true,
       ideas: true,
@@ -230,6 +320,16 @@ export function TemplateGenerators() {
     setErrors({});
     
     try {
+      // Track usage (counts as 5 templates)
+      for (let i = 0; i < 5; i++) {
+        const tracked = await trackUsage('templates');
+        if (!tracked) {
+          setBlockedFeature('Complete Template Package');
+          setShowPaywall(true);
+          return;
+        }
+      }
+      
       const completePackage = await generateCompleteTemplatePackage(
         selectedPlatform.id,
         selectedNiche.id,
@@ -297,12 +397,70 @@ export function TemplateGenerators() {
             </p>
           </div>
           
-          {isPremium && (
-            <Button onClick={handleGenerateAll} className="bg-gradient-to-r from-purple-500 to-pink-500">
-              <Sparkles className="w-4 h-4 mr-2" />
-              Generate All
-            </Button>
-          )}
+          <div className="flex items-center space-x-3">
+            {(generatedBio || generatedIdeas.length > 0 || generatedSchedule || generatedHashtags || generatedCaption) && (
+              <ExportButton
+                onExport={async (format) => {
+                  if (format === 'pdf') {
+                    const templates = [];
+                    
+                    if (generatedBio) {
+                      templates.push({
+                        title: 'Bio',
+                        content: generatedBio.content
+                      });
+                    }
+                    
+                    if (generatedIdeas.length > 0) {
+                      generatedIdeas.forEach((idea, index) => {
+                        templates.push({
+                          title: `Content Idea ${index + 1}: ${idea.title}`,
+                          content: `${idea.description}\n\nDifficulty: ${idea.difficulty}\nTime: ${idea.estimatedTime}min\nVirality: ${idea.viralityPotential}\n\nTips:\n${idea.tips.join('\n')}`
+                        });
+                      });
+                    }
+                    
+                    if (generatedSchedule) {
+                      templates.push({
+                        title: 'Posting Schedule',
+                        content: `Frequency: ${generatedSchedule.frequency}\nOptimal Times: ${generatedSchedule.optimalTimes.join(', ')}\n\nContent Calendar:\n${Object.entries(generatedSchedule.contentTypes).map(([day, content]) => `${day}: ${content}`).join('\n')}`
+                      });
+                    }
+                    
+                    if (generatedHashtags) {
+                      templates.push({
+                        title: 'Hashtag Strategy',
+                        content: `Strategy: ${generatedHashtags.strategy}\n\nTrending: ${generatedHashtags.trending.map(tag => `#${tag}`).join(' ')}\nNiche: ${generatedHashtags.niche_specific.map(tag => `#${tag}`).join(' ')}\nBroad: ${generatedHashtags.broad.map(tag => `#${tag}`).join(' ')}\n\nOptimal Count: ${generatedHashtags.optimal_count}`
+                      });
+                    }
+                    
+                    if (generatedCaption) {
+                      templates.push({
+                        title: 'Sample Caption',
+                        content: generatedCaption
+                      });
+                    }
+                    
+                    await exportTemplatesToPDF(templates, {
+                      title: `${selectedPlatform.name} ${selectedNiche.name} Templates`
+                    });
+                  }
+                }}
+                options={[
+                  { format: 'pdf', label: 'Export Templates', icon: FileText }
+                ]}
+                variant="outline"
+                feature="templates-export"
+              />
+            )}
+            
+            {isPremium && (
+              <Button onClick={handleGenerateAll} className="bg-gradient-to-r from-purple-500 to-pink-500">
+                <Sparkles className="w-4 h-4 mr-2" />
+                Generate All
+              </Button>
+            )}
+          </div>
         </div>
         
         {/* User Preferences */}
@@ -776,6 +934,22 @@ export function TemplateGenerators() {
           </Card>
         </TabsContent>
       </Tabs>
+      
+      {/* Paywall Modal */}
+      <PaywallModal
+        isOpen={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        feature="Template Generation"
+        title={`Unlock ${blockedFeature}`}
+        description={`You've reached your template generation limit. Upgrade to continue creating ${blockedFeature.toLowerCase()} and access unlimited templates.`}
+        benefits={[
+          'Unlimited template generation',
+          'Advanced customization options',
+          'Priority access to new templates',
+          'Export templates in multiple formats',
+          'Save and organize your templates'
+        ]}
+      />
     </div>
   );
 }

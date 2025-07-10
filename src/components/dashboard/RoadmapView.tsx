@@ -6,8 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ExportButton } from '@/components/export/ExportButton';
 import { useAppStore } from '@/store/useAppStore';
 import { getRoadmap, calculatePhaseProgress, calculateWeekProgress } from '@/lib/data';
+import { exportRoadmapToPDF } from '@/lib/export';
 import { 
   CheckCircle, 
   Clock, 
@@ -19,7 +21,8 @@ import {
   ArrowRight,
   Zap,
   Users,
-  TrendingUp
+  TrendingUp,
+  FileText
 } from 'lucide-react';
 
 export function RoadmapView() {
@@ -82,10 +85,32 @@ export function RoadmapView() {
       {/* Roadmap Header */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Target className="w-5 h-5" />
-            <span>90-Day {selectedPlatform.displayName} {selectedNiche.name} Roadmap</span>
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center space-x-2">
+              <Target className="w-5 h-5" />
+              <span>90-Day {selectedPlatform.displayName} {selectedNiche.name} Roadmap</span>
+            </CardTitle>
+            <ExportButton
+              onExport={async (format) => {
+                if (format === 'pdf') {
+                  await exportRoadmapToPDF(
+                    roadmap,
+                    {
+                      name: progress.userName || 'Creator',
+                      platform: selectedPlatform.displayName,
+                      niche: selectedNiche.name,
+                      goal: progress.goal || 'Grow my audience'
+                    }
+                  );
+                }
+              }}
+              options={[
+                { format: 'pdf', label: 'Export as PDF', icon: FileText }
+              ]}
+              size="sm"
+              feature="roadmap-export"
+            />
+          </div>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground mb-4">

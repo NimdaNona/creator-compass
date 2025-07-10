@@ -26,7 +26,19 @@ export async function POST(request: NextRequest) {
 
     const event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
 
-    switch (event.type) {
+    // Check if we've already processed this event (idempotency)
+    const existingEvent = await prisma.processedWebhookEvent.findUnique({
+      where: { eventId: event.id },
+    });
+
+    if (existingEvent) {
+      console.log(`Event ${event.id} already processed`);
+      return NextResponse.json({ received: true });
+    }
+
+    // Process the event
+    try {
+      switch (event.type) {
       case 'checkout.session.completed':
         await handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session);
         break;
@@ -53,11 +65,36 @@ export async function POST(request: NextRequest) {
       
       default:
         console.log(`Unhandled event type: ${event.type}`);
+      }
+
+      // Mark event as processed
+      await prisma.processedWebhookEvent.create({
+        data: {
+          eventId: event.id,
+          type: event.type,
+          metadata: JSON.stringify({
+            timestamp: new Date().toISOString(),
+            customerId: (event.data.object as any).customer || null,
+          }),
+        },
+      });
+    } catch (processingError) {
+      console.error(`Error processing ${event.type}:`, processingError);
+      // Don't throw - return success to avoid retries if the event was partially processed
     }
 
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error('Webhook error:', error);
+    
+    // Check if it's a signature verification error
+    if (error instanceof Stripe.errors.StripeSignatureVerificationError) {
+      return NextResponse.json(
+        { error: 'Webhook signature verification failed' },
+        { status: 400 }
+      );
+    }
+    
     return NextResponse.json(
       { error: 'Webhook handler failed' },
       { status: 500 }
@@ -66,6 +103,13 @@ export async function POST(request: NextRequest) {
 }
 
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
+  console.log('Processing checkout.session.completed:', {
+    sessionId: session.id,
+    customerId: session.customer,
+    subscriptionId: session.subscription,
+    metadata: session.metadata,
+  });
+
   const userId = session.metadata?.userId;
   if (!userId) {
     console.error('No userId in checkout session metadata');

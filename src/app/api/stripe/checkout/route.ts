@@ -18,10 +18,21 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { priceId, isYearly } = body;
+    const { planId, isYearly } = body;
 
+    if (!planId) {
+      return NextResponse.json({ error: 'Plan ID is required' }, { status: 400 });
+    }
+
+    // Get the correct price ID based on plan and billing period
+    const plan = SUBSCRIPTION_PLANS[planId as keyof typeof SUBSCRIPTION_PLANS];
+    if (!plan) {
+      return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
+    }
+
+    const priceId = isYearly ? plan.stripePriceYearlyId : plan.stripePriceId;
     if (!priceId) {
-      return NextResponse.json({ error: 'Price ID is required' }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid price configuration' }, { status: 400 });
     }
 
     // Find the user in the database

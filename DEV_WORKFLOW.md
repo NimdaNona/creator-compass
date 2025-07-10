@@ -310,4 +310,65 @@ npm run lint
 
 ---
 
+## Phase 2 Specific Workflows
+
+### Creating Stripe Prices
+```bash
+# Use the script for creating prices
+node scripts/create-yearly-prices.js
+
+# Or use Stripe CLI directly
+curl -X POST https://api.stripe.com/v1/prices \
+  -u "$STRIPE_SECRET_KEY:" \
+  -d "product=prod_id" \
+  -d "unit_amount=9900" \
+  -d "currency=usd" \
+  -d "recurring[interval]=year"
+```
+
+### Testing Subscription Flows
+1. **Local Testing**:
+   - Use Stripe test mode (sk_test_*)
+   - Test cards: 4242424242424242
+   - Webhook testing: stripe listen --forward-to localhost:3000/api/stripe/webhook
+
+2. **Development Testing**:
+   - Use live mode with small amounts
+   - Test on dev.creatorsaicompass.com
+   - Monitor webhook logs in Stripe dashboard
+
+### Database Migrations for Phase 2
+```bash
+# Add new fields to schema
+# Edit prisma/schema.prisma
+
+# Push changes to database
+npx prisma db push
+
+# Generate new client
+npx prisma generate
+```
+
+### Paywall Implementation Pattern
+```typescript
+// Consistent pattern for all premium features
+import { SubscriptionGate } from '@/components/subscription/SubscriptionGate';
+
+<SubscriptionGate feature="analytics" fallback={<PaywallBanner />}>
+  <AnalyticsDashboard />
+</SubscriptionGate>
+```
+
+### Environment Variable Updates
+```bash
+# Add to Vercel
+echo "value" | vercel env add KEY_NAME production
+echo "value" | vercel env add KEY_NAME preview
+
+# Pull latest
+vercel env pull .env.local
+```
+
+---
+
 This document serves as my primary reference for development workflow and should be consulted when starting any new task or troubleshooting issues.

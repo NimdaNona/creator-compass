@@ -105,7 +105,7 @@ export default function PricingPage() {
       popular: true,
       color: 'border-purple-500',
       priceId: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || 'price_1Riea4G48MbDPfJlHADqH4iP',
-      yearlyPriceId: process.env.NEXT_PUBLIC_STRIPE_PRO_YEARLY_PRICE_ID || 'price_1Riea4G48MbDPfJlHADqH4iP',
+      yearlyPriceId: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID_YEARLY || 'price_1RjNhfG48MbDPfJlZskFkffl',
     },
     {
       id: 'enterprise',
@@ -130,8 +130,8 @@ export default function PricingPage() {
       cta: 'Contact Sales',
       popular: false,
       color: 'border-yellow-500',
-      priceId: process.env.NEXT_PUBLIC_STRIPE_ENTERPRISE_PRICE_ID || 'price_1RieesG48MbDPfJlKCv1X4hS',
-      yearlyPriceId: process.env.NEXT_PUBLIC_STRIPE_ENTERPRISE_YEARLY_PRICE_ID || 'price_1RieesG48MbDPfJlKCv1X4hS',
+      priceId: process.env.NEXT_PUBLIC_STRIPE_STUDIO_PRICE_ID || 'price_1RieesG48MbDPfJlKCv1X4hS',
+      yearlyPriceId: process.env.NEXT_PUBLIC_STRIPE_STUDIO_PRICE_ID_YEARLY || 'price_1RjNhfG48MbDPfJl5OSDitxx',
     }
   ];
 
@@ -180,7 +180,7 @@ export default function PricingPage() {
       const response = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priceId, isYearly }),
+        body: JSON.stringify({ planId, isYearly }),
       });
 
       if (!response.ok) {

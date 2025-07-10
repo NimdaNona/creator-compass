@@ -63,7 +63,7 @@ export const SUBSCRIPTION_PLANS = {
     limitations: [],
     stripeProductId: 'prod_SdwSdTSNDK29DJ',
     stripePriceId: 'price_1Riea4G48MbDPfJlHADqH4iP',
-    stripePriceYearlyId: 'price_1Riea4G48MbDPfJlHADqH4iP', // Same for now, you can create yearly pricing later
+    stripePriceYearlyId: 'price_1RjNhfG48MbDPfJlZskFkffl', // $99/year (saves 17%)
   },
   enterprise: {
     name: 'Creator Studio',
@@ -85,7 +85,7 @@ export const SUBSCRIPTION_PLANS = {
     limitations: [],
     stripeProductId: 'prod_SdwXKELOkZJ1kV',
     stripePriceId: 'price_1RieesG48MbDPfJlKCv1X4hS',
-    stripePriceYearlyId: 'price_1RieesG48MbDPfJlKCv1X4hS', // Same for now, you can create yearly pricing later
+    stripePriceYearlyId: 'price_1RjNhfG48MbDPfJl5OSDitxx', // $299/year (saves 17%)
   },
 } as const;
 

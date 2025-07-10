@@ -1,13 +1,15 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/store/useAppStore';
 import { getAllPlatforms, getPlatformById } from '@/lib/data';
 import type { Platform } from '@/types';
-import { PlayCircle, Zap, Users, CheckCircle } from 'lucide-react';
+import { PlayCircle, Zap, Users, CheckCircle, Lock, AlertCircle } from 'lucide-react';
+import { usePlatformAccess } from '@/hooks/useSubscription';
+import { PaywallModal } from '@/components/paywall/PaywallModal';
 
 interface PlatformSelectionProps {
   onNext: () => void;
@@ -23,6 +25,14 @@ export function PlatformSelection({ onNext }: PlatformSelectionProps) {
   const searchParams = useSearchParams();
   const { selectedPlatform, setSelectedPlatform } = useAppStore();
   const platforms = getAllPlatforms();
+  const { canAccessPlatform, maxPlatforms, subscription, isLoading } = usePlatformAccess();
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [attemptedPlatform, setAttemptedPlatform] = useState<Platform | null>(null);
+  
+  // Count current platforms (in real app, this would come from the database)
+  const currentPlatformCount = selectedPlatform ? 1 : 0;
+  const canSelectMore = canAccessPlatform(currentPlatformCount);
+  const isFreeTier = subscription?.plan === 'free' || !subscription;
 
   // Auto-select platform if specified in URL
   useEffect(() => {
@@ -38,6 +48,13 @@ export function PlatformSelection({ onNext }: PlatformSelectionProps) {
   }, [searchParams, setSelectedPlatform, onNext]);
 
   const handlePlatformSelect = (platform: Platform) => {
+    // If switching platforms and on free tier, check if allowed
+    if (selectedPlatform && selectedPlatform.id !== platform.id && isFreeTier) {
+      setAttemptedPlatform(platform);
+      setShowPaywall(true);
+      return;
+    }
+    
     setSelectedPlatform(platform);
     // Auto-advance after selection
     setTimeout(onNext, 300);
@@ -45,6 +62,23 @@ export function PlatformSelection({ onNext }: PlatformSelectionProps) {
 
   return (
     <div className="max-w-6xl mx-auto">
+      {/* Free tier limit indicator */}
+      {isFreeTier && !isLoading && (
+        <div className="mb-8 p-4 bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+          <div className="flex items-center justify-center space-x-2">
+            <AlertCircle className="w-5 h-5 text-orange-600" />
+            <p className="text-sm text-orange-800 dark:text-orange-200">
+              <span className="font-semibold">Free Plan Limitation:</span> You can only select {maxPlatforms} platform.
+              {selectedPlatform && (
+                <span className="ml-1">
+                  To switch platforms, <a href="/pricing" className="underline font-semibold">upgrade to Premium</a>.
+                </span>
+              )}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Enhanced Header with Gen Z Appeal */}
       <div className="text-center mb-12 space-y-6">
         <div className="relative">
@@ -98,12 +132,16 @@ export function PlatformSelection({ onNext }: PlatformSelectionProps) {
           
           const style = platformStyles[platform.id as keyof typeof platformStyles];
           
+          const isLocked = selectedPlatform && selectedPlatform.id !== platform.id && isFreeTier;
+          
           return (
             <Card 
               key={platform.id}
               className={`modern-card gen-z-card cursor-pointer transition-all duration-500 hover:scale-105 ${style.glow} ${
                 isSelected 
                   ? 'ring-2 ring-purple-500 shadow-2xl neon-glow-purple scale-105' 
+                  : isLocked
+                  ? 'opacity-75 hover:opacity-100'
                   : 'hover:shadow-2xl'
               }`}
               onClick={() => handlePlatformSelect(platform)}
@@ -125,6 +163,11 @@ export function PlatformSelection({ onNext }: PlatformSelectionProps) {
                     <div className="relative">
                       <CheckCircle className="w-6 h-6 text-green-500 animate-bounce" />
                       <div className="absolute inset-0 w-6 h-6 bg-green-500/30 rounded-full animate-ping" />
+                    </div>
+                  )}
+                  {isLocked && (
+                    <div className="relative">
+                      <Lock className="w-5 h-5 text-orange-500" />
                     </div>
                   )}
                 </div>
@@ -245,6 +288,22 @@ export function PlatformSelection({ onNext }: PlatformSelectionProps) {
           </div>
         </div>
       </div>
+      
+      {/* Paywall Modal */}
+      <PaywallModal
+        isOpen={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        feature="Multiple Platforms"
+        title="Unlock Multiple Platforms"
+        description="Free users can only select one platform. Upgrade to Premium to switch between platforms and access cross-platform strategies."
+        benefits={[
+          'Switch between YouTube, TikTok, and Twitch anytime',
+          'Access cross-platform content strategies',
+          'Track progress across all platforms',
+          'Get platform-specific analytics',
+          'Export multi-platform reports'
+        ]}
+      />
     </div>
   );
 }
