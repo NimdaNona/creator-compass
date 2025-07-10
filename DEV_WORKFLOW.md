@@ -80,11 +80,12 @@ vercel env pull .env.local
 - **Preview Pattern**: creator-compass-*.vercel.app
 
 ### Database (Neon)
-- **Provider**: Neon (Serverless Postgres)
-- **Access**: Via DATABASE_URL in environment
+- **Provider**: Neon (Serverless Postgres) via Vercel
+- **Access**: Via POSTGRES_PRISMA_URL (pooled) and POSTGRES_URL_NON_POOLING (direct)
 - **ORM**: Prisma
 - **Migrations**: `npx prisma db push` (for now)
 - **Client Generation**: `npx prisma generate`
+- **Important**: Vercel Postgres uses specific env vars for Prisma integration
 
 ### Key Services
 1. **Authentication**: NextAuth.js
@@ -242,7 +243,10 @@ npm run lint
 
 ### Common Issues
 1. **Build failures**: Check type errors and missing dependencies
-2. **Database connection**: Verify DATABASE_URL is set
+2. **Database connection**: 
+   - Vercel Postgres uses POSTGRES_PRISMA_URL not DATABASE_URL
+   - Ensure Prisma schema has both url and directUrl configured
+   - Error "column does not exist" means schema not synced
 3. **Auth not working**: Check NEXTAUTH_URL and NEXTAUTH_SECRET
 4. **Emails not sending**: Verify RESEND_API_KEY
 5. **Payments failing**: Check Stripe keys and webhook setup
