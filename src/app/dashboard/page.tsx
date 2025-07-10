@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/useAppStore';
 import { DashboardOverview } from '@/components/dashboard/DashboardOverview';
 import { ResponsiveRoadmapView } from '@/components/dashboard/ResponsiveRoadmapView';
+import EnhancedRoadmapView from '@/components/roadmap/EnhancedRoadmapView';
 import { ProgressStats } from '@/components/dashboard/ProgressStats';
 import { TodaysTasks } from '@/components/dashboard/TodaysTasks';
 import { QuickActions } from '@/components/dashboard/QuickActions';
@@ -140,7 +141,7 @@ export default function DashboardPage() {
           </TabsContent>
 
           <TabsContent value="roadmap" className="space-y-6">
-            <ResponsiveRoadmapView />
+            <EnhancedRoadmapView />
           </TabsContent>
 
           <TabsContent value="calendar" className="space-y-6">
