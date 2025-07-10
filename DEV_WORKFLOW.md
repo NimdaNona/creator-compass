@@ -22,6 +22,47 @@
   - Testing deployed features
   - Granting permissions when needed
 
+## Dual-Environment Setup
+
+### Overview
+We maintain two separate environments for development and production:
+
+1. **Production Environment**
+   - URL: https://creatorsaicompass.com
+   - Branch: main
+   - Vercel Environment: Production
+   - Purpose: Live application for end users
+
+2. **Development Environment**
+   - URL: https://dev.creatorsaicompass.com
+   - Branch: develop
+   - Vercel Environment: Preview
+   - Purpose: Testing new features before production
+
+### Environment-Specific Configurations
+
+#### Google OAuth
+Both environments configured in Google Cloud Console:
+- Production redirect: https://creatorsaicompass.com/api/auth/callback/google
+- Development redirect: https://dev.creatorsaicompass.com/api/auth/callback/google
+
+#### Stripe Webhooks
+Separate webhook endpoints for each environment:
+- Production: https://creatorsaicompass.com/api/stripe/webhook
+- Development: https://dev.creatorsaicompass.com/api/stripe/webhook
+- Code automatically uses correct webhook secret based on NODE_ENV
+
+#### Email Configuration
+Resend configured to work with both domains:
+- Emails sent from: noreply@creatorsaicompass.com
+- Links in emails use appropriate domain based on NEXTAUTH_URL
+
+### Testing Workflow
+1. Develop and test locally with `npm run dev`
+2. Push to develop branch for dev environment testing
+3. Test thoroughly at dev.creatorsaicompass.com
+4. When ready, merge develop to main for production deployment
+
 ## Git & Deployment Workflow
 
 ### Branch Strategy
@@ -76,7 +117,8 @@ vercel env pull .env.local
 ### Vercel Configuration
 - **Project**: creator-compass
 - **Team**: sterling-cliftons-projects
-- **Production Domain**: creatorsaicompass.com
+- **Production Domain**: creatorsaicompass.com (main branch)
+- **Development Domain**: dev.creatorsaicompass.com (develop branch)
 - **Preview Pattern**: creator-compass-*.vercel.app
 
 ### Database (Neon)
@@ -236,8 +278,14 @@ npm run lint
 
 ### Environment Variables
 - Development: `.env.local`
-- Preview: Pulled from Vercel (development env)
+- Preview: Pulled from Vercel (preview env)
+  - NEXTAUTH_URL: https://dev.creatorsaicompass.com
+  - NODE_ENV: development
+  - STRIPE_WEBHOOK_SECRET_DEV: For dev webhook endpoint
 - Production: Pulled from Vercel (production env)
+  - NEXTAUTH_URL: https://creatorsaicompass.com
+  - NODE_ENV: production
+  - STRIPE_WEBHOOK_SECRET: For production webhook
 
 ## Troubleshooting
 
@@ -247,7 +295,10 @@ npm run lint
    - Vercel Postgres uses POSTGRES_PRISMA_URL not DATABASE_URL
    - Ensure Prisma schema has both url and directUrl configured
    - Error "column does not exist" means schema not synced
-3. **Auth not working**: Check NEXTAUTH_URL and NEXTAUTH_SECRET
+3. **Auth not working**: 
+   - Check NEXTAUTH_URL (dev.creatorsaicompass.com for preview, creatorsaicompass.com for production)
+   - Verify NEXTAUTH_SECRET is set
+   - Ensure Google OAuth has correct redirect URIs for both environments
 4. **Emails not sending**: Verify RESEND_API_KEY
 5. **Payments failing**: Check Stripe keys and webhook setup
 

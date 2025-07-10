@@ -9,6 +9,13 @@ CreatorCompass is a comprehensive creator growth platform built with Next.js 15,
 - **Hosting**: Vercel (integrated with GitHub)
 - **Repository**: GitHub with automatic deployments
 - **Domain**: creatorsaicompass.com
+- **Branch**: main
+
+**Development Deployment:**
+- **Live Site**: https://dev.creatorsaicompass.com
+- **Environment**: Vercel Preview
+- **Branch**: develop
+- **Auto-deploys**: On push to develop branch
 
 **Key Technologies:**
 - Next.js 15 with App Router and TypeScript
