@@ -5,7 +5,10 @@ import { prisma } from '@/lib/db';
 import { ratelimiters, rateLimit } from '@/lib/ratelimit';
 import Stripe from 'stripe';
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+// Use different webhook secrets for different environments
+const webhookSecret = process.env.NODE_ENV === 'production' 
+  ? process.env.STRIPE_WEBHOOK_SECRET!
+  : process.env.STRIPE_WEBHOOK_SECRET_DEV || process.env.STRIPE_WEBHOOK_SECRET!;
 
 export async function POST(request: NextRequest) {
   // Apply rate limiting for webhook endpoints (high volume)

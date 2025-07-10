@@ -2,7 +2,7 @@ import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const BASE_URL = process.env.NEXTAUTH_URL || 'https://creatorsaicompass.com';
+const BASE_URL = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://creatorsaicompass.com';
 const FROM_EMAIL = 'noreply@creatorsaicompass.com';
 const APP_NAME = 'Creators AI Compass';
 
