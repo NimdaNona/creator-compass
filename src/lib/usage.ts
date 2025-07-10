@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/db';
 import { startOfMonth, endOfMonth } from 'date-fns';
 
-export type UsageFeature = 'templates' | 'platforms' | 'exports' | 'analytics';
+export type UsageFeature = 'templates' | 'platforms' | 'exports' | 'analytics' | 'crossPlatform';
 
 interface UsageLimit {
   [key: string]: number;
@@ -12,6 +12,7 @@ const FREE_LIMITS: UsageLimit = {
   platforms: 1,
   exports: 3,
   analytics: 0,  // Premium only
+  crossPlatform: 0, // Premium only
 };
 
 const PRO_LIMITS: UsageLimit = {
@@ -19,6 +20,7 @@ const PRO_LIMITS: UsageLimit = {
   platforms: 3,
   exports: -1,  // Unlimited
   analytics: -1, // Unlimited
+  crossPlatform: 10, // 10 adaptations per month
 };
 
 const STUDIO_LIMITS: UsageLimit = {
@@ -26,6 +28,7 @@ const STUDIO_LIMITS: UsageLimit = {
   platforms: -1,  // Unlimited
   exports: -1,   // Unlimited
   analytics: -1,  // Unlimited
+  crossPlatform: -1, // Unlimited
 };
 
 export async function trackUsage(
@@ -143,7 +146,7 @@ export async function getUsageStats(userId: string) {
 
   // Build usage stats
   const usage: any = {};
-  const features: UsageFeature[] = ['templates', 'platforms', 'exports', 'analytics'];
+  const features: UsageFeature[] = ['templates', 'platforms', 'exports', 'analytics', 'crossPlatform'];
 
   for (const feature of features) {
     const record = usageRecords.find(r => r.feature === feature);

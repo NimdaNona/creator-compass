@@ -1,5 +1,5 @@
 import { Achievement, Streak, UserStats, Celebration, LevelSystem } from '@/types/achievements';
-import { achievements, levels } from '@/data/achievements.json';
+import achievementsData from '@/data/achievements.json';
 
 export class EngagementSystem {
   private userStats: UserStats;
@@ -8,8 +8,8 @@ export class EngagementSystem {
 
   constructor(userStats: UserStats) {
     this.userStats = userStats;
-    this.achievements = achievements as Achievement[];
-    this.levels = levels as LevelSystem[];
+    this.achievements = achievementsData.achievements as Achievement[];
+    this.levels = achievementsData.levels as LevelSystem[];
   }
 
   // Calculate current level based on points
