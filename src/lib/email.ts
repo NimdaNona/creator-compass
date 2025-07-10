@@ -3,7 +3,10 @@ import { Resend } from 'resend';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const BASE_URL = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://creatorsaicompass.com';
-const FROM_EMAIL = 'noreply@creatorsaicompass.com';
+// Use environment-specific FROM_EMAIL
+const FROM_EMAIL = process.env.NODE_ENV === 'production' 
+  ? 'noreply@creatorsaicompass.com'
+  : 'noreply@dev.creatorsaicompass.com';
 const APP_NAME = 'Creators AI Compass';
 
 export interface EmailOptions {

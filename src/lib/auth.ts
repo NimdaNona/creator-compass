@@ -62,7 +62,9 @@ export const authOptions: NextAuthOptions = {
           pass: process.env.RESEND_API_KEY,
         },
       },
-      from: 'Creators AI Compass <noreply@creatorsaicompass.com>',
+      from: process.env.NODE_ENV === 'production' 
+        ? 'Creators AI Compass <noreply@creatorsaicompass.com>'
+        : 'Creators AI Compass <noreply@dev.creatorsaicompass.com>',
       sendVerificationRequest: async ({ identifier: email, url }) => {
         // Extract token from URL
         const urlObj = new URL(url);
