@@ -384,7 +384,7 @@ export default function PricingPage() {
                 answer: "We offer a 30-day money-back guarantee. If you're not satisfied with your purchase, contact our support team for a full refund."
               },
               {
-                question: "Can I use CreatorCompass for multiple platforms?",
+                question: "Can I use Creators AI Compass for multiple platforms?",
                 answer: "With the Pro Creator plan, you get access to roadmaps for all platforms (YouTube, TikTok, Twitch). The free plan is limited to one platform."
               }
             ].map((faq, index) => (

@@ -15,12 +15,12 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "CreatorCompass - Your Personalized Creator Roadmap",
+  title: "Creators AI Compass - Your Personalized Creator Roadmap",
   description: "Build your audience and grow your brand with personalized 90-day roadmaps for YouTube, TikTok, and Twitch. Get proven strategies, templates, and analytics.",
   keywords: ["content creation", "youtube growth", "tiktok strategy", "twitch streaming", "creator tools", "social media"],
-  authors: [{ name: "CreatorCompass Team" }],
-  creator: "CreatorCompass",
-  publisher: "CreatorCompass",
+  authors: [{ name: "Creators AI Compass Team" }],
+  creator: "Creators AI Compass",
+  publisher: "Creators AI Compass",
   formatDetection: {
     email: false,
     address: false,
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "CreatorCompass",
+    title: "Creators AI Compass",
     startupImage: [
       {
         url: "/icon-512x512.png",
@@ -54,23 +54,23 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: "https://creatorsaicompass.com",
-    title: "CreatorCompass - Your Personalized Creator Roadmap",
+    title: "Creators AI Compass - Your Personalized Creator Roadmap",
     description: "Build your audience and grow your brand with personalized 90-day roadmaps for YouTube, TikTok, and Twitch.",
-    siteName: "CreatorCompass",
+    siteName: "Creators AI Compass",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "CreatorCompass - Your Personalized Creator Roadmap",
+        alt: "Creators AI Compass - Your Personalized Creator Roadmap",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "CreatorCompass - Your Personalized Creator Roadmap",
+    title: "Creators AI Compass - Your Personalized Creator Roadmap",
     description: "Build your audience and grow your brand with personalized 90-day roadmaps for YouTube, TikTok, and Twitch.",
-    creator: "@creatorcompass",
+    creator: "@creatorsaicompass",
     images: ["/og-image.png"],
   },
   robots: {

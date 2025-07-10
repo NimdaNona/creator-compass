@@ -63,7 +63,7 @@ export default function ForgotPasswordPage() {
           </h1>
           
           <p className="text-lg text-muted-foreground max-w-sm mx-auto">
-            No worries! We'll send you reset instructions.
+            No worries! We&apos;ll send you reset instructions.
           </p>
         </div>
 
@@ -98,7 +98,7 @@ export default function ForgotPasswordPage() {
                 </div>
                 <h3 className="text-xl font-semibold mb-2">Check your email!</h3>
                 <p className="text-muted-foreground mb-6">
-                  If an account exists with <strong>{email}</strong>, you'll receive password reset instructions.
+                  If an account exists with <strong>{email}</strong>, you&apos;ll receive password reset instructions.
                 </p>
                 <div className="space-y-3">
                   <Link href="/auth/signin">
@@ -107,7 +107,7 @@ export default function ForgotPasswordPage() {
                     </Button>
                   </Link>
                   <p className="text-sm text-muted-foreground">
-                    Didn't receive an email? Check your spam folder or{' '}
+                    Didn&apos;t receive an email? Check your spam folder or{' '}
                     <button
                       onClick={() => {
                         setIsSuccess(false);

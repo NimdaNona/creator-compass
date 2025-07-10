@@ -125,7 +125,7 @@ export default function AuthErrorPage() {
               <p className="text-sm text-muted-foreground">
                 Need help? Contact our support team at{' '}
                 <span className="font-medium text-blue-600 hover:underline cursor-pointer">
-                  support@creatorcompass.app
+                  support@creatorsaicompass.com
                 </span>
               </p>
             </div>

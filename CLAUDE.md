@@ -73,10 +73,15 @@ src/
 ### Key Components
 
 **Authentication System:**
-- NextAuth.js with Google OAuth (production)
-
+- NextAuth.js with multiple providers:
+  - Email/Password authentication with bcrypt
+  - Google OAuth
+  - Email magic links
+- Email verification system
+- Password reset functionality
+- Resend SMTP for email delivery
 - Protected routes via middleware
-- Session-based authentication
+- JWT-based session management
 
 **Database Layer:**
 - Prisma ORM with PostgreSQL (Neon)
@@ -174,9 +179,14 @@ npx prisma studio
 ### Production Authentication
 1. Users visit protected routes
 2. Middleware redirects to `/auth/signin` if not authenticated
-3. OAuth flow with Google or Email/Password
-4. Successful authentication redirects to intended page
-5. Session persisted via NextAuth.js
+3. Authentication options:
+   - Email/Password with email verification
+   - Google OAuth
+   - Magic link authentication
+4. Email verification required before accessing premium features
+5. Password reset functionality available
+6. Successful authentication redirects to intended page
+7. Session persisted via NextAuth.js with JWT strategy
 
 ### Route Protection
 - Public routes: `/`, `/pricing`, `/auth/*`
@@ -257,6 +267,12 @@ git push origin main
 - `src/components/layout/Header.tsx` - Navigation with auth state
 - `src/app/pricing/page.tsx` - Subscription management
 - `src/app/auth/signin/page.tsx` - Authentication page
+- `src/app/auth/signup/page.tsx` - User registration page
+- `src/app/auth/forgot-password/page.tsx` - Password reset request
+- `src/app/auth/reset-password/page.tsx` - Password reset form
+- `src/app/auth/verify-email/page.tsx` - Email verification
+- `src/lib/password.ts` - Password hashing utilities
+- `src/lib/email.ts` - Email sending functionality
 - `src/components/ui/error-boundary.tsx` - Error handling
 
 ## Security Considerations

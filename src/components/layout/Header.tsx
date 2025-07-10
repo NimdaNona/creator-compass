@@ -58,7 +58,7 @@ export function Header() {
             <Compass className="h-5 w-5 text-white" />
           </div>
           <span className="font-bold text-xl bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-            CreatorCompass
+            Creators AI Compass
           </span>
         </Link>
 

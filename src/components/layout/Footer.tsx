@@ -16,7 +16,7 @@ export function Footer() {
                 <Compass className="h-5 w-5 text-white" />
               </div>
               <span className="font-bold text-xl bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                CreatorCompass
+                Creators AI Compass
               </span>
             </Link>
             <p className="text-sm text-muted-foreground max-w-xs">
@@ -142,7 +142,7 @@ export function Footer() {
         <div className="mt-12 pt-8 border-t">
           <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
             <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4 text-sm text-muted-foreground">
-              <span>© 2024 CreatorCompass. All rights reserved.</span>
+              <span>© 2024 Creators AI Compass. All rights reserved.</span>
               <div className="flex items-center space-x-4">
                 <Link href="/privacy" className="hover:text-foreground transition-colors">
                   Privacy Policy

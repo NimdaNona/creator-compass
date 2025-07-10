@@ -1,6 +1,6 @@
 {
-  "name": "CreatorCompass",
-  "short_name": "CreatorCompass",
+  "name": "Creators AI Compass",
+  "short_name": "Creators AI",
   "description": "Your personalized roadmap to content creation success",
   "start_url": "/",
   "display": "standalone",
@@ -67,14 +67,14 @@
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "CreatorCompass Dashboard"
+      "label": "Creators AI Compass Dashboard"
     },
     {
       "src": "/screenshot-mobile.png",
       "sizes": "390x844",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "CreatorCompass Mobile View"
+      "label": "Creators AI Compass Mobile View"
     }
   ],
   "shortcuts": [

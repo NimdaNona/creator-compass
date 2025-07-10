@@ -7,10 +7,10 @@ async function main() {
 
   // Create a test user
   const testUser = await prisma.user.upsert({
-    where: { email: 'test@creatorcompass.app' },
+    where: { email: 'test@creatorsaicompass.com' },
     update: {},
     create: {
-      email: 'test@creatorcompass.app',
+      email: 'test@creatorsaicompass.com',
       name: 'Test Creator',
       emailVerified: new Date(),
     },

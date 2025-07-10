@@ -99,7 +99,7 @@ function OnboardingContent() {
               </Button>
               <div className="flex items-center space-x-2">
                 <Compass className="h-6 w-6 text-purple-500" />
-                <span className="text-xl font-bold">CreatorCompass</span>
+                <span className="text-xl font-bold">Creators AI Compass</span>
               </div>
             </div>
             

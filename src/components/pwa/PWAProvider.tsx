@@ -135,7 +135,7 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <h4 className="text-white font-semibold text-sm">
-                  Install CreatorCompass
+                  Install Creators AI Compass
                 </h4>
                 <p className="text-purple-100 text-xs mt-1">
                   Get quick access and offline features

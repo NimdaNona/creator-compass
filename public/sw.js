@@ -1,4 +1,4 @@
-// Service Worker for CreatorCompass PWA
+// Service Worker for Creators AI Compass PWA
 const CACHE_NAME = 'creator-compass-v1';
 const STATIC_CACHE_NAME = 'creator-compass-static-v1';
 const DYNAMIC_CACHE_NAME = 'creator-compass-dynamic-v1';
@@ -236,7 +236,7 @@ self.addEventListener('push', (event) => {
   }
   
   event.waitUntil(
-    self.registration.showNotification('CreatorCompass', options)
+    self.registration.showNotification('Creators AI Compass', options)
   );
 });
 

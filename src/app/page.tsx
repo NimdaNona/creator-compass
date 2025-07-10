@@ -329,7 +329,7 @@ export default function Home() {
                     ))}
                   </div>
                   <p className="text-muted-foreground mb-4">
-                    "CreatorCompass helped me grow from 0 to 10K followers in just 2 months. The daily tasks keep me focused and motivated!"
+                    "Creators AI Compass helped me grow from 0 to 10K followers in just 2 months. The daily tasks keep me focused and motivated!"
                   </p>
                   <div className="flex items-center">
                     <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full mr-3"></div>
