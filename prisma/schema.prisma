@@ -462,9 +462,14 @@ model ContentIdea {
   status          String   @default("new") // new, saved, used, discarded
   rating          Int?     // User rating 1-5
   source          String?  // trending, generated, user, template
+  implemented     Boolean  @default(false)
   implementedAt   DateTime?
   calendarEventId String?  // Link to calendar when implemented
+  tags            String[] @default([])
+  notes           String?  @db.Text
+  metadata        Json?    // Additional metadata (difficulty, engagement, format, etc)
   createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
   
   user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
   

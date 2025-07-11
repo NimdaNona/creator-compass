@@ -37,6 +37,8 @@ export function Header() {
   const authenticatedNavItems = [
     { href: '/dashboard', label: 'Dashboard' },
     { href: '/foryou', label: 'For You' },
+    { href: '/calendar', label: 'Calendar' },
+    { href: '/ideas', label: 'Ideas' },
     { href: '/templates', label: 'Templates' },
     { href: '/platform-tools', label: 'Platform Tools' },
     { href: '/analytics', label: 'Analytics' },

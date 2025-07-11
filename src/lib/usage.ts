@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/db';
 import { startOfMonth, endOfMonth } from 'date-fns';
 
-export type UsageFeature = 'templates' | 'platforms' | 'exports' | 'analytics' | 'crossPlatform';
+export type UsageFeature = 'templates' | 'platforms' | 'exports' | 'analytics' | 'crossPlatform' | 'ideas';
 
 interface UsageLimit {
   [key: string]: number;
@@ -13,6 +13,7 @@ const FREE_LIMITS: UsageLimit = {
   exports: 3,
   analytics: 0,  // Premium only
   crossPlatform: 0, // Premium only
+  ideas: 5, // 5 ideas per day
 };
 
 const PRO_LIMITS: UsageLimit = {
@@ -21,6 +22,7 @@ const PRO_LIMITS: UsageLimit = {
   exports: -1,  // Unlimited
   analytics: -1, // Unlimited
   crossPlatform: 10, // 10 adaptations per month
+  ideas: -1, // Unlimited
 };
 
 const STUDIO_LIMITS: UsageLimit = {
@@ -29,6 +31,7 @@ const STUDIO_LIMITS: UsageLimit = {
   exports: -1,   // Unlimited
   analytics: -1,  // Unlimited
   crossPlatform: -1, // Unlimited
+  ideas: -1, // Unlimited
 };
 
 export async function trackUsage(
