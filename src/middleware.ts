@@ -17,7 +17,9 @@ export default withAuth(
       pathname.startsWith('/favicon') ||
       pathname.startsWith('/offline') ||
       pathname.startsWith('/manifest') ||
-      pathname.startsWith('/icon')
+      pathname.startsWith('/icon') ||
+      pathname === '/sitemap.xml' ||
+      pathname === '/robots.txt'
     ) {
       return NextResponse.next();
     }
@@ -59,7 +61,9 @@ export default withAuth(
           pathname.startsWith('/favicon') ||
           pathname.startsWith('/offline') ||
           pathname.startsWith('/manifest') ||
-          pathname.startsWith('/icon')
+          pathname.startsWith('/icon') ||
+          pathname === '/sitemap.xml' ||
+          pathname === '/robots.txt'
         ) {
           return true;
         }
