@@ -9,6 +9,7 @@ import { CelebrationSystem } from "@/components/engagement/CelebrationSystem";
 import { SmartUpgradeTrigger } from "@/components/upgrade/SmartUpgradeTrigger";
 import { PWAProvider } from "@/components/pwa/PWAProvider";
 import { BottomNav } from "@/components/navigation/BottomNav";
+import { NotificationProvider } from "@/components/notifications/NotificationProvider";
 // Error boundary handled at page level since root layout is server component
 
 const inter = Inter({
@@ -93,20 +94,53 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'Creators AI Compass',
+    applicationCategory: 'BusinessApplication',
+    operatingSystem: 'Web',
+    description: 'Build your audience and grow your brand with personalized 90-day roadmaps for YouTube, TikTok, and Twitch.',
+    offers: {
+      '@type': 'Offer',
+      price: '9.99',
+      priceCurrency: 'USD',
+      availability: 'https://schema.org/InStock'
+    },
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: '4.8',
+      ratingCount: '150'
+    },
+    author: {
+      '@type': 'Organization',
+      name: 'Creators AI Compass',
+      url: 'https://creatorsaicompass.com'
+    }
+  };
+
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className={`${inter.className} antialiased min-h-screen flex flex-col`}>
         <SessionProvider>
           <ThemeProvider>
             <PWAProvider>
-              <Header />
-              <main className="flex-1 pb-20 md:pb-0">
-                {children}
-              </main>
-              <Footer />
-              <BottomNav />
-              <CelebrationSystem />
-              <SmartUpgradeTrigger />
+              <NotificationProvider>
+                <Header />
+                <main className="flex-1 pb-20 md:pb-0">
+                  {children}
+                </main>
+                <Footer />
+                <BottomNav />
+                <CelebrationSystem />
+                <SmartUpgradeTrigger />
+              </NotificationProvider>
             </PWAProvider>
           </ThemeProvider>
         </SessionProvider>

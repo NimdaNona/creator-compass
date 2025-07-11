@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/store/useAppStore';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 import {
   Menu,
   X,
@@ -100,6 +101,9 @@ export function Header() {
               {theme === 'light' ? '🌙' : '☀️'}
             </Button>
           )}
+
+          {/* Notifications - Only show for authenticated users */}
+          {isAuthenticated && <NotificationBell />}
 
           {/* User Menu */}
           {isAuthenticated ? (
