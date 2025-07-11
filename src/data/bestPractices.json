@@ -1,0 +1,55 @@
+{
+  "bestPractices": {
+    "youtube": [
+      {
+        "title": "Optimize Video Titles",
+        "description": "Use keywords naturally in the first 60 characters",
+        "category": "seo"
+      },
+      {
+        "title": "Create Eye-Catching Thumbnails",
+        "description": "Use bright colors, clear text, and expressive faces",
+        "category": "engagement"
+      },
+      {
+        "title": "Hook Viewers in First 15 Seconds",
+        "description": "Start with a preview or compelling question",
+        "category": "retention"
+      }
+    ],
+    "tiktok": [
+      {
+        "title": "Use Trending Sounds",
+        "description": "Leverage popular audio to increase discoverability",
+        "category": "growth"
+      },
+      {
+        "title": "Keep Videos Under 30 Seconds",
+        "description": "Shorter videos tend to have higher completion rates",
+        "category": "retention"
+      },
+      {
+        "title": "Post at Peak Times",
+        "description": "6-10am and 7-11pm tend to have highest engagement",
+        "category": "timing"
+      }
+    ],
+    "twitch": [
+      {
+        "title": "Maintain Consistent Schedule",
+        "description": "Stream at the same times to build regular viewership",
+        "category": "growth"
+      },
+      {
+        "title": "Engage with Chat Constantly",
+        "description": "Acknowledge viewers and respond to messages",
+        "category": "engagement"
+      },
+      {
+        "title": "Create Stream Alerts",
+        "description": "Thank followers and subscribers to encourage more",
+        "category": "monetization"
+      }
+    ]
+  }
+}

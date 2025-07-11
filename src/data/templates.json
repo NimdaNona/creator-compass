@@ -1,0 +1,52 @@
+{
+  "templates": [
+    {
+      "id": "content-calendar",
+      "name": "Content Calendar Template",
+      "category": "content-planning",
+      "description": "Plan and organize your content schedule",
+      "icon": "📅",
+      "isPremium": false
+    },
+    {
+      "id": "video-script",
+      "name": "Video Script Template",
+      "category": "video-scripts",
+      "description": "Structure your video content effectively",
+      "icon": "📝",
+      "isPremium": false
+    },
+    {
+      "id": "channel-audit",
+      "name": "Channel Audit Checklist",
+      "category": "channel-optimization",
+      "description": "Optimize your channel for growth",
+      "icon": "✅",
+      "isPremium": true
+    },
+    {
+      "id": "thumbnail-checklist",
+      "name": "Thumbnail Design Checklist",
+      "category": "thumbnails-titles",
+      "description": "Create clickable thumbnails",
+      "icon": "🎨",
+      "isPremium": false
+    },
+    {
+      "id": "audience-persona",
+      "name": "Audience Persona Template",
+      "category": "audience-growth",
+      "description": "Define your target audience",
+      "icon": "👥",
+      "isPremium": true
+    },
+    {
+      "id": "analytics-report",
+      "name": "Analytics Report Template",
+      "category": "analytics-reporting",
+      "description": "Track and analyze your performance",
+      "icon": "📊",
+      "isPremium": true
+    }
+  ]
+}

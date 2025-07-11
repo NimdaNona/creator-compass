@@ -1,0 +1,44 @@
+{
+  "achievements": [
+    {
+      "id": "first-upload",
+      "name": "First Steps",
+      "description": "Upload your first piece of content",
+      "icon": "🎬",
+      "points": 10,
+      "category": "milestones"
+    },
+    {
+      "id": "week-streak",
+      "name": "Consistent Creator",
+      "description": "Maintain a 7-day streak",
+      "icon": "🔥",
+      "points": 25,
+      "category": "streaks"
+    },
+    {
+      "id": "community-builder",
+      "name": "Community Builder",
+      "description": "Reach 100 followers/subscribers",
+      "icon": "👥",
+      "points": 50,
+      "category": "growth"
+    },
+    {
+      "id": "engagement-master",
+      "name": "Engagement Master",
+      "description": "Achieve 10% engagement rate",
+      "icon": "💬",
+      "points": 40,
+      "category": "engagement"
+    },
+    {
+      "id": "multi-platform",
+      "name": "Multi-Platform Pro",
+      "description": "Active on 3 platforms",
+      "icon": "🌐",
+      "points": 30,
+      "category": "expansion"
+    }
+  ]
+}

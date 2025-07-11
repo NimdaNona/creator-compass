@@ -1,0 +1,57 @@
+{
+  "resources": [
+    {
+      "id": "youtube-creator-hub",
+      "title": "YouTube Creator Hub",
+      "category": "youtube-guides",
+      "description": "Official YouTube resources for creators",
+      "type": "guide",
+      "url": "https://www.youtube.com/creators",
+      "isPremium": false
+    },
+    {
+      "id": "tiktok-creator-portal",
+      "title": "TikTok Creator Portal",
+      "category": "tiktok-guides",
+      "description": "Learn TikTok best practices",
+      "type": "guide",
+      "url": "https://www.tiktok.com/creators",
+      "isPremium": false
+    },
+    {
+      "id": "twitch-creator-camp",
+      "title": "Twitch Creator Camp",
+      "category": "twitch-guides",
+      "description": "Streaming tips and strategies",
+      "type": "guide",
+      "url": "https://www.twitch.tv/creatorcamp",
+      "isPremium": false
+    },
+    {
+      "id": "canva",
+      "title": "Canva",
+      "category": "tools",
+      "description": "Design thumbnails and graphics",
+      "type": "tool",
+      "url": "https://www.canva.com",
+      "isPremium": false
+    },
+    {
+      "id": "tubebuddy",
+      "title": "TubeBuddy",
+      "category": "tools",
+      "description": "YouTube optimization tool",
+      "type": "tool",
+      "url": "https://www.tubebuddy.com",
+      "isPremium": true
+    },
+    {
+      "id": "trending-topics-2024",
+      "title": "2024 Content Trends Report",
+      "category": "trends",
+      "description": "Latest trends in content creation",
+      "type": "report",
+      "isPremium": true
+    }
+  ]
+}

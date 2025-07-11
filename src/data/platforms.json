@@ -1,0 +1,46 @@
+{
+  "platforms": [
+    {
+      "id": "youtube",
+      "name": "YouTube",
+      "description": "Long-form video content platform",
+      "icon": "🎥",
+      "color": "red",
+      "features": [
+        "Long-form videos",
+        "Shorts",
+        "Live streaming",
+        "Community posts",
+        "Memberships"
+      ]
+    },
+    {
+      "id": "tiktok",
+      "name": "TikTok",
+      "description": "Short-form video entertainment",
+      "icon": "🎵",
+      "color": "black",
+      "features": [
+        "Short videos",
+        "Live streaming",
+        "Effects & filters",
+        "Sounds library",
+        "Duets & stitches"
+      ]
+    },
+    {
+      "id": "twitch",
+      "name": "Twitch",
+      "description": "Live streaming platform",
+      "icon": "🎮",
+      "color": "purple",
+      "features": [
+        "Live streaming",
+        "Chat interaction",
+        "Subscriptions",
+        "Bits & donations",
+        "Clips"
+      ]
+    }
+  ]
+}

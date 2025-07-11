@@ -1,0 +1,136 @@
+{
+  "roadmaps": {
+    "youtube": {
+      "beginner": {
+        "title": "YouTube Beginner Roadmap",
+        "duration": "90 days",
+        "phases": [
+          {
+            "phase": 1,
+            "title": "Foundation & Setup",
+            "duration": "Days 1-30",
+            "tasks": [
+              "Define your niche and target audience",
+              "Create channel branding (logo, banner, description)",
+              "Set up basic recording equipment",
+              "Learn video editing basics",
+              "Upload your first 5 videos"
+            ]
+          },
+          {
+            "phase": 2,
+            "title": "Content & Consistency",
+            "duration": "Days 31-60",
+            "tasks": [
+              "Establish a consistent upload schedule",
+              "Create 10-15 videos",
+              "Optimize titles, descriptions, and tags",
+              "Design eye-catching thumbnails",
+              "Engage with your community"
+            ]
+          },
+          {
+            "phase": 3,
+            "title": "Growth & Optimization",
+            "duration": "Days 61-90",
+            "tasks": [
+              "Analyze YouTube Analytics",
+              "Experiment with different content formats",
+              "Collaborate with other creators",
+              "Implement viewer feedback",
+              "Plan long-term content strategy"
+            ]
+          }
+        ]
+      }
+    },
+    "tiktok": {
+      "beginner": {
+        "title": "TikTok Beginner Roadmap",
+        "duration": "90 days",
+        "phases": [
+          {
+            "phase": 1,
+            "title": "Discovery & Setup",
+            "duration": "Days 1-30",
+            "tasks": [
+              "Research trending content in your niche",
+              "Set up profile with clear branding",
+              "Post 1-2 videos daily",
+              "Learn TikTok's features and tools",
+              "Study the algorithm basics"
+            ]
+          },
+          {
+            "phase": 2,
+            "title": "Content Mastery",
+            "duration": "Days 31-60",
+            "tasks": [
+              "Develop your unique style",
+              "Use trending sounds and hashtags",
+              "Create series or themed content",
+              "Engage with comments and duets",
+              "Track performance metrics"
+            ]
+          },
+          {
+            "phase": 3,
+            "title": "Community Building",
+            "duration": "Days 61-90",
+            "tasks": [
+              "Host live streams",
+              "Collaborate with other creators",
+              "Create community-driven content",
+              "Expand to other platforms",
+              "Develop monetization strategy"
+            ]
+          }
+        ]
+      }
+    },
+    "twitch": {
+      "beginner": {
+        "title": "Twitch Beginner Roadmap",
+        "duration": "90 days",
+        "phases": [
+          {
+            "phase": 1,
+            "title": "Stream Setup",
+            "duration": "Days 1-30",
+            "tasks": [
+              "Set up streaming software (OBS/Streamlabs)",
+              "Create channel panels and graphics",
+              "Establish streaming schedule",
+              "Stream 3-4 times per week",
+              "Learn chat moderation basics"
+            ]
+          },
+          {
+            "phase": 2,
+            "title": "Community Growth",
+            "duration": "Days 31-60",
+            "tasks": [
+              "Develop stream alerts and overlays",
+              "Create Discord community",
+              "Network with other streamers",
+              "Participate in community events",
+              "Improve stream quality and setup"
+            ]
+          },
+          {
+            "phase": 3,
+            "title": "Monetization Prep",
+            "duration": "Days 61-90",
+            "tasks": [
+              "Work towards Affiliate requirements",
+              "Create highlight videos for other platforms",
+              "Develop subscriber perks",
+              "Plan special streams and events",
+              "Build consistent viewer base"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
