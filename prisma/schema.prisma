@@ -64,6 +64,12 @@ model User {
   milestoneAchievements MilestoneAchievement[]
   contentRecommendations ContentRecommendation[]
   generatedTemplates GeneratedTemplate[]
+  calendarEvents         CalendarEvent[]
+  contentSeries          ContentSeries[]
+  contentIdeas           ContentIdea[]
+  communityProfile       CommunityProfile?
+  notificationPreference NotificationPreference?
+  notifications          Notification[]
 }
 
 model VerificationToken {
@@ -391,5 +397,244 @@ model ContentEngagement {
   
   @@index([userId, contentType])
   @@index([contentId])
+  @@index([createdAt])
+}
+
+// =============================================
+// Phase 4: Interactive Features & Tools
+// =============================================
+
+// Content Calendar
+model CalendarEvent {
+  id              String   @id @default(cuid())
+  userId          String
+  title           String
+  description     String?  @db.Text
+  platform        String
+  contentType     String   // video, short, stream, post
+  status          String   // idea, draft, ready, scheduled, published
+  scheduledDate   DateTime
+  publishedDate   DateTime?
+  tags            String[]
+  seriesId        String?
+  color           String?  // For visual organization
+  duration        Int?     // Duration in minutes (for videos/streams)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  series          ContentSeries? @relation(fields: [seriesId], references: [id])
+  
+  @@index([userId, scheduledDate])
+  @@index([platform, status])
+  @@index([seriesId])
+}
+
+// Content Series for recurring content
+model ContentSeries {
+  id              String   @id @default(cuid())
+  userId          String
+  name            String
+  description     String?  @db.Text
+  platform        String
+  frequency       String   // daily, weekly, biweekly, monthly
+  defaultDay      Int?     // 0-6 for day of week
+  defaultTime     String?  // HH:MM format
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  
+  user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events          CalendarEvent[]
+  
+  @@index([userId, isActive])
+}
+
+// Content Ideas Generator
+model ContentIdea {
+  id              String   @id @default(cuid())
+  userId          String
+  title           String
+  description     String   @db.Text
+  hook            String?  @db.Text
+  platform        String
+  contentType     String
+  category        String   // trending, evergreen, seasonal, series
+  status          String   @default("new") // new, saved, used, discarded
+  rating          Int?     // User rating 1-5
+  source          String?  // trending, generated, user, template
+  implementedAt   DateTime?
+  calendarEventId String?  // Link to calendar when implemented
+  createdAt       DateTime @default(now())
+  
+  user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, status])
+  @@index([platform, category])
+}
+
+// Community Profile
+model CommunityProfile {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  displayName           String
+  bio                   String?  @db.Text
+  avatar                String?
+  platforms             String[] // Array of platform IDs
+  niche                 String
+  level                 Int      @default(1)
+  isPublic              Boolean  @default(false)
+  allowMessages         Boolean  @default(false)
+  allowCollabRequests   Boolean  @default(true)
+  socialLinks           Json?    // { twitter: "", instagram: "", etc }
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  user                  User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sentPartnerships      Partnership[] @relation("PartnershipUser1")
+  receivedPartnerships  Partnership[] @relation("PartnershipUser2")
+  challengeParticipations ChallengeParticipation[]
+  successStories        SuccessStory[]
+  collaborationRequests CollaborationRequest[] @relation("CollabRequester")
+  collaborationOffers   CollaborationRequest[] @relation("CollabReceiver")
+  
+  @@index([isPublic])
+  @@index([niche])
+}
+
+// Creator Challenges
+model Challenge {
+  id              String   @id @default(cuid())
+  title           String
+  description     String   @db.Text
+  type            String   // growth, content, engagement, consistency
+  platform        String?  // null for all platforms
+  startDate       DateTime
+  endDate         DateTime
+  difficulty      String   // beginner, intermediate, advanced
+  requirements    Json     // Specific challenge requirements
+  rewards         Json     // Points, badges, features to unlock
+  maxParticipants Int?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  
+  participants    ChallengeParticipation[]
+  
+  @@index([isActive, startDate])
+  @@index([type, platform])
+}
+
+// Challenge Participation
+model ChallengeParticipation {
+  id              String   @id @default(cuid())
+  challengeId     String
+  profileId       String
+  status          String   @default("active") // active, completed, abandoned
+  progress        Json     // Track specific progress metrics
+  startedAt       DateTime @default(now())
+  completedAt     DateTime?
+  
+  challenge       Challenge @relation(fields: [challengeId], references: [id])
+  profile         CommunityProfile @relation(fields: [profileId], references: [id])
+  
+  @@unique([challengeId, profileId])
+  @@index([status])
+}
+
+// Accountability Partnerships
+model Partnership {
+  id              String   @id @default(cuid())
+  user1Id         String
+  user2Id         String
+  status          String   @default("pending") // pending, active, paused, ended
+  goals           Json?    // Shared goals and commitments
+  checkInFrequency String? // daily, weekly, biweekly
+  lastCheckIn     DateTime?
+  startedAt       DateTime @default(now())
+  endedAt         DateTime?
+  
+  user1           CommunityProfile @relation("PartnershipUser1", fields: [user1Id], references: [id])
+  user2           CommunityProfile @relation("PartnershipUser2", fields: [user2Id], references: [id])
+  
+  @@unique([user1Id, user2Id])
+  @@index([status])
+}
+
+// Success Stories
+model SuccessStory {
+  id              String   @id @default(cuid())
+  profileId       String
+  title           String
+  content         String   @db.Text
+  metrics         Json     // Growth numbers, milestones achieved
+  platform        String
+  timeframe       String   // How long it took
+  tips            String[] // Key tips for others
+  isApproved      Boolean  @default(false)
+  isFeatured      Boolean  @default(false)
+  likes           Int      @default(0)
+  createdAt       DateTime @default(now())
+  
+  profile         CommunityProfile @relation(fields: [profileId], references: [id])
+  
+  @@index([isApproved, isFeatured])
+  @@index([platform])
+}
+
+// Collaboration Requests
+model CollaborationRequest {
+  id              String   @id @default(cuid())
+  requesterId     String
+  receiverId      String
+  type            String   // collab, guest, series, challenge
+  title           String
+  description     String   @db.Text
+  platform        String
+  status          String   @default("pending") // pending, accepted, declined, completed
+  scheduledDate   DateTime?
+  createdAt       DateTime @default(now())
+  respondedAt     DateTime?
+  
+  requester       CommunityProfile @relation("CollabRequester", fields: [requesterId], references: [id])
+  receiver        CommunityProfile @relation("CollabReceiver", fields: [receiverId], references: [id])
+  
+  @@index([status])
+  @@index([requesterId, receiverId])
+}
+
+// Notification Preferences
+model NotificationPreference {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  emailFrequency  String   @default("daily") // realtime, daily, weekly, never
+  emailCategories String[] @default(["milestones", "community"])
+  inAppEnabled    Boolean  @default(true)
+  inAppCategories String[] @default(["all"])
+  quietHoursStart String?  // HH:MM format
+  quietHoursEnd   String?  // HH:MM format
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// In-app Notifications
+model Notification {
+  id              String   @id @default(cuid())
+  userId          String
+  type            String   // task_reminder, milestone, streak, community, collab
+  title           String
+  message         String
+  actionUrl       String?
+  actionLabel     String?
+  priority        String   @default("normal") // low, normal, high, urgent
+  isRead          Boolean  @default(false)
+  readAt          DateTime?
+  createdAt       DateTime @default(now())
+  expiresAt       DateTime?
+  
+  user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, isRead])
+  @@index([type, priority])
   @@index([createdAt])
 }

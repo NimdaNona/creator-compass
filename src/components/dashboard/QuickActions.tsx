@@ -52,7 +52,7 @@ export function QuickActions() {
       icon: Calendar,
       href: '/calendar',
       color: 'bg-orange-500',
-      free: false
+      free: true // Basic calendar view is free, full features are premium
     }
   ];
 

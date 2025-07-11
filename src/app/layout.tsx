@@ -8,6 +8,7 @@ import { SessionProvider } from "@/components/providers/SessionProvider";
 import { CelebrationSystem } from "@/components/engagement/CelebrationSystem";
 import { SmartUpgradeTrigger } from "@/components/upgrade/SmartUpgradeTrigger";
 import { PWAProvider } from "@/components/pwa/PWAProvider";
+import { BottomNav } from "@/components/navigation/BottomNav";
 // Error boundary handled at page level since root layout is server component
 
 const inter = Inter({
@@ -99,10 +100,11 @@ export default function RootLayout({
           <ThemeProvider>
             <PWAProvider>
               <Header />
-              <main className="flex-1">
+              <main className="flex-1 pb-20 md:pb-0">
                 {children}
               </main>
               <Footer />
+              <BottomNav />
               <CelebrationSystem />
               <SmartUpgradeTrigger />
             </PWAProvider>
