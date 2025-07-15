@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/useAppStore';
 import { DashboardOverview } from '@/components/dashboard/DashboardOverview';
-import { EnhancedRoadmapView } from '@/components/dashboard/EnhancedRoadmapView';
+import EnhancedRoadmapView from '@/components/roadmap/EnhancedRoadmapView';
 import { ProgressStats } from '@/components/dashboard/ProgressStats';
 import { TodaysTasks } from '@/components/dashboard/TodaysTasks';
 import { QuickActions } from '@/components/dashboard/QuickActions';
