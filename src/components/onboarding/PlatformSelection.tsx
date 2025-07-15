@@ -184,7 +184,7 @@ export function PlatformSelection({ onNext }: PlatformSelectionProps) {
                     Key Features:
                   </h4>
                   <ul className="space-y-2">
-                    {platform.features.slice(0, 3).map((feature, index) => (
+                    {(platform.features || []).slice(0, 3).map((feature, index) => (
                       <li key={index} className="flex items-center text-sm">
                         <div className="w-2 h-2 bg-gradient-to-r from-green-400 to-blue-500 rounded-full mr-3" />
                         {feature}
@@ -194,14 +194,14 @@ export function PlatformSelection({ onNext }: PlatformSelectionProps) {
                 </div>
                 
                 <div className="flex flex-wrap gap-2">
-                  {platform.niches.slice(0, 3).map((niche) => (
+                  {(platform.niches || []).slice(0, 3).map((niche) => (
                     <Badge key={niche.id} variant="secondary" className="text-xs social-button bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/50 dark:to-pink-900/50">
                       {niche.name}
                     </Badge>
                   ))}
-                  {platform.niches.length > 3 && (
+                  {(platform.niches || []).length > 3 && (
                     <Badge variant="outline" className="text-xs holographic">
-                      +{platform.niches.length - 3} more
+                      +{(platform.niches || []).length - 3} more
                     </Badge>
                   )}
                 </div>

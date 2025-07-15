@@ -6,12 +6,16 @@ import roadmapsData from '@/data/roadmaps.json';
 import templatesData from '@/data/templates.json';
 import bestPracticesData from '@/data/bestPractices.json';
 
-// Platforms data
-export const platforms: Record<string, Platform> = platformsData.platforms as Record<string, Platform>;
+// Platforms data - convert array to object keyed by ID
+const platformsArray = platformsData.platforms as Platform[];
+export const platforms: Record<string, Platform> = platformsArray.reduce((acc, platform) => {
+  acc[platform.id] = platform;
+  return acc;
+}, {} as Record<string, Platform>);
 
 // Get all platforms as array
 export const getAllPlatforms = (): Platform[] => {
-  return Object.values(platforms);
+  return platformsArray;
 };
 
 // Get platform by ID

@@ -19,7 +19,13 @@ export function useRealtimeNotifications() {
   const { showNotification } = useNotificationToast();
 
   const connect = useCallback(() => {
-    if (!session?.user || eventSourceRef.current?.readyState === EventSource.OPEN) {
+    // Don't connect if no session
+    if (!session?.user) {
+      return;
+    }
+    
+    // Don't connect if already connected
+    if (eventSourceRef.current?.readyState === EventSource.OPEN) {
       return;
     }
 

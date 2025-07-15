@@ -2,44 +2,251 @@
   "platforms": [
     {
       "id": "youtube",
-      "name": "YouTube",
-      "description": "Long-form video content platform",
+      "name": "youtube",
+      "displayName": "YouTube",
+      "description": "Perfect for long-form content, tutorials, and building authority in your niche",
       "icon": "🎥",
       "color": "red",
       "features": [
-        "Long-form videos",
-        "Shorts",
-        "Live streaming",
-        "Community posts",
-        "Memberships"
+        "Long-form videos (8-20 minutes optimal)",
+        "YouTube Shorts for discovery",
+        "Live streaming capabilities",
+        "Community posts and polls",
+        "Channel memberships and Super Thanks"
+      ],
+      "requirements": {
+        "monetization": {
+          "subscribers": "1,000",
+          "watchHours": "4,000 hours in 12 months",
+          "other": "AdSense account required"
+        },
+        "technical": {
+          "videoQuality": "1080p minimum recommended",
+          "uploadFrequency": "2-3 videos per week optimal",
+          "thumbnails": "Custom thumbnails required"
+        }
+      },
+      "niches": [
+        {
+          "id": "gaming",
+          "name": "Gaming",
+          "description": "Let's plays, tutorials, reviews, and gaming news",
+          "subcategories": ["Let's Plays", "Game Reviews", "Tutorials", "Speedruns", "Gaming News"],
+          "difficulty": "Medium",
+          "competitiveness": "High",
+          "avgTimeToMonetization": "6-12 months"
+        },
+        {
+          "id": "beauty",
+          "name": "Beauty & Fashion",
+          "description": "Makeup tutorials, skincare routines, fashion hauls",
+          "subcategories": ["Makeup Tutorials", "Skincare", "Fashion Hauls", "Product Reviews", "Transformations"],
+          "difficulty": "Medium",
+          "competitiveness": "High",
+          "avgTimeToMonetization": "4-8 months"
+        },
+        {
+          "id": "tech",
+          "name": "Tech Reviews",
+          "description": "Gadget reviews, software tutorials, tech news",
+          "subcategories": ["Product Reviews", "Unboxings", "Comparisons", "How-to Guides", "Tech News"],
+          "difficulty": "Medium",
+          "competitiveness": "Medium",
+          "avgTimeToMonetization": "6-10 months"
+        },
+        {
+          "id": "educational",
+          "name": "Educational",
+          "description": "Teaching, tutorials, online courses, skill development",
+          "subcategories": ["Language Learning", "Programming", "Science", "History", "Skills Training"],
+          "difficulty": "Easy",
+          "competitiveness": "Low",
+          "avgTimeToMonetization": "4-6 months"
+        },
+        {
+          "id": "lifestyle",
+          "name": "Lifestyle",
+          "description": "Vlogs, routines, home tours, personal development",
+          "subcategories": ["Daily Vlogs", "Morning Routines", "Home Tours", "Minimalism", "Self-improvement"],
+          "difficulty": "Easy",
+          "competitiveness": "Medium",
+          "avgTimeToMonetization": "6-12 months"
+        },
+        {
+          "id": "fitness",
+          "name": "Fitness & Health",
+          "description": "Workouts, nutrition, wellness, mental health",
+          "subcategories": ["Home Workouts", "Nutrition Tips", "Yoga", "Weight Loss", "Mental Health"],
+          "difficulty": "Medium",
+          "competitiveness": "Medium",
+          "avgTimeToMonetization": "4-8 months"
+        }
       ]
     },
     {
       "id": "tiktok",
-      "name": "TikTok",
-      "description": "Short-form video entertainment",
+      "name": "tiktok",
+      "displayName": "TikTok",
+      "description": "Perfect for viral short content, trending challenges, and rapid growth",
       "icon": "🎵",
       "color": "black",
       "features": [
-        "Short videos",
-        "Live streaming",
-        "Effects & filters",
-        "Sounds library",
-        "Duets & stitches"
+        "Short-form videos (15-60 seconds)",
+        "Viral discovery algorithm",
+        "Live streaming (1000+ followers)",
+        "Effects, filters, and sounds",
+        "Duets, stitches, and reactions"
+      ],
+      "requirements": {
+        "monetization": {
+          "followers": "10,000",
+          "views": "100,000 video views in 30 days",
+          "other": "Creator Fund application required"
+        },
+        "technical": {
+          "videoQuality": "Vertical 9:16 format",
+          "uploadFrequency": "1-3 times daily optimal",
+          "timing": "Peak hours: 6-10am, 7-11pm"
+        }
+      },
+      "niches": [
+        {
+          "id": "dance",
+          "name": "Dance & Music",
+          "description": "Dance challenges, lip-syncs, music performances",
+          "subcategories": ["Dance Tutorials", "Challenges", "Lip Sync", "Original Choreography", "Music Covers"],
+          "difficulty": "Easy",
+          "competitiveness": "High",
+          "avgTimeToMonetization": "3-6 months"
+        },
+        {
+          "id": "comedy",
+          "name": "Comedy & Entertainment",
+          "description": "Skits, pranks, relatable content, memes",
+          "subcategories": ["Comedy Skits", "Pranks", "Relatable Content", "Memes", "Impressions"],
+          "difficulty": "Medium",
+          "competitiveness": "High",
+          "avgTimeToMonetization": "2-4 months"
+        },
+        {
+          "id": "educational",
+          "name": "Educational",
+          "description": "Quick tips, life hacks, fun facts, mini-lessons",
+          "subcategories": ["Life Hacks", "Quick Tips", "Fun Facts", "Language Tips", "Science Experiments"],
+          "difficulty": "Easy",
+          "competitiveness": "Low",
+          "avgTimeToMonetization": "3-5 months"
+        },
+        {
+          "id": "beauty",
+          "name": "Beauty & Fashion",
+          "description": "Quick transformations, outfit ideas, makeup tips",
+          "subcategories": ["30-Second Makeup", "Outfit Transitions", "Skincare Tips", "Hair Tutorials", "Fashion Hacks"],
+          "difficulty": "Medium",
+          "competitiveness": "High",
+          "avgTimeToMonetization": "2-4 months"
+        },
+        {
+          "id": "food",
+          "name": "Food & Cooking",
+          "description": "Quick recipes, food hacks, restaurant reviews",
+          "subcategories": ["60-Second Recipes", "Food Hacks", "Restaurant Reviews", "Cooking Tips", "Food Challenges"],
+          "difficulty": "Easy",
+          "competitiveness": "Medium",
+          "avgTimeToMonetization": "3-6 months"
+        },
+        {
+          "id": "pets",
+          "name": "Pets & Animals",
+          "description": "Cute pet videos, training tips, animal facts",
+          "subcategories": ["Pet Tricks", "Funny Moments", "Training Tips", "Pet Care", "Animal Facts"],
+          "difficulty": "Easy",
+          "competitiveness": "Low",
+          "avgTimeToMonetization": "2-4 months"
+        }
       ]
     },
     {
       "id": "twitch",
-      "name": "Twitch",
-      "description": "Live streaming platform",
+      "name": "twitch",
+      "displayName": "Twitch",
+      "description": "Ideal for live streaming, real-time interaction, and building communities",
       "icon": "🎮",
       "color": "purple",
       "features": [
-        "Live streaming",
-        "Chat interaction",
-        "Subscriptions",
-        "Bits & donations",
-        "Clips"
+        "Live streaming focus",
+        "Real-time chat interaction",
+        "Subscription tiers and perks",
+        "Bits, donations, and cheers",
+        "Clips and highlights"
+      ],
+      "requirements": {
+        "monetization": {
+          "affiliate": "50 followers, 500 minutes streamed, 7 unique days, 3+ viewers average",
+          "partner": "75+ average viewers, stream 25 hours on 12 different days",
+          "other": "Must be 13+ years old"
+        },
+        "technical": {
+          "streamQuality": "720p 30fps minimum, 1080p 60fps recommended",
+          "uploadSpeed": "5+ Mbps recommended",
+          "schedule": "3-4 streams per week, 2-4 hours each"
+        }
+      },
+      "niches": [
+        {
+          "id": "gaming",
+          "name": "Gaming",
+          "description": "Game streaming, esports, variety gaming",
+          "subcategories": ["FPS Games", "MMORPGs", "Variety Gaming", "Speedrunning", "Esports"],
+          "difficulty": "Medium",
+          "competitiveness": "High",
+          "avgTimeToMonetization": "3-6 months"
+        },
+        {
+          "id": "just_chatting",
+          "name": "Just Chatting",
+          "description": "Talk shows, reactions, real-life content",
+          "subcategories": ["Talk Shows", "Reactions", "Hot Tub Streams", "IRL Streams", "Podcasts"],
+          "difficulty": "Easy",
+          "competitiveness": "Medium",
+          "avgTimeToMonetization": "4-8 months"
+        },
+        {
+          "id": "creative",
+          "name": "Art & Creative",
+          "description": "Digital art, music production, creative processes",
+          "subcategories": ["Digital Art", "Traditional Art", "Music Production", "3D Modeling", "Crafting"],
+          "difficulty": "Medium",
+          "competitiveness": "Low",
+          "avgTimeToMonetization": "4-6 months"
+        },
+        {
+          "id": "music",
+          "name": "Music & Performing Arts",
+          "description": "Live music, DJ sets, karaoke, performances",
+          "subcategories": ["Live Music", "DJ Sets", "Karaoke", "Music Production", "Beat Making"],
+          "difficulty": "Medium",
+          "competitiveness": "Low",
+          "avgTimeToMonetization": "4-7 months"
+        },
+        {
+          "id": "fitness",
+          "name": "Sports & Fitness",
+          "description": "Workout streams, sports talk, fitness challenges",
+          "subcategories": ["Live Workouts", "Sports Commentary", "Fitness Challenges", "Yoga", "Nutrition"],
+          "difficulty": "Easy",
+          "competitiveness": "Low",
+          "avgTimeToMonetization": "3-5 months"
+        },
+        {
+          "id": "educational",
+          "name": "Science & Technology",
+          "description": "Coding streams, tutorials, tech talks",
+          "subcategories": ["Programming", "Tech Reviews", "Science Experiments", "Tutorials", "Study With Me"],
+          "difficulty": "Hard",
+          "competitiveness": "Low",
+          "avgTimeToMonetization": "5-9 months"
+        }
       ]
     }
   ]
