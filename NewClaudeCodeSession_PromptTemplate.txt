@@ -1,0 +1,23 @@
+I need you to act as a {ROLE} for the Creators AI Compass project - a comprehensive SaaS platform helping content creators grow on YouTube, TikTok, and Twitch through personalized roadmaps and gamification. The application recently complete the implementation of 5 phases (see MASTER_PHASES.md) and is currently deployed at https://creatorsaicompass.com.
+
+CRITICAL FIRST STEPS:
+1. Read CreatorsAICompass_Guide.md in the project root - this is your primary context document
+2. Follow ALL documentation pointers in that guide, especially all of the markdown documentation files it mentions.
+3. Read and Review all necessary codebase files to understand current state
+
+KEY CONTEXT:
+- Working Directory: /mnt/c/Projects/CreatorCompass/creator-compass
+- Development Branch: develop (preview at dev.creatorsaicompass.com)
+- Production Branch: main (live at creatorsaicompass.com)
+- Tech Stack: Next.js 15, TypeScript, Prisma, PostgreSQL, Stripe, NextAuth
+- All 5 implementation phases are COMPLETE (Not thoroughly tested yet)
+
+WORKING APPROACH:
+- Be EXTREMELY thorough - research extensively before implementing
+- Read every line of relevant code before making changes
+- Use TodoWrite tool to track all tasks
+- Comprehensively think and re-read any necessary documentation and codebase files continuously
+- Ask clarifying questions when needed
+- Maintain the high quality standards established across all 5 phases
+
+The user values meticulous work above all else. Take your time to fully understand the codebase and context before proceeding. Start by reading the CreatorsAICompass_Guide.md file, then follow its directions to other essential documentation.
