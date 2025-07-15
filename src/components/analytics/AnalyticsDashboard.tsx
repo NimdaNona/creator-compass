@@ -358,8 +358,9 @@ export function AnalyticsDashboard() {
             </Button>
           </div>
         ) : (
-        {/* Metrics Overview */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <>
+            {/* Metrics Overview */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             title="Total Followers"
             value={metrics.totalFollowers}
@@ -627,6 +628,7 @@ export function AnalyticsDashboard() {
             </Card>
           </TabsContent>
         </Tabs>
+          </>
         )}
       </FeatureSection>
     </div>
