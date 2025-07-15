@@ -6,7 +6,7 @@ import { useNotificationToast } from '@/components/notifications/NotificationPro
 import { toast } from 'sonner';
 
 interface NotificationEvent {
-  type: 'connected' | 'heartbeat' | 'notification';
+  type: 'connected' | 'heartbeat' | 'notification' | 'reconnect';
   notification?: any;
   timestamp?: string;
 }
@@ -44,6 +44,14 @@ export function useRealtimeNotifications() {
             
             case 'heartbeat':
               // Keep-alive message, no action needed
+              break;
+              
+            case 'reconnect':
+              // Server is asking us to reconnect before timeout
+              console.log('Server requested reconnection');
+              eventSource.close();
+              eventSourceRef.current = null;
+              setTimeout(() => connect(), 1000);
               break;
             
             case 'notification':

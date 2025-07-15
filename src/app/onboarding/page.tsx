@@ -10,6 +10,7 @@ import { OnboardingComplete } from '@/components/onboarding/OnboardingComplete';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Compass } from 'lucide-react';
+import { HydratedStore } from '@/components/store/HydratedStore';
 
 function OnboardingContent() {
   const router = useRouter();
@@ -144,15 +145,17 @@ function OnboardingContent() {
 
 export default function OnboardingPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Compass className="h-8 w-8 animate-spin mx-auto mb-2" />
-          <p>Loading onboarding...</p>
+    <HydratedStore>
+      <Suspense fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <Compass className="h-8 w-8 animate-spin mx-auto mb-2" />
+            <p>Loading onboarding...</p>
+          </div>
         </div>
-      </div>
-    }>
-      <OnboardingContent />
-    </Suspense>
+      }>
+        <OnboardingContent />
+      </Suspense>
+    </HydratedStore>
   );
 }

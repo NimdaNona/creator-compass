@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
       const data = `data: ${JSON.stringify({ type: 'connected', timestamp: new Date() })}\n\n`;
       controller.enqueue(new TextEncoder().encode(data));
 
-      // Send heartbeat every 30 seconds to keep connection alive
+      // Send heartbeat every 10 seconds to keep connection alive
       const heartbeat = setInterval(() => {
         try {
           const heartbeatData = `data: ${JSON.stringify({ type: 'heartbeat', timestamp: new Date() })}\n\n`;
@@ -47,11 +47,25 @@ export async function GET(request: NextRequest) {
         } catch (error) {
           clearInterval(heartbeat);
         }
-      }, 30000);
+      }, 10000);
+      
+      // Auto-close connection after 4.5 minutes to avoid Vercel timeout
+      const timeout = setTimeout(() => {
+        try {
+          const reconnectData = `data: ${JSON.stringify({ type: 'reconnect', timestamp: new Date() })}\n\n`;
+          controller.enqueue(new TextEncoder().encode(reconnectData));
+          controller.close();
+        } catch (error) {
+          // Ignore errors
+        }
+        clearInterval(heartbeat);
+        clients.delete(user.id);
+      }, 270000); // 4.5 minutes
 
       // Clean up on close
       request.signal.addEventListener('abort', () => {
         clearInterval(heartbeat);
+        clearTimeout(timeout);
         clients.delete(user.id);
         controller.close();
       });

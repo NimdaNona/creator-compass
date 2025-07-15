@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { useAppStore } from '@/store/useAppStore';
 import { getStripeJs } from '@/lib/stripe';
+import { HydratedStore } from '@/components/store/HydratedStore';
 import { 
   Check, 
   Crown, 
@@ -23,7 +24,7 @@ import {
   Loader2
 } from 'lucide-react';
 
-export default function PricingPage() {
+function PricingContent() {
   const [isYearly, setIsYearly] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [userSubscription, setUserSubscription] = useState<any>(null);
@@ -415,5 +416,13 @@ export default function PricingPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PricingPage() {
+  return (
+    <HydratedStore>
+      <PricingContent />
+    </HydratedStore>
   );
 }

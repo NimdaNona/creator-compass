@@ -49,7 +49,7 @@ export function Header() {
 
   // Navigation items for unauthenticated users (public pages)
   const publicNavItems = [
-    { href: '/pricing', label: 'Pricing' },
+    // { href: '/pricing', label: 'Pricing' }, // Removed per user feedback
   ];
 
   const navItems = isAuthenticated ? authenticatedNavItems : publicNavItems;
@@ -122,7 +122,7 @@ export function Header() {
                 <Link href="/auth/signin">Sign In</Link>
               </Button>
               <Button asChild>
-                <Link href="/auth/signin">Get Started</Link>
+                <Link href="/auth/signup">Get Started</Link>
               </Button>
             </div>
           )}
@@ -216,7 +216,7 @@ export function Header() {
                   <Link href="/auth/signin">Sign In</Link>
                 </Button>
                 <Button className="w-full" asChild onClick={closeMenu}>
-                  <Link href="/auth/signin">Get Started</Link>
+                  <Link href="/auth/signup">Get Started</Link>
                 </Button>
               </div>
             )}

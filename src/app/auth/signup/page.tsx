@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { signIn } from 'next-auth/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,6 +26,8 @@ import {
 
 export default function SignUpPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const platform = searchParams.get('platform');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -113,7 +115,10 @@ export default function SignUpPage() {
       
       // Redirect after 3 seconds
       setTimeout(() => {
-        router.push('/auth/signin?message=AccountCreated');
+        const redirectUrl = platform 
+          ? `/auth/signin?message=AccountCreated&callbackUrl=/onboarding?platform=${platform}`
+          : '/auth/signin?message=AccountCreated&callbackUrl=/onboarding';
+        router.push(redirectUrl);
       }, 3000);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'An error occurred');
@@ -125,7 +130,8 @@ export default function SignUpPage() {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      await signIn('google', { callbackUrl: '/dashboard' });
+      const callbackUrl = platform ? `/onboarding?platform=${platform}` : '/onboarding';
+      await signIn('google', { callbackUrl });
     } catch (error) {
       console.error('Sign in error:', error);
       setError('Failed to sign in with Google');

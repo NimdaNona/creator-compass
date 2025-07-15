@@ -27,10 +27,10 @@ export const ratelimiters = redis
         analytics: true,
       }),
 
-      // Payment endpoints - 5 requests per minute
+      // Payment endpoints - 30 requests per minute (increased from 5)
       payment: new Ratelimit({
         redis,
-        limiter: Ratelimit.slidingWindow(5, '1 m'),
+        limiter: Ratelimit.slidingWindow(30, '1 m'),
         analytics: true,
       }),
 

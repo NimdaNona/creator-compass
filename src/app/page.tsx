@@ -58,7 +58,7 @@ export default function Home() {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
               <Button size="lg" className="text-lg px-8" asChild>
-                <Link href="/onboarding">
+                <Link href="/auth/signup">
                   Start Your Journey
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
@@ -130,7 +130,7 @@ export default function Home() {
                   </li>
                 </ul>
                 <Button variant="secondary" className="w-full" asChild>
-                  <Link href="/onboarding?platform=youtube">
+                  <Link href="/auth/signup?platform=youtube">
                     Start YouTube Journey
                   </Link>
                 </Button>
@@ -164,7 +164,7 @@ export default function Home() {
                   </li>
                 </ul>
                 <Button variant="secondary" className="w-full" asChild>
-                  <Link href="/onboarding?platform=tiktok">
+                  <Link href="/auth/signup?platform=tiktok">
                     Start TikTok Journey
                   </Link>
                 </Button>
@@ -198,7 +198,7 @@ export default function Home() {
                   </li>
                 </ul>
                 <Button variant="secondary" className="w-full" asChild>
-                  <Link href="/onboarding?platform=twitch">
+                  <Link href="/auth/signup?platform=twitch">
                     Start Twitch Journey
                   </Link>
                 </Button>
@@ -358,7 +358,7 @@ export default function Home() {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Button size="lg" className="text-lg px-8" asChild>
-                <Link href="/onboarding">
+                <Link href="/auth/signup">
                   Start Free Today
                   <Compass className="ml-2 h-5 w-5" />
                 </Link>
