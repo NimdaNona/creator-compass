@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { BulkScheduleIdeas } from './BulkScheduleIdeas';
 import {
   Select,
   SelectContent,
@@ -24,7 +25,8 @@ import {
   Radio,
   ExternalLink,
   Filter,
-  MoreVertical
+  MoreVertical,
+  CalendarDays
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -35,6 +37,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { useAppStore } from '@/store/useAppStore';
 
 interface SavedIdea {
   id: string;
@@ -52,12 +55,16 @@ interface SavedIdea {
 
 export function SavedIdeas() {
   const { toast } = useToast();
+  const { subscription } = useAppStore();
   const [savedIdeas, setSavedIdeas] = useState<SavedIdea[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterPlatform, setFilterPlatform] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortBy, setSortBy] = useState('recent');
+  const [bulkScheduleOpen, setBulkScheduleOpen] = useState(false);
+  
+  const hasFullAccess = subscription !== 'free';
 
   useEffect(() => {
     fetchSavedIdeas();
@@ -209,7 +216,8 @@ export function SavedIdeas() {
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -255,6 +263,25 @@ export function SavedIdeas() {
                 <SelectItem value="title">Title A-Z</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          
+          {/* Bulk Actions */}
+          {filteredIdeas.length > 0 && (
+            <div className="flex items-center justify-between pt-2 border-t">
+              <p className="text-sm text-muted-foreground">
+                {filteredIdeas.length} ideas found
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setBulkScheduleOpen(true)}
+                disabled={!hasFullAccess}
+              >
+                <CalendarDays className="w-4 h-4 mr-2" />
+                Bulk Schedule
+              </Button>
+            </div>
+          )}
           </div>
         </CardContent>
       </Card>
@@ -374,6 +401,14 @@ export function SavedIdeas() {
           })}
         </div>
       )}
+      
+      {/* Bulk Schedule Modal */}
+      <BulkScheduleIdeas
+        isOpen={bulkScheduleOpen}
+        onClose={() => setBulkScheduleOpen(false)}
+        ideas={filteredIdeas.filter(idea => !idea.implemented)}
+        hasFullAccess={hasFullAccess}
+      />
     </div>
   );
 }

@@ -144,6 +144,29 @@ export async function POST(request: Request) {
       }
     });
 
+    // Send real-time analytics update if event is published
+    if (validatedData.status === 'published') {
+      try {
+        await fetch(new URL('/api/analytics/update', request.url).toString(), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cookie': request.headers.get('cookie') || ''
+          },
+          body: JSON.stringify({
+            type: 'content',
+            update: {
+              contentUpdate: {
+                published: 1
+              }
+            }
+          })
+        });
+      } catch (error) {
+        console.error('Failed to send analytics update:', error);
+      }
+    }
+
     return NextResponse.json({ event }, { status: 201 });
 
   } catch (error) {

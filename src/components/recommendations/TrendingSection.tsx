@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, Hash, Users, Play } from 'lucide-react';
-import { useStore } from '@/store/useStore';
+import { useAppStore } from '@/store/useAppStore';
 import { cn } from '@/lib/utils';
 
 interface TrendingItem {
@@ -18,7 +18,7 @@ interface TrendingItem {
 export default function TrendingSection() {
   const [trending, setTrending] = useState<TrendingItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const { selectedPlatform, selectedNiche } = useStore();
+  const { selectedPlatform, selectedNiche } = useAppStore();
 
   useEffect(() => {
     fetchTrending();

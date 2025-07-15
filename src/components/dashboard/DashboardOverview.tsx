@@ -23,12 +23,26 @@ export function DashboardOverview() {
   const { selectedPlatform, selectedNiche, progress } = useAppStore();
 
   if (!selectedPlatform || !selectedNiche || !progress) {
-    return null;
+    return (
+      <div className="space-y-4">
+        <Card>
+          <CardHeader>
+            <div className="h-6 w-32 bg-muted animate-pulse rounded" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="h-4 w-full bg-muted animate-pulse rounded" />
+              <div className="h-4 w-3/4 bg-muted animate-pulse rounded" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   const roadmap = getRoadmap(selectedPlatform.id, selectedNiche.id);
   const allTasks = getAllTasksForRoadmap(selectedPlatform.id, selectedNiche.id);
-  const daysElapsed = Math.floor((Date.now() - progress.startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const daysElapsed = Math.floor((Date.now() - new Date(progress.startDate).getTime()) / (1000 * 60 * 60 * 24));
   const daysRemaining = Math.max(0, 90 - daysElapsed);
 
   // Calculate phase progress

@@ -11,7 +11,7 @@ import { Calendar, Clock, Target, Trophy, ChevronRight, Lock } from 'lucide-reac
 import DailyTaskCard from './DailyTaskCard';
 import MilestoneTracker from './MilestoneTracker';
 import ProgressPrediction from './ProgressPrediction';
-import { useStore } from '@/store/useStore';
+import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
 
 interface EnhancedTask {
@@ -71,7 +71,7 @@ export default function EnhancedRoadmapView() {
   const [selectedPhase, setSelectedPhase] = useState<number>(1);
   const [selectedWeek, setSelectedWeek] = useState<number>(1);
 
-  const { user, selectedPlatform, selectedNiche } = useStore();
+  const { selectedPlatform, selectedNiche } = useAppStore();
 
   useEffect(() => {
     fetchTasks();

@@ -6,10 +6,11 @@ import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { IdeaGenerator } from '@/components/ideas/IdeaGenerator';
+import { IdeaGenerator, GeneratedIdea } from '@/components/ideas/IdeaGenerator';
 import { SavedIdeas } from '@/components/ideas/SavedIdeas';
 import { TrendingTopics } from '@/components/ideas/TrendingTopics';
 import { IdeaFilters } from '@/components/ideas/IdeaFilters';
+import { ScheduleIdeaModal } from '@/components/ideas/ScheduleIdeaModal';
 import { 
   Lightbulb,
   Sparkles,
@@ -31,6 +32,8 @@ export default function IdeasPage() {
   const [activeTab, setActiveTab] = useState('generate');
   const [showPaywall, setShowPaywall] = useState(false);
   const [generatedToday, setGeneratedToday] = useState(0);
+  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [selectedIdea, setSelectedIdea] = useState<GeneratedIdea | null>(null);
 
   // Free tier limits
   const freeUserDailyLimit = 5;
@@ -48,6 +51,11 @@ export default function IdeasPage() {
       return;
     }
     // Idea generation logic handled in IdeaGenerator component
+  };
+
+  const handleScheduleIdea = (idea: GeneratedIdea) => {
+    setSelectedIdea(idea);
+    setScheduleModalOpen(true);
   };
 
   if (!session) {
@@ -128,6 +136,7 @@ export default function IdeasPage() {
                   generatedToday={generatedToday}
                   onGenerate={() => setGeneratedToday(prev => prev + 1)}
                   onLimitReached={() => setShowPaywall(true)}
+                  onScheduleIdea={handleScheduleIdea}
                 />
               </TabsContent>
 
@@ -226,6 +235,17 @@ export default function IdeasPage() {
         onClose={() => setShowPaywall(false)}
         feature="Unlimited Idea Generation"
         description="Generate unlimited content ideas with AI-powered suggestions tailored to your niche and platform."
+      />
+
+      {/* Schedule Idea Modal */}
+      <ScheduleIdeaModal
+        isOpen={scheduleModalOpen}
+        onClose={() => {
+          setScheduleModalOpen(false);
+          setSelectedIdea(null);
+        }}
+        idea={selectedIdea}
+        platform={selectedPlatform?.id}
       />
     </div>
   );

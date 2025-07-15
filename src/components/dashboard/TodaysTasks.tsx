@@ -5,8 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useDailyTasks } from '@/hooks/useDailyTasks';
 import { useAppStore } from '@/store/useAppStore';
-import { getTodaysTasks } from '@/lib/data';
 import { 
   CheckCircle, 
   Clock, 
@@ -19,20 +20,33 @@ import {
 } from 'lucide-react';
 
 export function TodaysTasks() {
-  const { selectedPlatform, selectedNiche, progress, completeTask, uncompleteTask, isTaskCompleted, updateStreak } = useAppStore();
+  const { updateStreak } = useAppStore();
+  const { loading, todaysTasks, completeTask: completeDailyTask } = useDailyTasks();
   const [celebratingTask, setCelebratingTask] = useState<string | null>(null);
 
-  if (!selectedPlatform || !selectedNiche || !progress) {
-    return null;
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-6 w-40" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-20 w-full" />
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
-  const todaysTasks = getTodaysTasks(selectedPlatform.id, selectedNiche.id, progress.startDate, progress.completedTasks);
-  const completedCount = todaysTasks.filter(task => isTaskCompleted(task.id)).length;
+  const completedCount = todaysTasks.filter(task => task.completed).length;
 
-  const handleTaskToggle = (taskId: string, completed: boolean) => {
+  const handleTaskToggle = async (taskId: string, completed: boolean) => {
     if (completed) {
-      completeTask(taskId);
       setCelebratingTask(taskId);
+      await completeDailyTask(taskId);
       updateStreak();
       
       // Clear celebration after animation
@@ -40,7 +54,8 @@ export function TodaysTasks() {
         setCelebratingTask(null);
       }, 2000);
     } else {
-      uncompleteTask(taskId);
+      // For now, we don't support uncompleting tasks via API
+      // This would need a separate endpoint
     }
   };
 
@@ -122,9 +137,28 @@ export function TodaysTasks() {
         ) : (
           <div className="space-y-4">
             {todaysTasks.map((task) => {
-              const isCompleted = isTaskCompleted(task.id);
+              const isCompleted = task.completed;
               const isCelebrating = celebratingTask === task.id;
               const CategoryIcon = getCategoryIcon(task.category);
+              
+              if (task.locked) {
+                return (
+                  <div key={task.id} className="p-4 rounded-lg border opacity-75">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Zap className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <h4 className="font-medium line-through">{task.title}</h4>
+                          <p className="text-sm text-muted-foreground">Upgrade to unlock this task</p>
+                        </div>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        Upgrade
+                      </Button>
+                    </div>
+                  </div>
+                );
+              }
               
               return (
                 <div
@@ -132,7 +166,7 @@ export function TodaysTasks() {
                   className={`p-4 rounded-lg border transition-all duration-300 ${
                     isCompleted 
                       ? 'bg-green-50 dark:bg-green-950/20 border-green-200' 
-                      : getPriorityColor(task.priority)
+                      : 'hover:border-gray-300'
                   } ${isCelebrating ? 'celebrate' : ''}`}
                 >
                   <div className="flex items-start space-x-3">
@@ -140,6 +174,7 @@ export function TodaysTasks() {
                       checked={isCompleted}
                       onCheckedChange={(checked) => handleTaskToggle(task.id, checked as boolean)}
                       className="mt-1"
+                      disabled={isCompleted}
                     />
                     
                     <div className="flex-1 min-w-0">
@@ -154,7 +189,9 @@ export function TodaysTasks() {
                             {task.category}
                           </Badge>
                           
-                          <div className={`w-2 h-2 rounded-full ${getPriorityBadgeColor(task.priority)}`} />
+                          <Badge variant={task.difficulty === 'beginner' ? 'secondary' : task.difficulty === 'intermediate' ? 'outline' : 'default'} className="text-xs">
+                            {task.difficulty}
+                          </Badge>
                         </div>
                       </div>
                       
@@ -166,17 +203,13 @@ export function TodaysTasks() {
                         <div className="flex items-center space-x-4 text-xs text-muted-foreground">
                           <div className="flex items-center space-x-1">
                             <Clock className="w-3 h-3" />
-                            <span>{task.estimatedTime} min</span>
+                            <span>{task.timeEstimate} min</span>
                           </div>
                           
                           <div className="flex items-center space-x-1">
                             <Target className="w-3 h-3" />
                             <span>{task.dayRange}</span>
                           </div>
-                          
-                          <Badge variant="outline" className="text-xs capitalize">
-                            {task.priority}
-                          </Badge>
                         </div>
                         
                         {!isCompleted && (

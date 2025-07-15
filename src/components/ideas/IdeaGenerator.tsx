@@ -38,9 +38,10 @@ interface IdeaGeneratorProps {
   generatedToday: number;
   onGenerate: () => void;
   onLimitReached: () => void;
+  onScheduleIdea?: (idea: GeneratedIdea) => void;
 }
 
-interface GeneratedIdea {
+export interface GeneratedIdea {
   id: string;
   title: string;
   description: string;
@@ -60,7 +61,8 @@ export function IdeaGenerator({
   dailyLimit,
   generatedToday,
   onGenerate,
-  onLimitReached
+  onLimitReached,
+  onScheduleIdea
 }: IdeaGeneratorProps) {
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
@@ -312,6 +314,16 @@ export function IdeaGenerator({
                       >
                         <Save className="w-4 h-4" />
                       </Button>
+                      {onScheduleIdea && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onScheduleIdea(idea)}
+                          title="Schedule this idea"
+                        >
+                          <Calendar className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
 

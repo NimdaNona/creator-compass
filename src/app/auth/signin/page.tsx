@@ -138,6 +138,8 @@ export default function SignInPage() {
         return 'Account created! Please check your email to verify your account.';
       case 'EmailAlreadyVerified':
         return 'Email already verified. You can sign in.';
+      case 'PasswordReset':
+        return 'Password reset successfully! You can now sign in with your new password.';
       default:
         return null;
     }

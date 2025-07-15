@@ -92,14 +92,8 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.sub!;
-        
-        // Fetch user profile and stats
-        const userData = await dbUtils.getUserById(token.sub!);
-        if (userData) {
-          session.user.profile = userData.profile;
-          session.user.stats = userData.stats;
-          session.user.emailVerified = userData.emailVerified;
-        }
+        // Only include essential user data in session
+        // Profile and stats should be fetched via API endpoints as needed
       }
       return session;
     },
@@ -172,9 +166,6 @@ declare module 'next-auth' {
       name?: string | null;
       email?: string | null;
       image?: string | null;
-      emailVerified?: Date | null;
-      profile?: any;
-      stats?: any;
     };
   }
 }

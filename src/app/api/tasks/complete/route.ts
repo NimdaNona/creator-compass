@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { NotificationTriggers } from '@/lib/notifications';
 
 export async function POST(request: Request) {
   try {
@@ -127,6 +128,58 @@ export async function POST(request: Request) {
 
     // Check for milestone achievements
     const milestoneAchievements = await checkMilestoneAchievements(user.id, completedTasks, streakDays);
+    
+    // Trigger celebrations for new achievements
+    for (const achievement of milestoneAchievements) {
+      try {
+        // Send achievement notification
+        await NotificationTriggers.onMilestoneCompleted(user.id, achievement.milestone);
+        
+        // Trigger celebration
+        await fetch(new URL('/api/celebrations', request.url).toString(), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cookie': request.headers.get('cookie') || ''
+          },
+          body: JSON.stringify({
+            type: 'milestone',
+            title: `🎉 ${achievement.milestone.name} Achieved!`,
+            message: achievement.milestone.description || 'Congratulations on reaching this milestone!',
+            icon: achievement.milestone.icon || '🏆',
+            color: achievement.milestone.color || '#FFD700',
+            animation: 'confetti',
+            duration: 5000
+          })
+        });
+      } catch (error) {
+        console.error('Failed to trigger celebration:', error);
+      }
+    }
+    
+    // Check for streak celebrations
+    if (streakDays === 7 || streakDays === 30 || streakDays === 90) {
+      try {
+        await fetch(new URL('/api/celebrations', request.url).toString(), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cookie': request.headers.get('cookie') || ''
+          },
+          body: JSON.stringify({
+            type: 'streak',
+            title: `🔥 ${streakDays}-Day Streak!`,
+            message: `Amazing! You've maintained a ${streakDays}-day streak!`,
+            icon: '🔥',
+            color: '#FF6B6B',
+            animation: 'fireworks',
+            duration: 5000
+          })
+        });
+      } catch (error) {
+        console.error('Failed to trigger streak celebration:', error);
+      }
+    }
 
     // Track engagement for recommendations
     await prisma.contentEngagement.create({

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -11,6 +11,9 @@ import { ExportButton } from '@/components/export/ExportButton';
 import { useAppStore } from '@/store/useAppStore';
 import { useSubscription } from '@/hooks/useSubscription';
 import { exportAnalyticsToPDF, exportToCSV } from '@/lib/export';
+import { toast } from 'sonner';
+import { useRealtimeAnalytics } from '@/hooks/useRealtimeAnalytics';
+import { cn } from '@/lib/utils';
 import {
   BarChart3,
   TrendingUp,
@@ -45,52 +48,177 @@ import {
   AreaChart
 } from 'recharts';
 
-// Mock data for charts
-const growthData = [
-  { month: 'Jan', followers: 1200, views: 45000, engagement: 3.2 },
-  { month: 'Feb', followers: 1350, views: 52000, engagement: 3.5 },
-  { month: 'Mar', followers: 1580, views: 61000, engagement: 3.8 },
-  { month: 'Apr', followers: 1820, views: 72000, engagement: 4.1 },
-  { month: 'May', followers: 2150, views: 85000, engagement: 4.3 },
-  { month: 'Jun', followers: 2480, views: 98000, engagement: 4.5 },
-];
-
-const contentPerformance = [
-  { type: 'Tutorial', views: 35000, engagement: 4.5, count: 12 },
-  { type: 'Review', views: 28000, engagement: 3.8, count: 8 },
-  { type: 'Vlog', views: 22000, engagement: 3.2, count: 15 },
-  { type: 'Shorts', views: 45000, engagement: 5.2, count: 30 },
-  { type: 'Live', views: 18000, engagement: 4.8, count: 5 },
-];
-
-const audienceData = [
-  { age: '13-17', percentage: 15 },
-  { age: '18-24', percentage: 35 },
-  { age: '25-34', percentage: 30 },
-  { age: '35-44', percentage: 15 },
-  { age: '45+', percentage: 5 },
-];
+interface AnalyticsData {
+  metrics: {
+    totalFollowers: number;
+    followersChange: string;
+    totalViews: number;
+    viewsChange: string;
+    avgEngagement: string;
+    engagementChange: string;
+    totalRevenue: number;
+    revenueChange: number;
+    completedTasks: number;
+    completedMilestones: number;
+    contentPublished: number;
+  };
+  growthData: Array<{
+    month: string;
+    followers: number;
+    views: number;
+    engagement: number;
+  }>;
+  contentPerformance: Array<{
+    type: string;
+    count: number;
+    views: number;
+    engagement: number;
+  }>;
+  contentMetrics: {
+    published: number;
+    scheduled: number;
+    draft: number;
+    ideas: number;
+  };
+  audienceData: Array<{
+    age: string;
+    percentage: number;
+  }>;
+  insights: Array<{
+    type: string;
+    title: string;
+    description: string;
+  }>;
+}
 
 const COLORS = ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981', '#f59e0b'];
 
 export function AnalyticsDashboard() {
   const { selectedPlatform } = useAppStore();
   const { subscription, isActive } = useSubscription();
-  const [timeRange, setTimeRange] = useState('6months');
+  const [timeRange, setTimeRange] = useState('30days');
   const [activeTab, setActiveTab] = useState('overview');
+  const [loading, setLoading] = useState(true);
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
+  const [error, setError] = useState<string | null>(null);
   
   const isPremium = isActive && subscription?.plan !== 'free';
 
-  // Mock metrics
-  const metrics = {
-    totalFollowers: 2480,
-    followersChange: 15.2,
-    totalViews: 98000,
-    viewsChange: 12.8,
-    avgEngagement: 4.5,
-    engagementChange: 2.1,
-    totalRevenue: 1250,
-    revenueChange: 18.5,
+  // Handle real-time analytics updates
+  const handleRealtimeUpdate = useCallback((update: any) => {
+    setAnalyticsData(prev => {
+      if (!prev) return prev;
+      
+      const newData = { ...prev };
+      
+      // Update specific metric
+      if (update.type === 'metric' && update.metric) {
+        newData.metrics = {
+          ...newData.metrics,
+          [update.metric]: update.value
+        };
+        
+        // Update change percentage if provided
+        const changeKey = `${update.metric}Change`;
+        if (update.change !== undefined && changeKey in newData.metrics) {
+          (newData.metrics as any)[changeKey] = update.change;
+        }
+      }
+      
+      // Update content metrics
+      if (update.type === 'content' && update.contentUpdate) {
+        newData.contentMetrics = {
+          ...newData.contentMetrics,
+          ...update.contentUpdate
+        };
+      }
+      
+      // Update milestone completion
+      if (update.type === 'milestone' && update.milestoneUpdate) {
+        newData.metrics.completedMilestones = update.milestoneUpdate.completed;
+      }
+      
+      return newData;
+    });
+  }, []);
+
+  // Use real-time analytics hook
+  useRealtimeAnalytics({
+    onUpdate: handleRealtimeUpdate,
+    enabled: isPremium && !loading && !error
+  });
+
+  // Fetch analytics data
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      if (!isPremium) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const params = new URLSearchParams({
+          timeRange,
+          platform: selectedPlatform?.id || 'all'
+        });
+        
+        const response = await fetch(`/api/analytics?${params}`);
+        const data = await response.json();
+        
+        if (!response.ok) {
+          if (data.upgradeRequired) {
+            // Analytics is a premium feature, handled by FeatureSection
+            setError(null);
+          } else {
+            throw new Error(data.error || 'Failed to fetch analytics');
+          }
+        } else {
+          setAnalyticsData(data);
+        }
+      } catch (err) {
+        console.error('Error fetching analytics:', err);
+        setError('Failed to load analytics data');
+        toast.error('Failed to load analytics');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnalytics();
+    
+    // Set up polling for real-time updates (every 30 seconds)
+    const interval = setInterval(fetchAnalytics, 30000);
+    
+    return () => clearInterval(interval);
+  }, [timeRange, selectedPlatform, isPremium]);
+
+  // Use default data if no analytics data is loaded
+  const metrics = analyticsData?.metrics || {
+    totalFollowers: 0,
+    followersChange: '0',
+    totalViews: 0,
+    viewsChange: '0',
+    avgEngagement: '0',
+    engagementChange: '0',
+    totalRevenue: 0,
+    revenueChange: 0,
+    completedTasks: 0,
+    completedMilestones: 0,
+    contentPublished: 0
+  };
+  
+  const growthData = analyticsData?.growthData || [];
+  const contentPerformance = analyticsData?.contentPerformance || [];
+  const audienceData = analyticsData?.audienceData || [];
+  const insights = analyticsData?.insights || [];
+  const contentMetrics = analyticsData?.contentMetrics || {
+    published: 0,
+    scheduled: 0,
+    draft: 0,
+    ideas: 0
   };
 
   const MetricCard = ({ 
@@ -101,24 +229,26 @@ export function AnalyticsDashboard() {
     format = 'number' 
   }: {
     title: string;
-    value: number;
-    change: number;
+    value: number | string;
+    change: number | string;
     icon: React.ElementType;
     format?: 'number' | 'percent' | 'currency';
   }) => {
+    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+    const numChange = typeof change === 'string' ? parseFloat(change) : change;
     const formatValue = () => {
       switch (format) {
         case 'percent':
-          return `${value}%`;
+          return `${numValue}%`;
         case 'currency':
-          return `$${value.toLocaleString()}`;
+          return `$${numValue.toLocaleString()}`;
         default:
-          return value.toLocaleString();
+          return numValue.toLocaleString();
       }
     };
 
-    const isPositive = change > 0;
-    const isNeutral = change === 0;
+    const isPositive = numChange > 0;
+    const isNeutral = numChange === 0;
 
     return (
       <Card>
@@ -139,7 +269,7 @@ export function AnalyticsDashboard() {
             <span className={cn(
               isNeutral ? 'text-muted-foreground' : isPositive ? 'text-green-500' : 'text-red-500'
             )}>
-              {Math.abs(change)}%
+              {Math.abs(numChange)}%
             </span>
             <span className="text-muted-foreground">from last period</span>
           </div>
@@ -208,24 +338,44 @@ export function AnalyticsDashboard() {
         title="Premium Analytics"
         description="Get detailed insights into your content performance, audience demographics, and growth trends"
       >
+        {loading && isPremium ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center space-y-3">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto" />
+              <p className="text-sm text-muted-foreground">Loading analytics...</p>
+            </div>
+          </div>
+        ) : error ? (
+          <div className="text-center py-8">
+            <p className="text-destructive">{error}</p>
+            <Button 
+              onClick={() => window.location.reload()} 
+              variant="outline" 
+              size="sm" 
+              className="mt-2"
+            >
+              Retry
+            </Button>
+          </div>
+        ) : (
         {/* Metrics Overview */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             title="Total Followers"
             value={metrics.totalFollowers}
-            change={metrics.followersChange}
+            change={parseFloat(metrics.followersChange)}
             icon={Users}
           />
           <MetricCard
             title="Total Views"
             value={metrics.totalViews}
-            change={metrics.viewsChange}
+            change={parseFloat(metrics.viewsChange)}
             icon={Eye}
           />
           <MetricCard
             title="Avg. Engagement"
-            value={metrics.avgEngagement}
-            change={metrics.engagementChange}
+            value={parseFloat(metrics.avgEngagement)}
+            change={parseFloat(metrics.engagementChange)}
             icon={Activity}
             format="percent"
           />
@@ -300,33 +450,26 @@ export function AnalyticsDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex items-start space-x-3">
-                  <div className="w-2 h-2 rounded-full bg-green-500 mt-1.5" />
-                  <div>
-                    <p className="text-sm font-medium">Strong Growth Momentum</p>
-                    <p className="text-xs text-muted-foreground">
-                      Your follower count has increased by 106% in the last 6 months
-                    </p>
+                {insights.length > 0 ? insights.map((insight, index) => (
+                  <div key={index} className="flex items-start space-x-3">
+                    <div className={cn(
+                      "w-2 h-2 rounded-full mt-1.5",
+                      insight.type === 'growth' ? 'bg-green-500' :
+                      insight.type === 'engagement' ? 'bg-blue-500' :
+                      'bg-purple-500'
+                    )} />
+                    <div>
+                      <p className="text-sm font-medium">{insight.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {insight.description}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5" />
-                  <div>
-                    <p className="text-sm font-medium">Engagement Rate Above Average</p>
-                    <p className="text-xs text-muted-foreground">
-                      Your 4.5% engagement rate is 2x higher than the platform average
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-2 h-2 rounded-full bg-purple-500 mt-1.5" />
-                  <div>
-                    <p className="text-sm font-medium">Best Performing Content Type</p>
-                    <p className="text-xs text-muted-foreground">
-                      Short-form content generates 45% more views than other formats
-                    </p>
-                  </div>
-                </div>
+                )) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No insights available yet. Keep creating content!
+                  </p>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -484,11 +627,9 @@ export function AnalyticsDashboard() {
             </Card>
           </TabsContent>
         </Tabs>
+        )}
       </FeatureSection>
     </div>
   );
 }
 
-function cn(...classes: (string | boolean | undefined)[]) {
-  return classes.filter(Boolean).join(' ');
-}

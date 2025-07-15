@@ -10,6 +10,9 @@ import { SmartUpgradeTrigger } from "@/components/upgrade/SmartUpgradeTrigger";
 import { PWAProvider } from "@/components/pwa/PWAProvider";
 import { BottomNav } from "@/components/navigation/BottomNav";
 import { NotificationProvider } from "@/components/notifications/NotificationProvider";
+import { RealtimeNotificationProvider } from "@/components/notifications/RealtimeNotificationProvider";
+import { ProfileLoader } from "@/components/providers/ProfileLoader";
+import { NavigationGuard } from "@/components/navigation/NavigationGuard";
 // Error boundary handled at page level since root layout is server component
 
 const inter = Inter({
@@ -130,18 +133,24 @@ export default function RootLayout({
       <body className={`${inter.className} antialiased min-h-screen flex flex-col`}>
         <SessionProvider>
           <ThemeProvider>
-            <PWAProvider>
-              <NotificationProvider>
-                <Header />
-                <main className="flex-1 pb-20 md:pb-0">
-                  {children}
-                </main>
-                <Footer />
-                <BottomNav />
-                <CelebrationSystem />
-                <SmartUpgradeTrigger />
-              </NotificationProvider>
-            </PWAProvider>
+            <ProfileLoader>
+              <NavigationGuard>
+                <PWAProvider>
+                  <NotificationProvider>
+                    <RealtimeNotificationProvider>
+                      <Header />
+                      <main className="flex-1 pb-20 md:pb-0">
+                        {children}
+                      </main>
+                      <Footer />
+                      <BottomNav />
+                      <CelebrationSystem />
+                      <SmartUpgradeTrigger />
+                    </RealtimeNotificationProvider>
+                  </NotificationProvider>
+                </PWAProvider>
+              </NavigationGuard>
+            </ProfileLoader>
           </ThemeProvider>
         </SessionProvider>
       </body>

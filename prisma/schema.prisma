@@ -70,6 +70,7 @@ model User {
   communityProfile       CommunityProfile?
   notificationPreferences Json?
   notifications          Notification[]
+  resourceRatings        ResourceRating[]
 }
 
 model VerificationToken {
@@ -626,4 +627,46 @@ model Notification {
   @@index([userId, isRead])
   @@index([type, priority])
   @@index([createdAt])
+}
+
+// Resource library
+model Resource {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @db.Text
+  category    String   // guides, tools, templates, tutorials, community, analytics, monetization
+  type        String   // article, video, tool, template, course, community, service
+  url         String?
+  content     String?  @db.Text
+  platform    String?  // youtube, tiktok, twitch, or null for cross-platform
+  isPremium   Boolean  @default(false)
+  tags        String[]
+  metadata    Json?    // Additional data like author, difficulty, etc.
+  views       Int      @default(0)
+  rating      Float?   // Average rating
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  ratings ResourceRating[]
+  
+  @@index([category])
+  @@index([platform])
+  @@index([isPremium])
+}
+
+// Resource ratings
+model ResourceRating {
+  id         String   @id @default(cuid())
+  userId     String
+  resourceId String
+  rating     Int      // 1-5
+  review     String?  @db.Text
+  helpful    Int      @default(0) // Helpful votes
+  createdAt  DateTime @default(now())
+  
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, resourceId])
+  @@index([resourceId])
 }

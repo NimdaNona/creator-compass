@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
@@ -15,7 +15,7 @@ const updateEventSchema = z.object({
   tags: z.array(z.string()).optional(),
   duration: z.number().optional(),
   color: z.string().optional(),
-  seriesId: z.string().nullable().optional()
+  seriesId: z.string().optional()
 });
 
 // GET /api/calendar/events/[id] - Get single event
@@ -63,8 +63,8 @@ export async function GET(
   }
 }
 
-// PUT /api/calendar/events/[id] - Update event
-export async function PUT(
+// PATCH /api/calendar/events/[id] - Update event
+export async function PATCH(
   request: Request,
   { params }: { params: { id: string } }
 ) {
@@ -101,17 +101,10 @@ export async function PUT(
     }
 
     // Update event
-    const updatedData: any = {};
-    if (validatedData.title !== undefined) updatedData.title = validatedData.title;
-    if (validatedData.description !== undefined) updatedData.description = validatedData.description;
-    if (validatedData.platform !== undefined) updatedData.platform = validatedData.platform;
-    if (validatedData.contentType !== undefined) updatedData.contentType = validatedData.contentType;
-    if (validatedData.status !== undefined) updatedData.status = validatedData.status;
-    if (validatedData.scheduledDate !== undefined) updatedData.scheduledDate = new Date(validatedData.scheduledDate);
-    if (validatedData.tags !== undefined) updatedData.tags = validatedData.tags;
-    if (validatedData.duration !== undefined) updatedData.duration = validatedData.duration;
-    if (validatedData.color !== undefined) updatedData.color = validatedData.color;
-    if (validatedData.seriesId !== undefined) updatedData.seriesId = validatedData.seriesId;
+    const updatedData: any = { ...validatedData };
+    if (validatedData.scheduledDate) {
+      updatedData.scheduledDate = new Date(validatedData.scheduledDate);
+    }
 
     const event = await prisma.calendarEvent.update({
       where: { id: params.id },
@@ -120,6 +113,39 @@ export async function PUT(
         series: true
       }
     });
+
+    // Send real-time analytics update if status changed
+    if (validatedData.status && validatedData.status !== existingEvent.status) {
+      try {
+        const contentUpdate: any = {};
+        
+        // Decrement old status count
+        if (existingEvent.status === 'published') contentUpdate.published = -1;
+        else if (existingEvent.status === 'scheduled') contentUpdate.scheduled = -1;
+        else if (existingEvent.status === 'draft') contentUpdate.draft = -1;
+        else if (existingEvent.status === 'idea') contentUpdate.ideas = -1;
+        
+        // Increment new status count
+        if (validatedData.status === 'published') contentUpdate.published = (contentUpdate.published || 0) + 1;
+        else if (validatedData.status === 'scheduled') contentUpdate.scheduled = (contentUpdate.scheduled || 0) + 1;
+        else if (validatedData.status === 'draft') contentUpdate.draft = (contentUpdate.draft || 0) + 1;
+        else if (validatedData.status === 'idea') contentUpdate.ideas = (contentUpdate.ideas || 0) + 1;
+
+        await fetch(new URL('/api/analytics/update', request.url).toString(), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cookie': request.headers.get('cookie') || ''
+          },
+          body: JSON.stringify({
+            type: 'content',
+            update: { contentUpdate }
+          })
+        });
+      } catch (error) {
+        console.error('Failed to send analytics update:', error);
+      }
+    }
 
     return NextResponse.json({ event });
 
@@ -160,14 +186,14 @@ export async function DELETE(
     }
 
     // Check if event exists and belongs to user
-    const existingEvent = await prisma.calendarEvent.findFirst({
+    const event = await prisma.calendarEvent.findFirst({
       where: {
         id: params.id,
         userId: user.id
       }
     });
 
-    if (!existingEvent) {
+    if (!event) {
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
 
@@ -176,7 +202,30 @@ export async function DELETE(
       where: { id: params.id }
     });
 
-    return NextResponse.json({ message: 'Event deleted successfully' });
+    // Send real-time analytics update
+    if (event.status === 'published' || event.status === 'scheduled') {
+      try {
+        const contentUpdate: any = {};
+        if (event.status === 'published') contentUpdate.published = -1;
+        else if (event.status === 'scheduled') contentUpdate.scheduled = -1;
+
+        await fetch(new URL('/api/analytics/update', request.url).toString(), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cookie': request.headers.get('cookie') || ''
+          },
+          body: JSON.stringify({
+            type: 'content',
+            update: { contentUpdate }
+          })
+        });
+      } catch (error) {
+        console.error('Failed to send analytics update:', error);
+      }
+    }
+
+    return NextResponse.json({ success: true });
 
   } catch (error) {
     console.error('Error deleting calendar event:', error);

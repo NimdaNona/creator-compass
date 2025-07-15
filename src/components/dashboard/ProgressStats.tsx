@@ -1,10 +1,14 @@
 'use client';
 
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useAppStore } from '@/store/useAppStore';
 import { getAllTasksForRoadmap, calculateProgress } from '@/lib/data';
+import { useSubscription } from '@/hooks/useSubscription';
+import { PaywallModal } from '@/components/paywall/PaywallModal';
 import { 
   Target, 
   TrendingUp, 
@@ -12,11 +16,16 @@ import {
   Flame,
   Calendar,
   Trophy,
-  Zap
+  Zap,
+  Lock,
+  AlertCircle,
+  Crown
 } from 'lucide-react';
 
 export function ProgressStats() {
   const { selectedPlatform, selectedNiche, progress } = useAppStore();
+  const { subscription, isActive, loading: isLoading } = useSubscription();
+  const [showPaywall, setShowPaywall] = useState(false);
 
   if (!selectedPlatform || !selectedNiche || !progress) {
     return null;
@@ -24,8 +33,15 @@ export function ProgressStats() {
 
   const allTasks = getAllTasksForRoadmap(selectedPlatform.id, selectedNiche.id);
   const overallProgress = calculateProgress(progress.completedTasks, allTasks.length);
-  const daysElapsed = Math.floor((Date.now() - progress.startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const daysElapsed = Math.floor((Date.now() - new Date(progress.startDate).getTime()) / (1000 * 60 * 60 * 24));
   const expectedProgress = Math.min(100, (daysElapsed / 90) * 100);
+  
+  // Free tier limits
+  const maxProgressDays = 30;
+  const currentDay = daysElapsed + 1;
+  const isFreeTier = !isActive || subscription?.plan === 'free';
+  const isLocked = isFreeTier && currentDay > maxProgressDays;
+  const daysRemaining = Math.max(0, maxProgressDays - currentDay);
 
   const stats = [
     {
@@ -58,7 +74,7 @@ export function ProgressStats() {
       value: `${currentDay}`,
       subtitle: isFreeTier ? `of ${maxProgressDays} days (Free)` : 'of 90 days',
       icon: Calendar,
-      progress: isFreeTier ? (currentDay / maxProgressDays) * 100 : (currentDay / 90) * 100,
+      progress: isFreeTier ? Math.min(100, (currentDay / maxProgressDays) * 100) : Math.min(100, (currentDay / 90) * 100),
       color: isLocked ? 'bg-red-500' : 'bg-green-500',
       trend: 'neutral'
     }

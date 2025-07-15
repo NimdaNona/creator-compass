@@ -19,7 +19,8 @@ export default withAuth(
       pathname.startsWith('/manifest') ||
       pathname.startsWith('/icon') ||
       pathname === '/sitemap.xml' ||
-      pathname === '/robots.txt'
+      pathname === '/robots.txt' ||
+      pathname.startsWith('/sw.js')
     ) {
       return NextResponse.next();
     }
@@ -32,18 +33,8 @@ export default withAuth(
       return NextResponse.redirect(url);
     }
 
-    // Redirect to onboarding if user hasn't completed setup
-    if (token && !pathname.startsWith('/onboarding')) {
-      // Check if user has completed onboarding
-      const hasCompletedOnboarding = (token as any)?.profile?.selectedPlatform;
-      
-      if (!hasCompletedOnboarding) {
-        const url = req.nextUrl.clone();
-        url.pathname = '/onboarding';
-        return NextResponse.redirect(url);
-      }
-    }
-
+    // Allow access to all authenticated routes
+    // Onboarding check will be handled at the page level
     return NextResponse.next();
   },
   {
@@ -63,13 +54,14 @@ export default withAuth(
           pathname.startsWith('/manifest') ||
           pathname.startsWith('/icon') ||
           pathname === '/sitemap.xml' ||
-          pathname === '/robots.txt'
+          pathname === '/robots.txt' ||
+          pathname.startsWith('/sw.js') ||
+          pathname.startsWith('/api/stripe/webhook') // Allow webhook access
         ) {
           return true;
         }
 
         // For protected routes, require authentication
-        // This will redirect to sign-in automatically
         return !!token;
       },
     },

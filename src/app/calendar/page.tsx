@@ -6,10 +6,13 @@ import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ContentCalendar } from '@/components/calendar/ContentCalendar';
+import { DraggableContentCalendar } from '@/components/calendar/DraggableContentCalendar';
+import { EventFormModal } from '@/components/calendar/EventFormModal';
 import { CalendarHeader } from '@/components/calendar/CalendarHeader';
 import { ScheduleOptimizer } from '@/components/calendar/ScheduleOptimizer';
 import { ContentList } from '@/components/calendar/ContentList';
+import { BulkScheduler } from '@/components/calendar/BulkScheduler';
+import { SeriesManager } from '@/components/calendar/SeriesManager';
 import { 
   Calendar,
   Grid3x3,
@@ -33,6 +36,9 @@ export default function CalendarPage() {
   const [view, setView] = useState<'month' | 'week' | 'list'>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showPaywall, setShowPaywall] = useState(false);
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
 
   // Check if user has access (calendar is a premium feature for full functionality)
   const hasFullAccess = subscription !== 'free';
@@ -49,8 +55,25 @@ export default function CalendarPage() {
       setShowPaywall(true);
       return;
     }
-    // Navigate to content creation or open modal
-    router.push('/templates/generate');
+    setSelectedDate(new Date());
+    setSelectedEvent(null);
+    setShowEventModal(true);
+  };
+
+  const handleEventCreate = (date: Date) => {
+    if (!hasFullAccess && date > new Date(Date.now() + freeUserDaysLimit * 24 * 60 * 60 * 1000)) {
+      setShowPaywall(true);
+      return;
+    }
+    setSelectedDate(date);
+    setSelectedEvent(null);
+    setShowEventModal(true);
+  };
+
+  const handleEventEdit = (event: any) => {
+    setSelectedEvent(event);
+    setSelectedDate(event.scheduledDate);
+    setShowEventModal(true);
   };
 
   const handleExport = () => {
@@ -142,20 +165,24 @@ export default function CalendarPage() {
                   </TabsList>
 
                   <TabsContent value="month" className="mt-0">
-                    <ContentCalendar 
+                    <DraggableContentCalendar 
                       view="month"
                       currentDate={currentDate}
                       hasFullAccess={hasFullAccess}
                       freeUserDaysLimit={freeUserDaysLimit}
+                      onEventCreate={handleEventCreate}
+                      onEventEdit={handleEventEdit}
                     />
                   </TabsContent>
 
                   <TabsContent value="week" className="mt-0">
-                    <ContentCalendar 
+                    <DraggableContentCalendar 
                       view="week"
                       currentDate={currentDate}
                       hasFullAccess={hasFullAccess}
                       freeUserDaysLimit={freeUserDaysLimit}
+                      onEventCreate={handleEventCreate}
+                      onEventEdit={handleEventEdit}
                     />
                   </TabsContent>
 
@@ -173,6 +200,16 @@ export default function CalendarPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* Bulk Scheduler */}
+            <BulkScheduler 
+              onSuccess={() => {
+                // Calendar will auto-refresh
+              }}
+            />
+
+            {/* Series Manager */}
+            <SeriesManager />
+
             {/* Schedule Optimizer */}
             <ScheduleOptimizer 
               platform={selectedPlatform}
@@ -233,6 +270,24 @@ export default function CalendarPage() {
         onClose={() => setShowPaywall(false)}
         feature="Full Calendar Access"
         description="Unlock unlimited calendar planning, bulk scheduling, and calendar export features."
+      />
+
+      {/* Event Form Modal */}
+      <EventFormModal
+        isOpen={showEventModal}
+        onClose={() => {
+          setShowEventModal(false);
+          setSelectedEvent(null);
+          setSelectedDate(null);
+        }}
+        event={selectedEvent}
+        defaultDate={selectedDate}
+        onSuccess={() => {
+          setShowEventModal(false);
+          setSelectedEvent(null);
+          setSelectedDate(null);
+          // Calendar will auto-refresh due to useEffect dependency
+        }}
       />
     </div>
   );

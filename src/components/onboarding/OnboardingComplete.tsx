@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/store/useAppStore';
+import { toast } from 'sonner';
 import { 
   CheckCircle, 
   Sparkles, 
@@ -25,11 +26,49 @@ interface OnboardingCompleteProps {
 export function OnboardingComplete({ onNext }: OnboardingCompleteProps) {
   const router = useRouter();
   const { selectedPlatform, selectedNiche, progress, initialize } = useAppStore();
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     // Initialize the app state and create initial progress
     initialize();
-  }, [initialize]);
+    
+    // Save onboarding data to database
+    const saveOnboardingData = async () => {
+      if (!selectedPlatform || !selectedNiche) return;
+      
+      setSaving(true);
+      try {
+        const response = await fetch('/api/user/profile', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            selectedPlatform: selectedPlatform.id,
+            selectedNiche: selectedNiche.id,
+            currentPhase: 1,
+            currentWeek: 1,
+            goals: progress?.goals || [],
+            targetTimeframe: progress?.targetTimeframe || 90,
+            motivation: progress?.motivation || '',
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to save profile');
+        }
+
+        toast.success('Your profile has been created successfully!');
+      } catch (error) {
+        console.error('Error saving profile:', error);
+        toast.error('Failed to save your profile. Please try again.');
+      } finally {
+        setSaving(false);
+      }
+    };
+
+    saveOnboardingData();
+  }, [initialize, selectedPlatform, selectedNiche, progress]);
 
   const handleGoToDashboard = () => {
     router.push('/dashboard');
@@ -195,13 +234,13 @@ export function OnboardingComplete({ onNext }: OnboardingCompleteProps) {
 
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
-        <Button size="lg" onClick={handleGoToDashboard} className="px-8">
+        <Button size="lg" onClick={handleGoToDashboard} disabled={saving} className="px-8">
           <PlayCircle className="w-5 h-5 mr-2" />
-          Start Your Journey
+          {saving ? 'Saving...' : 'Start Your Journey'}
           <ArrowRight className="w-5 h-5 ml-2" />
         </Button>
         
-        <Button variant="outline" size="lg" onClick={handleExploreTemplates} className="px-8">
+        <Button variant="outline" size="lg" onClick={handleExploreTemplates} disabled={saving} className="px-8">
           <Sparkles className="w-5 h-5 mr-2" />
           Explore Templates
         </Button>

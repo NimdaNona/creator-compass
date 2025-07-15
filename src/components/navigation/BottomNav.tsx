@@ -166,7 +166,7 @@ export function BottomNav() {
               )}
             >
               <Plus className="w-6 h-6" />
-              <span className="sr-only">Create Content</span>
+              <span className="sr-only">Generate Content</span>
               
               {/* Pulse effect */}
               <div className="absolute inset-0 rounded-full bg-white/20 scale-0 group-hover:scale-100 transition-transform duration-300" />

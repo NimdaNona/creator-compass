@@ -102,6 +102,7 @@ async function main() {
   console.log('✅ Created sample achievement');
 
   console.log('🎉 Database seed completed!');
+  console.log('📝 Note: Run "tsx prisma/seedTasks.ts" separately to seed daily tasks');
 }
 
 main()

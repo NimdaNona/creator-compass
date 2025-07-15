@@ -200,8 +200,8 @@ export const getNextTask = (platformId: string, nicheId: string, completedTasks:
 };
 
 // Get today's tasks (if following the roadmap chronologically)
-export const getTodaysTasks = (platformId: string, nicheId: string, startDate: Date, completedTasks: string[]) => {
-  const daysSinceStart = Math.floor((Date.now() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+export const getTodaysTasks = (platformId: string, nicheId: string, startDate: Date | string, completedTasks: string[]) => {
+  const daysSinceStart = Math.floor((Date.now() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24));
   const currentDay = daysSinceStart + 1; // Day 1, 2, 3, etc.
   
   const allTasks = getAllTasksForRoadmap(platformId, nicheId);
@@ -219,8 +219,8 @@ export const getTodaysTasks = (platformId: string, nicheId: string, startDate: D
 };
 
 // Get tasks for current week
-export const getCurrentWeekTasks = (platformId: string, nicheId: string, startDate: Date) => {
-  const daysSinceStart = Math.floor((Date.now() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+export const getCurrentWeekTasks = (platformId: string, nicheId: string, startDate: Date | string) => {
+  const daysSinceStart = Math.floor((Date.now() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24));
   const currentWeek = Math.floor(daysSinceStart / 7) + 1;
   const currentPhase = Math.ceil(currentWeek / 4); // Assuming 4 weeks per phase
   

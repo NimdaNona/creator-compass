@@ -11,6 +11,7 @@ import { TodaysTasks } from '@/components/dashboard/TodaysTasks';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { AchievementsBanner } from '@/components/dashboard/AchievementsBanner';
 import { UsageWidget } from '@/components/dashboard/UsageWidget';
+import { DraggableContentCalendar } from '@/components/calendar/DraggableContentCalendar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,17 +32,8 @@ export default function DashboardPage() {
   const { 
     selectedPlatform, 
     selectedNiche, 
-    progress, 
-    onboardingComplete 
+    progress
   } = useAppStore();
-
-  useEffect(() => {
-    // Redirect to onboarding if not completed
-    if (!onboardingComplete || !selectedPlatform || !selectedNiche) {
-      router.push('/onboarding');
-      return;
-    }
-  }, [onboardingComplete, selectedPlatform, selectedNiche, router]);
 
   // Loading state
   if (!selectedPlatform || !selectedNiche || !progress) {
@@ -77,7 +69,7 @@ export default function DashboardPage() {
                 <Badge variant="outline">{selectedNiche.name}</Badge>
                 <span className="text-muted-foreground">•</span>
                 <span className="text-sm text-muted-foreground">
-                  Day {Math.floor((Date.now() - progress.startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1} of 90
+                  Day {Math.floor((Date.now() - new Date(progress.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1} of 90
                 </span>
               </div>
             </div>
@@ -145,27 +137,7 @@ export default function DashboardPage() {
           </TabsContent>
 
           <TabsContent value="calendar" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Calendar className="w-5 h-5" />
-                  <span>Content Calendar</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12">
-                  <Calendar className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Coming Soon</h3>
-                  <p className="text-muted-foreground mb-4">
-                    A visual content calendar to plan your posts and track your publishing schedule.
-                  </p>
-                  <Button variant="outline">
-                    <PlayCircle className="w-4 h-4 mr-2" />
-                    Get Notified
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <DraggableContentCalendar />
           </TabsContent>
         </Tabs>
       </div>

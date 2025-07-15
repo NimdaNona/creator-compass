@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/db';
 import { NotificationType } from '@/types/notifications';
+import { sendEmail } from '@/lib/email';
 
 // Notification service for creating and managing notifications
 export class NotificationService {
@@ -50,8 +51,28 @@ export class NotificationService {
         }
       });
 
-      // TODO: Send real-time notification via WebSocket/SSE
-      // TODO: Send email notification if enabled in preferences
+      // Send real-time notification via SSE
+      try {
+        const { sendNotificationToUser } = await import('@/app/api/notifications/sse/route');
+        sendNotificationToUser(userId, {
+          id: notification.id,
+          type,
+          title: data.title,
+          message: data.message,
+          icon: data.icon,
+          color: data.color,
+          animation: data.animation,
+          duration: data.duration,
+          createdAt: notification.createdAt
+        });
+      } catch (error) {
+        console.error('Error sending real-time notification:', error);
+      }
+
+      // Send email notification if enabled in preferences
+      if (preferences.emailNotifications) {
+        await this.sendEmailNotification(userId, notification);
+      }
 
       return notification;
     } catch (error) {
@@ -76,6 +97,45 @@ export class NotificationService {
       userIds.map(userId => this.create(userId, type, data))
     );
     return notifications.filter(Boolean);
+  }
+
+  // Send email notification
+  private static async sendEmailNotification(userId: string, notification: any) {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true, name: true }
+      });
+
+      if (!user?.email) return;
+
+      // Create email HTML based on notification type
+      const emailHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px;">
+            <h2 style="color: #333; margin-bottom: 10px;">${notification.title}</h2>
+            <p style="color: #666; font-size: 16px; line-height: 1.5;">${notification.message}</p>
+            
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+              <p style="color: #999; font-size: 14px;">
+                You're receiving this email because you have email notifications enabled in your CreatorCompass settings.
+              </p>
+              <a href="${process.env.NEXTAUTH_URL}/settings/notifications" style="color: #6366f1; font-size: 14px;">
+                Manage notification preferences
+              </a>
+            </div>
+          </div>
+        </div>
+      `;
+
+      await sendEmail({
+        to: user.email,
+        subject: notification.title,
+        html: emailHtml
+      });
+    } catch (error) {
+      console.error('Error sending email notification:', error);
+    }
   }
 
   // Check if notification should be sent based on preferences
