@@ -113,7 +113,7 @@ export function AIAssistantWidget() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          conversationId,
+          ...(conversationId && { conversationId }),
           message: textToSend,
           includeKnowledge: true,
         }),
@@ -141,12 +141,16 @@ export function AIAssistantWidget() {
               try {
                 const data = JSON.parse(line.slice(6));
                 
-                if (data.type === 'start' && !conversationId) {
-                  setConversationId(data.conversationId);
-                } else if (data.type === 'content') {
+                if (data.content) {
                   accumulatedContent += data.content;
                   setStreamingMessage(accumulatedContent);
-                } else if (data.type === 'complete') {
+                }
+                
+                if (data.conversationId && !conversationId) {
+                  setConversationId(data.conversationId);
+                }
+                
+                if (data.done) {
                   const assistantMessage: Message = {
                     id: `msg_${Date.now()}`,
                     role: 'assistant',

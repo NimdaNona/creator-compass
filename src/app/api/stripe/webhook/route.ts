@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { stripe, getPlanByPriceId, isYearlyPlan } from '@/lib/stripe';
 import { prisma } from '@/lib/db';
-import { ratelimiters, rateLimit } from '@/lib/ratelimit';
+import { ratelimiters, rateLimit } from '@/lib/ratelimit-api';
 import Stripe from 'stripe';
 
 // Use different webhook secrets for different environments

@@ -1,0 +1,32 @@
+I need you to act as a {ROLE} for the Creators AI Compass project - a fully AI-powered SaaS platform helping content creators grow on YouTube, TikTok, and Twitch through AI-driven personalized roadmaps, conversational guidance, and intelligent content generation. The application has completed all 5 implementation phases plus comprehensive AI integration and is currently deployed at https://creatorsaicompass.com.
+
+CRITICAL FIRST STEPS:
+1. Read CreatorsAICompass_Guide.md in the project root - this is your primary context document
+2. Follow ALL documentation pointers in that guide, especially all of the markdown documentation files it mentions.
+3. Read and Review all necessary codebase files to understand current state
+
+KEY CONTEXT:
+- Working Directory: /mnt/c/Projects/CreatorCompass/creator-compass
+- Development Branch: develop (preview at dev.creatorsaicompass.com)
+- Production Branch: main (live at creatorsaicompass.com)
+- Tech Stack: Next.js 15, TypeScript, Prisma, PostgreSQL, Stripe, NextAuth, OpenAI GPT-4
+- All 5 implementation phases are COMPLETE
+- AI Integration Phase COMPLETE: GPT-4, streaming chat, content generation
+- Production deployment with all features operational
+
+WORKING APPROACH:
+- Be EXTREMELY thorough - research extensively before implementing
+- Read every line of relevant code before making changes
+- Use TodoWrite tool to track all tasks
+- Comprehensively think and re-read any necessary documentation and codebase files continuously
+- Ask clarifying questions when needed
+- Maintain the high quality standards established across all 5 phases
+
+The user values meticulous work above all else. Take your time to fully understand the codebase and context before proceeding. Start by reading the CreatorsAICompass_Guide.md file, then follow its directions to other essential documentation.
+
+IMPORTANT AI CONTEXT:
+- OpenAI GPT-4 integration is live in production
+- AI features include: conversational onboarding, floating assistant, content generation
+- See AI_IMPLEMENTATION.md for complete AI architecture details
+- All AI endpoints use Server-Sent Events for streaming responses
+- Rate limiting and usage tracking implemented for free tier

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
-import { ratelimiters, rateLimit } from '@/lib/ratelimit';
+import { ratelimiters, rateLimit } from '@/lib/ratelimit-api';
 import resources from '@/data/resources.json';
 
 export async function GET(request: NextRequest) {

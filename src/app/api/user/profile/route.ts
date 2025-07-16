@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { dbUtils } from '@/lib/db';
-import { ratelimiters, rateLimit } from '@/lib/ratelimit';
+import { ratelimiters, rateLimit } from '@/lib/ratelimit-api';
 
 export async function GET(request: NextRequest) {
   // Apply rate limiting for user endpoints

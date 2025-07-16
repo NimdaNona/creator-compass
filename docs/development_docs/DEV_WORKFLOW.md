@@ -1,4 +1,4 @@
-# Development Workflow & Technical Context
+# Development Workflow & Technical Context - Creators AI Compass
 
 ## Role & Responsibilities
 
@@ -136,6 +136,11 @@ vercel env pull .env.local
 4. **Cache/Rate Limiting**: Upstash Redis (KV)
 5. **Hosting**: Vercel
 6. **Database**: Neon Postgres
+7. **AI**: OpenAI GPT-4 API
+   - Chat completions for AI mentor
+   - Embeddings for knowledge base
+   - Function calling for structured outputs
+   - Stream processing for real-time responses
 
 ## Development Patterns
 
@@ -144,15 +149,30 @@ vercel env pull .env.local
 src/
 ├── app/                 # Next.js 13+ App Router
 │   ├── api/            # API routes
+│   │   └── ai/         # AI endpoints (chat, embeddings, etc)
 │   ├── (auth)/         # Auth pages group
 │   └── (dashboard)/    # Protected pages group
 ├── components/         # React components
 │   ├── ui/            # Base UI components
-│   └── features/      # Feature-specific components
+│   ├── features/      # Feature-specific components
+│   ├── ai/            # AI-specific components
+│   │   ├── chat/      # Chat interface components
+│   │   ├── mentor/    # AI mentor components
+│   │   └── insights/  # AI insights display
+│   └── onboarding/    # AI onboarding flow
 ├── lib/               # Utilities and configurations
+│   ├── ai/            # AI service layer
+│   │   ├── openai.ts  # OpenAI client configuration
+│   │   ├── prompts/   # System prompts and templates
+│   │   ├── knowledge/ # Knowledge base management
+│   │   └── utils/     # AI utility functions
+│   └── knowledge-base/ # Static knowledge files
 ├── hooks/             # Custom React hooks
+│   └── useAI.ts       # AI-specific hooks
 ├── store/             # Zustand state management
+│   └── ai-store.ts    # AI conversation state
 └── types/             # TypeScript definitions
+    └── ai.ts          # AI-specific types
 ```
 
 ### Code Standards
@@ -282,10 +302,18 @@ npm run lint
   - NEXTAUTH_URL: https://dev.creatorsaicompass.com
   - NODE_ENV: development
   - STRIPE_WEBHOOK_SECRET_DEV: For dev webhook endpoint
+  - OPENAI_API_KEY: For AI features
+  - OPENAI_MODEL: gpt-4-turbo-preview (or specific model)
+  - AI_RATE_LIMIT: Messages per minute (default: 10)
+  - AI_MAX_TOKENS: Max response tokens (default: 1000)
 - Production: Pulled from Vercel (production env)
   - NEXTAUTH_URL: https://creatorsaicompass.com
   - NODE_ENV: production
   - STRIPE_WEBHOOK_SECRET: For production webhook
+  - OPENAI_API_KEY: For AI features
+  - OPENAI_MODEL: gpt-4-turbo-preview (or specific model)
+  - AI_RATE_LIMIT: Messages per minute (default: 10)
+  - AI_MAX_TOKENS: Max response tokens (default: 1000)
 
 ## Troubleshooting
 
@@ -301,6 +329,19 @@ npm run lint
    - Ensure Google OAuth has correct redirect URIs for both environments
 4. **Emails not sending**: Verify RESEND_API_KEY
 5. **Payments failing**: Check Stripe keys and webhook setup
+6. **AI not responding**:
+   - Check OPENAI_API_KEY is valid
+   - Verify API quota/credits available
+   - Check rate limit settings
+   - Monitor error logs for specific issues
+7. **AI streaming issues**:
+   - Ensure proper SSE headers
+   - Check for proxy/CDN interference
+   - Verify client-side EventSource handling
+8. **AI context problems**:
+   - Check conversation history storage
+   - Verify context token limits
+   - Ensure proper session management
 
 ### Recovery Procedures
 - **Rollback**: Revert commit and force push
@@ -309,6 +350,207 @@ npm run lint
 - **Cache issues**: Clear .next folder and rebuild
 
 ---
+
+## AI Implementation Workflows
+
+### AI Development Setup
+1. **Environment Configuration**:
+   ```bash
+   # Add to .env.local
+   OPENAI_API_KEY=sk-proj-...
+   OPENAI_MODEL=gpt-4-turbo-preview
+   AI_RATE_LIMIT=10
+   AI_MAX_TOKENS=1000
+   AI_TEMPERATURE=0.7
+   ```
+
+2. **Testing AI Features**:
+   - **Local Testing**:
+     - Set OPENAI_API_KEY in .env.local
+     - Test streaming responses with SSE
+     - Monitor token usage in console
+     - Use AI playground at /dashboard/ai-playground
+   
+   - **Development Testing**:
+     - Test on dev.creatorsaicompass.com
+     - Monitor AI conversation persistence
+     - Check rate limiting behavior
+     - Test error handling for API limits
+
+### Updating AI Prompts
+1. **System Prompts**:
+   ```typescript
+   // lib/ai/prompts/system.ts
+   export const SYSTEM_PROMPTS = {
+     mentor: `You are an AI mentor for content creators...`,
+     analyzer: `You analyze content performance...`,
+     ideaGenerator: `You help generate content ideas...`
+   }
+   ```
+
+2. **Prompt Testing**:
+   ```bash
+   # Test prompts locally
+   npm run test:prompts
+   
+   # Validate prompt tokens
+   npm run validate:prompts
+   ```
+
+3. **Prompt Deployment**:
+   - Update prompt files in `lib/ai/prompts/`
+   - Test with various inputs
+   - Monitor response quality
+   - Deploy to preview first
+
+### AI Service Debugging
+```bash
+# Check AI service logs
+vercel logs --follow --filter ai
+
+# Test AI endpoints
+curl -X POST https://dev.creatorsaicompass.com/api/ai/chat \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $SESSION_TOKEN" \
+  -d '{"message": "Hello AI", "context": "onboarding"}'
+
+# Test streaming endpoint
+curl -X POST https://dev.creatorsaicompass.com/api/ai/stream \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $SESSION_TOKEN" \
+  -d '{"message": "Generate content ideas"}' \
+  --no-buffer
+```
+
+### Knowledge Base Management
+1. **Adding Knowledge**:
+   ```bash
+   # Add new knowledge document
+   cp new-doc.md docs/knowledge-base/
+   
+   # Generate embeddings
+   npm run knowledge:embed
+   
+   # Update vector database
+   npm run knowledge:sync
+   ```
+
+2. **Knowledge Updates**:
+   - Update documents in `docs/knowledge-base/`
+   - Run embedding generation
+   - Test semantic search
+   - Verify AI responses use new knowledge
+
+3. **Knowledge Testing**:
+   ```bash
+   # Test knowledge retrieval
+   npm run knowledge:test "query string"
+   
+   # Validate knowledge consistency
+   npm run knowledge:validate
+   ```
+
+### AI Monitoring & Analytics
+1. **Token Usage Tracking**:
+   ```typescript
+   // Track in database
+   await prisma.aiUsage.create({
+     data: {
+       userId,
+       tokens: response.usage.total_tokens,
+       model: 'gpt-4-turbo-preview',
+       type: 'chat'
+     }
+   })
+   ```
+
+2. **Performance Monitoring**:
+   - Response time tracking
+   - Error rate monitoring
+   - Token consumption per user
+   - API rate limit tracking
+
+3. **Cost Analysis**:
+   ```bash
+   # Generate AI cost report
+   npm run ai:cost-report --month 2024-03
+   
+   # Check user AI usage
+   npm run ai:user-usage --userId user_123
+   ```
+
+### AI Feature Testing
+1. **Unit Tests**:
+   ```bash
+   # Test AI utilities
+   npm run test:ai
+   
+   # Test prompt generation
+   npm run test:prompts
+   ```
+
+2. **Integration Tests**:
+   ```bash
+   # Test AI endpoints
+   npm run test:ai-api
+   
+   # Test streaming responses
+   npm run test:streaming
+   ```
+
+3. **E2E Tests**:
+   - Test complete AI conversations
+   - Verify context persistence
+   - Test rate limiting
+   - Validate error handling
+
+### AI Error Handling
+1. **API Errors**:
+   ```typescript
+   try {
+     const response = await openai.chat.completions.create({...})
+   } catch (error) {
+     if (error.code === 'rate_limit_exceeded') {
+       // Handle rate limit
+     } else if (error.code === 'insufficient_quota') {
+       // Handle quota exceeded
+     }
+   }
+   ```
+
+2. **Fallback Strategies**:
+   - Cache frequent responses
+   - Use simpler models for non-critical tasks
+   - Implement graceful degradation
+   - Show helpful error messages
+
+### AI Deployment Considerations
+1. **API Key Security**:
+   - Never expose keys in client code
+   - Use server-side API routes only
+   - Implement request validation
+   - Monitor for unusual usage
+
+2. **Rate Limiting**:
+   ```typescript
+   // Implement per-user rate limits
+   const rateLimiter = new RateLimiter({
+     windowMs: 60 * 1000, // 1 minute
+     max: process.env.AI_RATE_LIMIT || 10
+   })
+   ```
+
+3. **Cost Management**:
+   - Set usage alerts in OpenAI dashboard
+   - Implement daily/monthly limits per user
+   - Use cheaper models for simple tasks
+   - Cache common responses
+
+4. **Performance Optimization**:
+   - Stream responses for better UX
+   - Implement request queuing
+   - Use edge functions where possible
+   - Optimize prompt length
 
 ## Phase 2 Specific Workflows
 
@@ -365,8 +607,56 @@ import { SubscriptionGate } from '@/components/subscription/SubscriptionGate';
 echo "value" | vercel env add KEY_NAME production
 echo "value" | vercel env add KEY_NAME preview
 
+# Add OpenAI configuration
+echo "sk-proj-..." | vercel env add OPENAI_API_KEY production
+echo "sk-proj-..." | vercel env add OPENAI_API_KEY preview
+echo "gpt-4-turbo-preview" | vercel env add OPENAI_MODEL production
+echo "gpt-4-turbo-preview" | vercel env add OPENAI_MODEL preview
+echo "10" | vercel env add AI_RATE_LIMIT production
+echo "20" | vercel env add AI_RATE_LIMIT preview
+echo "1000" | vercel env add AI_MAX_TOKENS production
+echo "2000" | vercel env add AI_MAX_TOKENS preview
+
 # Pull latest
 vercel env pull .env.local
+```
+
+## AI-Specific Commands
+
+### Development
+```bash
+# Test AI locally
+npm run dev:ai
+
+# Generate embeddings for knowledge base
+npm run ai:embed
+
+# Validate AI prompts
+npm run ai:validate-prompts
+
+# Test AI responses
+npm run ai:test-responses
+```
+
+### Monitoring
+```bash
+# Check AI usage
+npm run ai:usage --period="7d"
+
+# Monitor AI costs
+npm run ai:costs --month="2024-03"
+
+# View AI error logs
+vercel logs --filter="ai-error"
+```
+
+### Deployment
+```bash
+# Deploy with AI feature flags
+vercel --build-env AI_FEATURES=enabled
+
+# Deploy with specific model
+vercel --build-env OPENAI_MODEL=gpt-4-turbo-preview
 ```
 
 ---

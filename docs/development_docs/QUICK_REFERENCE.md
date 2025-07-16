@@ -91,6 +91,7 @@ git push origin develop
 - `STRIPE_SECRET_KEY` - Payment processing
 - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` - Client-side Stripe
 - `STRIPE_WEBHOOK_SECRET` - Webhook verification
+- `OPENAI_API_KEY` - OpenAI API for content generation
 
 #### Access in Code
 ```typescript
@@ -109,6 +110,16 @@ process.env.NEXT_PUBLIC_KEY
 - [ ] Run `npm run build`
 - [ ] Test all affected features locally
 - [ ] Check console for errors
+- [ ] Test AI features if modified
+
+#### AI Testing
+- [ ] Test content generation with valid prompts
+- [ ] Verify error handling for failed AI calls
+- [ ] Check rate limiting functionality
+- [ ] Test fallback to templates when AI unavailable
+- [ ] Verify AI response caching
+- [ ] Test prompt injection prevention
+- [ ] Check AI usage tracking and limits
 
 #### Authentication Testing
 - [ ] Sign up with email
@@ -145,18 +156,25 @@ process.env.NEXT_PUBLIC_KEY
 src/
 ├── app/                # Pages and API routes
 │   ├── api/           # API endpoints
+│   │   └── ai/       # AI generation endpoints
 │   ├── (auth)/        # Auth group (public)
 │   └── (dashboard)/   # Protected pages
 ├── components/        # React components
 │   ├── ui/           # Base components
 │   ├── emails/       # Email templates
+│   ├── ai/           # AI-related components
 │   └── [feature]/    # Feature components
 ├── lib/              # Utilities
 │   ├── auth.ts       # NextAuth config
 │   ├── db.ts         # Database client
 │   ├── email.ts      # Email sending
-│   └── stripe.ts     # Stripe config
+│   ├── stripe.ts     # Stripe config
+│   ├── openai.ts     # OpenAI client setup
+│   └── ai/           # AI utilities
+│       ├── prompts.ts # Prompt templates
+│       └── limits.ts  # Rate limiting
 └── types/            # TypeScript types
+    └── ai.ts         # AI-related types
 ```
 
 ### Debug Tips
@@ -167,6 +185,9 @@ src/
 3. **Emails not sending**: Check RESEND_API_KEY
 4. **Database errors**: Verify DATABASE_URL, run migrations
 5. **Stripe errors**: Check webhook secret, API keys
+6. **AI not generating**: Check OPENAI_API_KEY, rate limits
+7. **AI errors**: Verify API quota, check error logs
+8. **Slow AI responses**: Check caching, optimize prompts
 
 #### Useful Debugging
 ```typescript
@@ -180,6 +201,11 @@ console.log('Session:', session);
 // Database queries
 const result = await db.user.findMany();
 console.log('Users:', result);
+
+// AI debugging
+console.log('AI Request:', { prompt, model, temperature });
+console.log('AI Response:', { usage, choices });
+console.log('Rate Limit Status:', { remaining, reset });
 ```
 
 ### Git Workflows
@@ -234,6 +260,9 @@ git push origin main
 - Database query optimization
 - Proper caching strategies
 - Error boundaries for stability
+- AI response streaming for better UX
+- Token usage optimization in prompts
+- Batch AI requests when possible
 
 #### Avoid
 - Large client-side state
@@ -241,21 +270,88 @@ git push origin main
 - Blocking operations
 - Exposed secrets
 - Unhandled promise rejections
+- Synchronous AI calls in UI
+- Storing API keys client-side
+- Unlimited AI generation loops
 
 ### AI Assistant Integration Notes
 
-#### Current Setup (No AI)
-- Use research docs for content
-- Implement template-based generation
-- Create dynamic feel without actual AI
-- Prepare structure for future AI integration
+#### Current AI Setup
+- OpenAI GPT-4 for content generation
+- Dynamic prompt templates by niche
+- Redis-based rate limiting per user/tier
+- Response caching to reduce API calls
+- Fallback to template content on errors
 
-#### Future AI Considerations
-- OpenAI API for content generation
-- Prompt templates by niche
-- Rate limiting for API calls
-- Caching AI responses
-- Fallback to templates if AI fails
+#### AI Commands & Usage
+```bash
+# Test AI generation locally
+curl -X POST http://localhost:3000/api/ai/generate \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "test", "type": "content_idea"}'
+
+# Clear AI cache (development)
+npm run cache:clear
+
+# Monitor AI usage
+npm run ai:stats
+```
+
+#### AI Configuration
+```typescript
+// lib/ai/config.ts
+export const AI_CONFIG = {
+  model: 'gpt-4-turbo-preview',
+  temperature: 0.7,
+  maxTokens: 2000,
+  rateLimits: {
+    free: { requests: 10, window: '24h' },
+    pro: { requests: 100, window: '24h' },
+    agency: { requests: 1000, window: '24h' }
+  }
+};
+```
+
+#### AI Prompt Management
+- Prompts stored in `lib/ai/prompts/`
+- Organized by content type and niche
+- Include system prompts for consistency
+- Version controlled for A/B testing
+
+#### AI Error Handling
+```typescript
+// Always wrap AI calls in try-catch
+try {
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4-turbo-preview',
+    messages: [{ role: 'user', content: prompt }],
+  });
+} catch (error) {
+  if (error.code === 'rate_limit_exceeded') {
+    // Handle rate limit
+  } else if (error.code === 'insufficient_quota') {
+    // Handle quota issues
+  } else {
+    // Fallback to template
+  }
+}
+```
+
+#### AI Monitoring Commands
+```bash
+# Check AI API status
+curl https://api.openai.com/v1/models \
+  -H "Authorization: Bearer $OPENAI_API_KEY"
+
+# Test specific prompt
+npm run ai:test -- --prompt "Create content idea" --type "youtube"
+
+# View AI usage stats
+npm run ai:usage -- --period "7d"
+
+# Debug AI responses
+NODE_ENV=development npm run dev # Enables AI debug logging
+```
 
 ### User Communication
 
@@ -304,5 +400,5 @@ git push origin main
 
 ---
 
-Last Updated: After Phase 1 Completion
-Next Major Task: Phase 2 - Monetization & Paywall Implementation
+Last Updated: After AI Integration
+Current Status: AI-powered content generation fully implemented

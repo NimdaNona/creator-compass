@@ -26,7 +26,7 @@ function OnboardingContent() {
   } = useAppStore();
 
   const [step, setStep] = useState(currentOnboardingStep);
-  const [onboardingMode, setOnboardingMode] = useState<'choice' | 'ai' | 'manual'>('choice');
+  const [onboardingMode, setOnboardingMode] = useState<'choice' | 'ai' | 'manual'>('ai');
 
   // Check for platform parameter from landing page
   useEffect(() => {
@@ -138,50 +138,8 @@ function OnboardingContent() {
             )}
           </div>
 
-          {/* Content based on mode */}
-          {onboardingMode === 'choice' && (
-            <OnboardingChoice 
-              onChooseAI={handleChooseAI}
-              onChooseManual={handleChooseManual}
-            />
-          )}
-
-          {onboardingMode === 'ai' && (
-            <AIOnboarding onComplete={handleAIComplete} />
-          )}
-
-          {onboardingMode === 'manual' && (
-            <>
-              {/* Progress Bar */}
-              <div className="mb-8">
-                <div className="flex justify-between items-center mb-2">
-                  <h2 className="text-2xl font-bold">{currentStepData.title}</h2>
-                  <span className="text-sm text-muted-foreground">
-                    {Math.round(progress)}% complete
-                  </span>
-                </div>
-                <Progress value={progress} className="h-2" />
-              </div>
-
-              {/* Current Step Component */}
-              <div className="mb-8">
-                <CurrentComponent onNext={handleNext} />
-              </div>
-
-              {/* Navigation */}
-              {step < steps.length - 1 && (
-                <div className="flex justify-between items-center">
-                  <Button variant="outline" onClick={handleBack}>
-                    Back
-                  </Button>
-                  
-                  <Button onClick={handleNext} disabled={!canProceed()}>
-                    {step === steps.length - 2 ? 'Complete Setup' : 'Continue'}
-                  </Button>
-                </div>
-              )}
-            </>
-          )}
+          {/* AI Onboarding Only */}
+          <AIOnboarding onComplete={handleAIComplete} />
         </div>
       </div>
     </div>

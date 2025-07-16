@@ -20,6 +20,8 @@ export function AIOnboarding({ onComplete }: { onComplete: () => void }) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   
@@ -66,13 +68,14 @@ Just type 1, 2, or 3, or tell me in your own words!`,
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
+    setError(null);
 
     try {
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          conversationId,
+          ...(conversationId && { conversationId }),
           message: input.trim(),
           includeKnowledge: true,
         }),
@@ -138,7 +141,26 @@ Just type 1, 2, or 3, or tell me in your own words!`,
       }
     } catch (error) {
       console.error('Chat error:', error);
-      toast.error('Failed to send message. Please try again.');
+      setError('Failed to send message. Please try again.');
+      
+      // Add error message to chat
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: '❌ Sorry, I encountered an error. Please try sending your message again.',
+        timestamp: new Date(),
+      }]);
+      
+      // Auto-retry logic for transient errors
+      if (retryCount < 3) {
+        setRetryCount(prev => prev + 1);
+        toast.error('Connection error. Retrying...');
+        setTimeout(() => {
+          sendMessage();
+        }, 1000 * (retryCount + 1));
+      } else {
+        toast.error('Failed to connect. Please check your internet connection.');
+        setRetryCount(0);
+      }
     } finally {
       setIsLoading(false);
       inputRef.current?.focus();
@@ -257,6 +279,11 @@ Just type 1, 2, or 3, or tell me in your own words!`,
         </ScrollArea>
 
         <div className="p-4 border-t">
+          {error && (
+            <div className="mb-3 p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-600 dark:text-red-400">
+              {error}
+            </div>
+          )}
           {!isComplete ? (
             <div className="flex gap-2">
               <Input

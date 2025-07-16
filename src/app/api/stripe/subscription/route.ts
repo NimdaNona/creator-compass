@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/db';
-import { ratelimiters, rateLimit } from '@/lib/ratelimit';
+import { ratelimiters, rateLimit } from '@/lib/ratelimit-api';
 
 // GET - Get current subscription
 export async function GET(request: NextRequest) {

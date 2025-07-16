@@ -35,7 +35,13 @@ export default function DashboardPage() {
     progress
   } = useAppStore();
 
-  // Loading state
+  // Loading state or redirect to onboarding
+  useEffect(() => {
+    if (!selectedPlatform || !selectedNiche) {
+      router.push('/onboarding');
+    }
+  }, [selectedPlatform, selectedNiche, router]);
+
   if (!selectedPlatform || !selectedNiche || !progress) {
     return (
       <div className="min-h-screen flex items-center justify-center">

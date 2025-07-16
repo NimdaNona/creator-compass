@@ -11,6 +11,7 @@ const excludedPaths = [
   '/auth/forgot-password',
   '/auth/reset-password',
   '/auth/verify-email',
+  '/onboarding',
 ];
 
 export function AIAssistantProvider() {
