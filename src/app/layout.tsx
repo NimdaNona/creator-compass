@@ -13,6 +13,7 @@ import { NotificationProvider } from "@/components/notifications/NotificationPro
 import { RealtimeNotificationProvider } from "@/components/notifications/RealtimeNotificationProvider";
 import { ProfileLoader } from "@/components/providers/ProfileLoader";
 import { NavigationGuard } from "@/components/navigation/NavigationGuard";
+import { AIAssistantProvider } from "@/components/providers/AIAssistantProvider";
 // Error boundary handled at page level since root layout is server component
 
 const inter = Inter({
@@ -138,14 +139,17 @@ export default function RootLayout({
                 <PWAProvider>
                   <NotificationProvider>
                     <RealtimeNotificationProvider>
-                      <Header />
-                      <main className="flex-1 pb-20 md:pb-0">
-                        {children}
-                      </main>
-                      <Footer />
+                      <div className="flex flex-col min-h-screen">
+                        <Header />
+                        <main className="flex-1 pb-20 md:pb-0">
+                          {children}
+                        </main>
+                        <Footer className="hidden md:block" />
+                      </div>
                       <BottomNav />
                       <CelebrationSystem />
                       <SmartUpgradeTrigger />
+                      <AIAssistantProvider />
                     </RealtimeNotificationProvider>
                   </NotificationProvider>
                 </PWAProvider>

@@ -4,9 +4,9 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Compass, Twitter, Instagram, Youtube, Github } from 'lucide-react';
 
-export function Footer() {
+export function Footer({ className }: { className?: string }) {
   return (
-    <footer className="border-t bg-background">
+    <footer className={`border-t bg-background ${className || ''}`}>
       <div className="container py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand Section */}

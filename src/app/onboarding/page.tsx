@@ -7,6 +7,8 @@ import { PlatformSelection } from '@/components/onboarding/PlatformSelection';
 import { NicheSelection } from '@/components/onboarding/NicheSelection';
 import { GoalSetting } from '@/components/onboarding/GoalSetting';
 import { OnboardingComplete } from '@/components/onboarding/OnboardingComplete';
+import { OnboardingChoice } from '@/components/onboarding/OnboardingChoice';
+import { AIOnboarding } from '@/components/onboarding/AIOnboarding';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Compass } from 'lucide-react';
@@ -24,12 +26,18 @@ function OnboardingContent() {
   } = useAppStore();
 
   const [step, setStep] = useState(currentOnboardingStep);
+  const [onboardingMode, setOnboardingMode] = useState<'choice' | 'ai' | 'manual'>('choice');
 
   // Check for platform parameter from landing page
   useEffect(() => {
     const platformParam = searchParams.get('platform');
-    if (platformParam && step === 0) {
+    const modeParam = searchParams.get('mode');
+    
+    if (modeParam === 'ai') {
+      setOnboardingMode('ai');
+    } else if (platformParam && step === 0) {
       // If platform is specified, we can skip to niche selection
+      setOnboardingMode('manual');
       setStep(1);
       setCurrentOnboardingStep(1);
     }
@@ -43,7 +51,7 @@ function OnboardingContent() {
   ];
 
   const currentStepData = steps[step];
-  const progress = ((step + 1) / steps.length) * 100;
+  const progress = onboardingMode === 'manual' ? ((step + 1) / steps.length) * 100 : 0;
 
   const handleNext = () => {
     if (step < steps.length - 1) {
@@ -62,10 +70,14 @@ function OnboardingContent() {
   };
 
   const handleBack = () => {
-    if (step > 0) {
-      const prevStep = step - 1;
-      setStep(prevStep);
-      setCurrentOnboardingStep(prevStep);
+    if (onboardingMode !== 'choice') {
+      if (step > 0) {
+        const prevStep = step - 1;
+        setStep(prevStep);
+        setCurrentOnboardingStep(prevStep);
+      } else {
+        setOnboardingMode('choice');
+      }
     } else {
       router.push('/');
     }
@@ -86,7 +98,22 @@ function OnboardingContent() {
     }
   };
 
-  const CurrentComponent = currentStepData.component;
+  const handleChooseAI = () => {
+    setOnboardingMode('ai');
+  };
+
+  const handleChooseManual = () => {
+    setOnboardingMode('manual');
+    setStep(0);
+    setCurrentOnboardingStep(0);
+  };
+
+  const handleAIComplete = () => {
+    setOnboardingComplete(true);
+    router.push('/dashboard');
+  };
+
+  const CurrentComponent = currentStepData?.component;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
@@ -104,38 +131,56 @@ function OnboardingContent() {
               </div>
             </div>
             
-            <div className="text-sm text-muted-foreground">
-              Step {step + 1} of {steps.length}
-            </div>
+            {onboardingMode === 'manual' && (
+              <div className="text-sm text-muted-foreground">
+                Step {step + 1} of {steps.length}
+              </div>
+            )}
           </div>
 
-          {/* Progress Bar */}
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-2xl font-bold">{currentStepData.title}</h2>
-              <span className="text-sm text-muted-foreground">
-                {Math.round(progress)}% complete
-              </span>
-            </div>
-            <Progress value={progress} className="h-2" />
-          </div>
+          {/* Content based on mode */}
+          {onboardingMode === 'choice' && (
+            <OnboardingChoice 
+              onChooseAI={handleChooseAI}
+              onChooseManual={handleChooseManual}
+            />
+          )}
 
-          {/* Current Step Component */}
-          <div className="mb-8">
-            <CurrentComponent onNext={handleNext} />
-          </div>
+          {onboardingMode === 'ai' && (
+            <AIOnboarding onComplete={handleAIComplete} />
+          )}
 
-          {/* Navigation */}
-          {step < steps.length - 1 && (
-            <div className="flex justify-between items-center">
-              <Button variant="outline" onClick={handleBack}>
-                Back
-              </Button>
-              
-              <Button onClick={handleNext} disabled={!canProceed()}>
-                {step === steps.length - 2 ? 'Complete Setup' : 'Continue'}
-              </Button>
-            </div>
+          {onboardingMode === 'manual' && (
+            <>
+              {/* Progress Bar */}
+              <div className="mb-8">
+                <div className="flex justify-between items-center mb-2">
+                  <h2 className="text-2xl font-bold">{currentStepData.title}</h2>
+                  <span className="text-sm text-muted-foreground">
+                    {Math.round(progress)}% complete
+                  </span>
+                </div>
+                <Progress value={progress} className="h-2" />
+              </div>
+
+              {/* Current Step Component */}
+              <div className="mb-8">
+                <CurrentComponent onNext={handleNext} />
+              </div>
+
+              {/* Navigation */}
+              {step < steps.length - 1 && (
+                <div className="flex justify-between items-center">
+                  <Button variant="outline" onClick={handleBack}>
+                    Back
+                  </Button>
+                  
+                  <Button onClick={handleNext} disabled={!canProceed()}>
+                    {step === steps.length - 2 ? 'Complete Setup' : 'Continue'}
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

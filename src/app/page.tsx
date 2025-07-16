@@ -19,7 +19,11 @@ import {
   Compass,
   BarChart3,
   Calendar,
-  Crown
+  Crown,
+  Bot,
+  Brain,
+  MessageCircle,
+  Wand2
 } from 'lucide-react';
 
 export default function Home() {
@@ -40,20 +44,20 @@ export default function Home() {
           <div className="text-center max-w-4xl mx-auto">
             <Badge variant="secondary" className="mb-6">
               <Sparkles className="w-4 h-4 mr-2" />
-              Join 10,000+ creators growing their audience
+              AI-Powered Creator Growth Platform
             </Badge>
             
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
               Your{' '}
               <span className="gradient-text">
-                Personalized Roadmap
+                AI-Powered Compass
               </span>
               {' '}to Creator Success
             </h1>
             
             <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-              Get proven 90-day strategies for YouTube, TikTok, and Twitch. 
-              Track your progress, unlock achievements, and build the audience you deserve.
+              Get AI-generated personalized roadmaps, smart content templates, and real-time guidance. 
+              Build your audience with the power of GPT-4 intelligence.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
@@ -202,6 +206,74 @@ export default function Home() {
                     Start Twitch Journey
                   </Link>
                 </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* AI Features Section */}
+      <section className="py-20 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/10 dark:to-pink-900/10">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <Badge variant="outline" className="mb-4">
+              <Brain className="w-4 h-4 mr-2" />
+              Powered by GPT-4
+            </Badge>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              AI That Understands Creators
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Experience the future of content creation with intelligent features designed for your success
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+            <Card className="border-purple-200 dark:border-purple-800 hover:shadow-lg transition-all">
+              <CardHeader>
+                <MessageCircle className="w-8 h-8 text-purple-500 mb-2" />
+                <CardTitle>AI Onboarding</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Chat naturally with our AI to create your personalized growth strategy
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-blue-200 dark:border-blue-800 hover:shadow-lg transition-all">
+              <CardHeader>
+                <Wand2 className="w-8 h-8 text-blue-500 mb-2" />
+                <CardTitle>Smart Templates</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Generate scripts, captions, and ideas tailored to your niche
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-green-200 dark:border-green-800 hover:shadow-lg transition-all">
+              <CardHeader>
+                <Bot className="w-8 h-8 text-green-500 mb-2" />
+                <CardTitle>AI Assistant</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Get instant help and guidance whenever you need it
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-orange-200 dark:border-orange-800 hover:shadow-lg transition-all">
+              <CardHeader>
+                <Brain className="w-8 h-8 text-orange-500 mb-2" />
+                <CardTitle>Smart Insights</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Receive personalized recommendations based on your progress
+                </p>
               </CardContent>
             </Card>
           </div>

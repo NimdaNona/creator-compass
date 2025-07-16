@@ -1,208 +1,123 @@
-import { Ratelimit } from '@upstash/ratelimit';
-import { Redis } from '@upstash/redis';
-import { NextRequest, NextResponse } from 'next/server';
+/**
+ * Rate limiter implementation for AI API calls
+ */
+export class RateLimiter {
+  private requests: Map<string, { count: number; resetTime: number }> = new Map();
+  private tokensPerInterval: number;
+  private intervalMs: number;
+  private fireImmediately: boolean;
 
-// Initialize Redis client (only in production with proper configuration)
-const redis = process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN
-  ? new Redis({
-      url: process.env.KV_REST_API_URL,
-      token: process.env.KV_REST_API_TOKEN,
-    })
-  : null;
-
-// Create rate limiters for different endpoints (only when Redis is available)
-export const ratelimiters = redis
-  ? {
-      // General API rate limiter - 100 requests per minute
-      api: new Ratelimit({
-        redis,
-        limiter: Ratelimit.slidingWindow(100, '1 m'),
-        analytics: true,
-      }),
-
-      // Authentication endpoints - 60 requests per minute
-      auth: new Ratelimit({
-        redis,
-        limiter: Ratelimit.slidingWindow(60, '1 m'),
-        analytics: true,
-      }),
-
-      // Payment endpoints - 30 requests per minute (increased from 5)
-      payment: new Ratelimit({
-        redis,
-        limiter: Ratelimit.slidingWindow(30, '1 m'),
-        analytics: true,
-      }),
-
-      // Stripe webhooks - 1000 requests per minute (high volume)
-      webhook: new Ratelimit({
-        redis,
-        limiter: Ratelimit.slidingWindow(1000, '1 m'),
-        analytics: true,
-      }),
-
-      // Public endpoints - 200 requests per minute
-      public: new Ratelimit({
-        redis,
-        limiter: Ratelimit.slidingWindow(200, '1 m'),
-        analytics: true,
-      }),
-
-      // User actions - 50 requests per minute
-      user: new Ratelimit({
-        redis,
-        limiter: Ratelimit.slidingWindow(50, '1 m'),
-        analytics: true,
-      }),
-    }
-  : null;
-
-// Helper function to get client IP
-export function getClientIP(request: NextRequest): string {
-  const xForwardedFor = request.headers.get('x-forwarded-for');
-  const xRealIp = request.headers.get('x-real-ip');
-  const cfConnectingIp = request.headers.get('cf-connecting-ip');
-
-  if (xForwardedFor) {
-    return xForwardedFor.split(',')[0].trim();
+  constructor(options: {
+    tokensPerInterval: number;
+    interval: 'second' | 'minute' | 'hour';
+    fireImmediately?: boolean;
+  }) {
+    this.tokensPerInterval = options.tokensPerInterval;
+    this.intervalMs = this.getIntervalMs(options.interval);
+    this.fireImmediately = options.fireImmediately || false;
   }
 
-  if (xRealIp) {
-    return xRealIp;
+  private getIntervalMs(interval: 'second' | 'minute' | 'hour'): number {
+    switch (interval) {
+      case 'second': return 1000;
+      case 'minute': return 60000;
+      case 'hour': return 3600000;
+    }
   }
 
-  if (cfConnectingIp) {
-    return cfConnectingIp;
+  async check(identifier: string): Promise<{ success: boolean; remaining?: number; resetIn?: number }> {
+    const now = Date.now();
+    const key = identifier;
+    const entry = this.requests.get(key);
+
+    // Clean up old entries
+    this.cleanup();
+
+    if (!entry || now > entry.resetTime) {
+      // First request or reset period has passed
+      this.requests.set(key, { 
+        count: 1, 
+        resetTime: now + this.intervalMs 
+      });
+      return { 
+        success: true, 
+        remaining: this.tokensPerInterval - 1,
+        resetIn: this.intervalMs
+      };
+    }
+
+    if (entry.count >= this.tokensPerInterval) {
+      // Rate limit exceeded
+      return { 
+        success: false, 
+        remaining: 0,
+        resetIn: entry.resetTime - now
+      };
+    }
+
+    // Increment counter
+    entry.count++;
+    return { 
+      success: true, 
+      remaining: this.tokensPerInterval - entry.count,
+      resetIn: entry.resetTime - now
+    };
   }
 
-  return request.ip || '127.0.0.1';
-}
+  private cleanup() {
+    const now = Date.now();
+    const keysToDelete: string[] = [];
 
-// Rate limit middleware
-export async function rateLimit(
-  request: NextRequest,
-  limiter: Ratelimit | null,
-  identifier?: string
-): Promise<NextResponse | null> {
-  // Skip rate limiting if no Redis connection or in development/test environment
-  if (!limiter || process.env.NODE_ENV === 'test' || !redis) {
-    return null;
-  }
-
-  const ip = getClientIP(request);
-  const id = identifier || ip;
-
-  try {
-    const { success, limit, reset, remaining } = await limiter.limit(id);
-
-    if (!success) {
-      return NextResponse.json(
-        {
-          error: 'Rate limit exceeded',
-          message: 'Too many requests. Please try again later.',
-          retryAfter: Math.round((reset - Date.now()) / 1000),
-        },
-        {
-          status: 429,
-          headers: {
-            'X-RateLimit-Limit': limit.toString(),
-            'X-RateLimit-Remaining': remaining.toString(),
-            'X-RateLimit-Reset': new Date(reset).toISOString(),
-            'Retry-After': Math.round((reset - Date.now()) / 1000).toString(),
-          },
-        }
-      );
-    }
-
-    return null;
-  } catch (error) {
-    console.error('Rate limiting error:', error);
-    // Fail open in case of rate limiting errors
-    return null;
-  }
-}
-
-// Higher-order function to wrap API routes with rate limiting
-export function withRateLimit(
-  handler: (request: NextRequest) => Promise<NextResponse>,
-  limiter: Ratelimit | null,
-  getIdentifier?: (request: NextRequest) => string
-) {
-  return async (request: NextRequest): Promise<NextResponse> => {
-    const identifier = getIdentifier ? getIdentifier(request) : undefined;
-    const rateLimitResponse = await rateLimit(request, limiter, identifier);
-
-    if (rateLimitResponse) {
-      return rateLimitResponse;
-    }
-
-    return handler(request);
-  };
-}
-
-// Session-based rate limiting (for authenticated users)
-export function withSessionRateLimit(
-  handler: (request: NextRequest) => Promise<NextResponse>,
-  limiter: Ratelimit | null
-) {
-  return withRateLimit(handler, limiter, (request: NextRequest) => {
-    // Try to get user ID from session or auth header
-    const authHeader = request.headers.get('authorization');
-    const sessionCookie = request.cookies.get('next-auth.session-token');
-    
-    if (authHeader) {
-      return `auth:${authHeader.substring(0, 20)}`;
-    }
-    
-    if (sessionCookie) {
-      return `session:${sessionCookie.value.substring(0, 20)}`;
-    }
-    
-    return getClientIP(request);
-  });
-}
-
-// Development mode fallback (when Redis is not available)
-export function createMemoryRateLimit() {
-  const requests = new Map<string, { count: number; resetTime: number }>();
-
-  return {
-    check: (identifier: string, limit: number, windowMs: number) => {
-      const now = Date.now();
-      const key = identifier;
-      const entry = requests.get(key);
-
-      if (!entry || now > entry.resetTime) {
-        requests.set(key, { count: 1, resetTime: now + windowMs });
-        return { success: true, remaining: limit - 1 };
+    // Remove expired entries to prevent memory leak
+    this.requests.forEach((entry, key) => {
+      if (now > entry.resetTime + this.intervalMs) {
+        keysToDelete.push(key);
       }
+    });
 
-      if (entry.count >= limit) {
-        return { success: false, remaining: 0 };
-      }
-
-      entry.count++;
-      return { success: true, remaining: limit - entry.count };
-    },
-  };
-}
-
-// Error handler for rate limit failures
-export function handleRateLimitError(error: Error): NextResponse {
-  console.error('Rate limit error:', error);
-  
-  // In production, fail open (allow the request) if rate limiting fails
-  // In development, you might want to fail closed for testing
-  if (process.env.NODE_ENV === 'production') {
-    return NextResponse.json(
-      { error: 'Rate limiting service unavailable' },
-      { status: 503 }
-    );
+    keysToDelete.forEach(key => this.requests.delete(key));
   }
 
-  // In development, continue without rate limiting
-  return NextResponse.json(
-    { error: 'Rate limiting disabled in development' },
-    { status: 200 }
-  );
+  /**
+   * Reset rate limit for a specific identifier
+   */
+  reset(identifier: string) {
+    this.requests.delete(identifier);
+  }
+
+  /**
+   * Get current usage for an identifier
+   */
+  getUsage(identifier: string): { used: number; total: number; resetIn: number } {
+    const now = Date.now();
+    const entry = this.requests.get(identifier);
+
+    if (!entry || now > entry.resetTime) {
+      return { used: 0, total: this.tokensPerInterval, resetIn: 0 };
+    }
+
+    return {
+      used: entry.count,
+      total: this.tokensPerInterval,
+      resetIn: Math.max(0, entry.resetTime - now)
+    };
+  }
 }
+
+/**
+ * Create a shared rate limiter instance for general API calls
+ */
+export const apiRateLimiter = new RateLimiter({
+  tokensPerInterval: 10,
+  interval: 'minute',
+  fireImmediately: true,
+});
+
+/**
+ * Create a stricter rate limiter for expensive operations
+ */
+export const expensiveOpRateLimiter = new RateLimiter({
+  tokensPerInterval: 5,
+  interval: 'hour',
+  fireImmediately: false,
+});
