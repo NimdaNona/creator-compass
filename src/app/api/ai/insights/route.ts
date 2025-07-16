@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { chatCompletion } from '@/lib/ai/openai-service';
+import { userContextService } from '@/lib/ai/user-context';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
 
@@ -50,15 +51,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
+    // Get comprehensive user context
+    const userContext = await userContextService.getUserContext(user.id);
+    
     // Build context for AI
     const context = {
       platform,
       niche: niche || 'general',
       progress,
-      creatorLevel: user.userAIProfile?.creatorLevel || 'beginner',
+      creatorLevel: userContext?.creatorLevel || user.userAIProfile?.creatorLevel || 'beginner',
       recentTasks: user.taskCompletions.map(tc => tc.taskId),
       achievements: user.milestoneAchievements.map(ma => ma.milestoneId),
       isSubscribed: subscription?.status === 'active',
+      userContext, // Include full context
     };
 
     // Generate insights using AI
@@ -72,11 +77,22 @@ export async function POST(request: NextRequest) {
         2. Growth (Days 31-60): Building audience, improving content quality
         3. Scale (Days 61-90): Monetization, advanced strategies
         
+        ${userContext ? `User Profile:
+        - They've been active for ${userContext.daysActive} days
+        - Current phase: ${userContext.currentPhase}
+        - Creator level: ${userContext.creatorLevel}
+        - Goals: ${userContext.goals.join(', ')}
+        - Challenges: ${userContext.challenges.join(', ')}
+        - Equipment: ${userContext.equipment.join(', ')}
+        - Time commitment: ${userContext.timeCommitment}
+        ` : ''}
+        
         Generate 3-4 personalized insights based on the creator's current progress. Focus on:
         - What they're doing well
-        - What they should focus on next
+        - What they should focus on next based on their specific goals and challenges
         - Platform-specific tips for their current phase
         - Motivation based on their streak and progress
+        - Address their specific challenges with actionable solutions
         
         Format each insight as JSON with:
         - type: "tip" | "warning" | "success" | "recommendation"
@@ -85,7 +101,7 @@ export async function POST(request: NextRequest) {
         - priority: "high" | "medium" | "low"
         - action: Optional object with { label: string, href: string }
         
-        Be encouraging, specific, and actionable. Reference their actual progress and phase.`,
+        Be encouraging, specific, and actionable. Reference their actual progress, goals, and challenges.`,
       },
       {
         role: 'user' as const,

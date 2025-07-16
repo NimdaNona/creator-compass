@@ -1,5 +1,6 @@
 import { chatCompletionStream, chatCompletion } from './openai-service';
 import { knowledgeBase } from './knowledge-base';
+import { userContextService } from './user-context';
 import { ConversationMessage, AIConversation } from './types';
 import { prisma } from '../db';
 import OpenAI from 'openai';
@@ -102,9 +103,15 @@ export class ConversationManager {
     // Update onboarding context if applicable
     if (conversation.context.type === 'onboarding') {
       await this.updateOnboardingContext(conversationId, userMessage);
+      // Refresh conversation to get updated context
+      const refreshedConversation = await this.getConversation(conversationId);
+      if (refreshedConversation) {
+        conversation.context = refreshedConversation.context;
+        conversation.messages = refreshedConversation.messages;
+      }
     }
 
-    // Build context
+    // Build context with updated conversation
     const systemPrompt = await this.buildSystemPrompt(conversation, options?.includeKnowledge);
     const messages = this.buildMessageHistory(conversation, systemPrompt);
 
@@ -128,18 +135,15 @@ export class ConversationManager {
       return this.buildOnboardingSystemPrompt(conversation);
     }
 
-    let systemPrompt = `You are an AI assistant for CreatorCompass, a platform that helps content creators grow their audience on YouTube, TikTok, and Twitch.
+    let systemPrompt = `You are an AI assistant for CreatorCompass, a platform that provides personalized 90-day roadmaps for content creators on YouTube, TikTok, and Twitch.
     
-    You are knowledgeable, friendly, and focused on providing actionable advice to content creators.
+    You are knowledgeable, friendly, and focused on providing actionable advice that aligns with their current roadmap phase.
     You understand platform algorithms, content strategies, and creator challenges.`;
 
-    // Add user context if available
-    if (conversation.context.userProfile) {
-      systemPrompt += `\n\nUser Profile:
-      - Creator Level: ${conversation.context.userProfile.creatorLevel}
-      - Platforms: ${conversation.context.userProfile.preferredPlatforms?.join(', ')}
-      - Niche: ${conversation.context.userProfile.contentNiche}
-      - Goals: ${conversation.context.userProfile.goals?.join(', ')}`;
+    // Add comprehensive user context
+    const userContext = await userContextService.getAISystemPromptContext(conversation.userId);
+    if (userContext) {
+      systemPrompt += `\n${userContext}`;
     }
 
     // Add relevant knowledge if requested
@@ -285,6 +289,9 @@ Example responses:
         context: conversation.context,
       },
     });
+
+    // Clear cache to ensure fresh data
+    this.conversationCache.delete(conversationId);
   }
 
   async getUserConversations(userId: string, limit = 10): Promise<AIConversation[]> {
@@ -370,6 +377,12 @@ Example responses:
         // User is describing their challenges
         responses.challenges = userMessage;
         nextStep = 'complete';
+        
+        // Save onboarding data to user profile
+        await userContextService.updateUserContextFromOnboarding(
+          conversation.userId,
+          responses
+        );
         break;
     }
 

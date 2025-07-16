@@ -110,11 +110,14 @@ export async function POST(request: NextRequest) {
       } : undefined,
     };
 
-    // Generate content
+    // Generate content with user context
     const generatedContent = await generateContent(
       type as ContentGenerationType,
       enrichedContext,
-      options
+      {
+        ...options,
+        userId: user.id,
+      }
     );
 
     // Save generated content

@@ -2,6 +2,7 @@ import OpenAI from 'openai';
 import { AIResponse, AIStreamResponse, ContentGenerationType } from './types';
 import { promptTemplates } from './prompt-templates';
 import { RateLimiter } from '../ratelimit';
+import { userContextService } from './user-context';
 
 // Singleton OpenAI client
 let openaiClient: OpenAI | null = null;
@@ -109,6 +110,7 @@ export async function generateContent(
   options?: {
     temperature?: number;
     maxTokens?: number;
+    userId?: string;
   }
 ): Promise<string> {
   const template = promptTemplates[type];
@@ -116,11 +118,20 @@ export async function generateContent(
     throw new Error(`Unknown content generation type: ${type}`);
   }
 
+  // Get user context if userId provided
+  let enhancedSystemPrompt = template.systemPrompt;
+  if (options?.userId) {
+    const userContext = await userContextService.getAISystemPromptContext(options.userId);
+    if (userContext) {
+      enhancedSystemPrompt += `\n\n${userContext}`;
+    }
+  }
+
   const prompt = template.buildPrompt(context);
   const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
     {
       role: 'system',
-      content: template.systemPrompt,
+      content: enhancedSystemPrompt,
     },
     {
       role: 'user',
