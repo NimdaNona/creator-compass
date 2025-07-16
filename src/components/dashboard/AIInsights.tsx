@@ -60,7 +60,7 @@ export function AIInsights() {
     setIsLoading(true);
     try {
       // Fetch AI-powered insights
-      const response = await fetch('/api/ai/analyze', {
+      const response = await fetch('/api/ai/insights', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

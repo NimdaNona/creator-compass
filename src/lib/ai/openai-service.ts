@@ -152,16 +152,23 @@ export async function analyzeUserProfile(
   const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
     {
       role: 'system',
-      content: `You are an AI assistant helping to analyze a content creator's profile based on their conversation.
-      Extract the following information from the conversation:
-      - Creator level (beginner/intermediate/advanced)
-      - Equipment they have or plan to get
-      - Their goals
-      - Challenges they face
-      - Time commitment
-      - Preferred platforms
-      - Content niche
+      content: `You are an AI assistant for CreatorCompass analyzing a content creator's profile based on their onboarding conversation.
       
+      Context: CreatorCompass provides personalized 90-day roadmaps for content creators on YouTube, TikTok, and Twitch.
+      
+      Extract the following information from the conversation:
+      - Creator level: Map user responses to one of:
+        * "beginner" - just starting out, no content yet
+        * "intermediate" - already creating content but wants to grow
+        * "advanced" - experienced creator looking to optimize
+      - Equipment: List actual equipment mentioned (camera, microphone, lights, etc.)
+      - Goals: Specific creator goals mentioned (grow audience, monetize, improve quality, etc.)
+      - Challenges: Pain points or concerns they've expressed
+      - Time commitment: Hours per week they can dedicate
+      - Preferred platforms: Must be one or more of: youtube, tiktok, twitch
+      - Content niche: The type of content they want to create (gaming, education, lifestyle, etc.)
+      
+      Be precise and only extract what was explicitly mentioned in the conversation.
       Return the analysis in JSON format.`,
     },
   ];
@@ -209,16 +216,27 @@ export async function generateRecommendations(
   type: 'equipment' | 'content' | 'strategy' | 'next-steps'
 ): Promise<string[]> {
   const prompts = {
-    equipment: `Based on this creator profile, recommend equipment they should consider:`,
-    content: `Based on this creator profile, suggest content ideas they should try:`,
-    strategy: `Based on this creator profile, recommend growth strategies:`,
-    'next-steps': `Based on this creator profile, suggest their next steps:`,
+    equipment: `Based on this creator profile, recommend equipment they should consider for their content creation journey:`,
+    content: `Based on this creator profile, suggest specific content ideas that align with their niche and platform:`,
+    strategy: `Based on this creator profile, recommend proven growth strategies for their platform:`,
+    'next-steps': `Based on this creator profile and their progress in the 90-day roadmap, suggest their immediate next steps:`,
   };
 
   const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
     {
       role: 'system',
-      content: `You are an expert content creation advisor. Provide specific, actionable recommendations.`,
+      content: `You are an expert content creation advisor for CreatorCompass. 
+      
+      Context: CreatorCompass provides personalized 90-day roadmaps for content creators on YouTube, TikTok, and Twitch.
+      
+      Provide specific, actionable recommendations that:
+      1. Are tailored to the user's creator level (beginner/intermediate/advanced)
+      2. Consider their specific platform (YouTube/TikTok/Twitch)
+      3. Align with their content niche
+      4. Respect their time commitment and current equipment
+      5. Build upon their current progress in the roadmap
+      
+      Focus on practical, achievable recommendations that will help them progress in their creator journey.`,
     },
     {
       role: 'user',
@@ -226,7 +244,7 @@ export async function generateRecommendations(
       
       Profile: ${JSON.stringify(userProfile, null, 2)}
       
-      Provide 5 specific recommendations in JSON array format.`,
+      Provide 5 specific, actionable recommendations in JSON array format. Each recommendation should be a complete sentence that the user can immediately understand and act upon.`,
     },
   ];
 
@@ -251,7 +269,16 @@ export async function prioritizeTasks(
   const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
     {
       role: 'system',
-      content: `You are a productivity expert. Prioritize tasks based on the user's current situation, goals, and progress.`,
+      content: `You are a productivity expert for CreatorCompass, helping content creators on YouTube, TikTok, and Twitch follow their 90-day roadmaps effectively.
+      
+      Prioritize tasks based on:
+      1. The user's current roadmap phase (Foundation, Growth, or Scale)
+      2. Their creator level (beginner, intermediate, advanced)
+      3. Platform-specific best practices
+      4. Their time commitment and current progress
+      5. Tasks that build upon completed work
+      
+      Focus on tasks that will have the most impact on their growth at their current stage.`,
     },
     {
       role: 'user',
