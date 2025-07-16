@@ -1,7 +1,8 @@
-import { chatCompletionStream } from './openai-service';
+import { chatCompletionStream, chatCompletion } from './openai-service';
 import { knowledgeBase } from './knowledge-base';
 import { ConversationMessage, AIConversation } from './types';
 import { prisma } from '../db';
+import OpenAI from 'openai';
 
 export class ConversationManager {
   private conversationCache = new Map<string, AIConversation>();
@@ -98,6 +99,11 @@ export class ConversationManager {
     // Add user message
     await this.addMessage(conversationId, 'user', userMessage);
 
+    // Update onboarding context if applicable
+    if (conversation.context.type === 'onboarding') {
+      await this.updateOnboardingContext(conversationId, userMessage);
+    }
+
     // Build context
     const systemPrompt = await this.buildSystemPrompt(conversation, options?.includeKnowledge);
     const messages = this.buildMessageHistory(conversation, systemPrompt);
@@ -117,6 +123,11 @@ export class ConversationManager {
     conversation: AIConversation,
     includeKnowledge?: boolean
   ): Promise<string> {
+    // Check if this is an onboarding conversation
+    if (conversation.context.type === 'onboarding') {
+      return this.buildOnboardingSystemPrompt(conversation);
+    }
+
     let systemPrompt = `You are an AI assistant for CreatorCompass, a platform that helps content creators grow their audience on YouTube, TikTok, and Twitch.
     
     You are knowledgeable, friendly, and focused on providing actionable advice to content creators.
@@ -147,6 +158,62 @@ export class ConversationManager {
         systemPrompt += `\n\nRelevant Knowledge Base Information:${relevantContext}`;
       }
     }
+
+    return systemPrompt;
+  }
+
+  private buildOnboardingSystemPrompt(conversation: AIConversation): string {
+    const step = conversation.context.step || 'welcome';
+    const responses = conversation.context.responses || {};
+
+    let systemPrompt = `You are the AI onboarding assistant for CreatorCompass. Your role is to guide new users through a conversational onboarding process to understand their creator journey and build a personalized roadmap.
+
+IMPORTANT: You are conducting an ONBOARDING CONVERSATION, not providing general advice. Follow this structured flow:
+
+Current Step: ${step}
+User Responses So Far: ${JSON.stringify(responses, null, 2)}
+
+CONVERSATION FLOW:
+1. Welcome & Creator Level (current step: ${step === 'welcome' ? 'ACTIVE' : 'COMPLETE'})
+   - Ask about their experience level (beginner/intermediate/advanced)
+   - When they respond with "1" or "just starting out", acknowledge they're a beginner
+   - DO NOT provide tips yet - move to next question
+
+2. Platform Selection (current step: ${step === 'platform' ? 'ACTIVE' : step === 'welcome' ? 'PENDING' : 'COMPLETE'})
+   - Ask which platform they want to focus on: YouTube, TikTok, or Twitch
+   - Can also ask if they're interested in multiple platforms
+
+3. Content Niche (current step: ${step === 'niche' ? 'ACTIVE' : ['welcome', 'platform'].includes(step) ? 'PENDING' : 'COMPLETE'})
+   - Ask what type of content they want to create
+   - Examples: gaming, education, lifestyle, comedy, etc.
+
+4. Equipment & Setup (current step: ${step === 'equipment' ? 'ACTIVE' : ['welcome', 'platform', 'niche'].includes(step) ? 'PENDING' : 'COMPLETE'})
+   - Ask about their current equipment
+   - Phone/camera, microphone, lighting, computer specs
+
+5. Goals & Commitment (current step: ${step === 'goals' ? 'ACTIVE' : ['welcome', 'platform', 'niche', 'equipment'].includes(step) ? 'PENDING' : 'COMPLETE'})
+   - Ask about their content creation goals
+   - How much time they can dedicate per week
+
+6. Challenges (current step: ${step === 'challenges' ? 'ACTIVE' : step === 'complete' ? 'COMPLETE' : 'PENDING'})
+   - Ask what their biggest concerns or challenges are
+
+7. Complete (current step: ${step === 'complete' ? 'ACTIVE' : 'PENDING'})
+   - Summarize what you've learned
+   - Confirm you have everything needed for their roadmap
+
+RESPONSE GUIDELINES:
+- Keep responses conversational and encouraging
+- Ask ONE main question at a time
+- Acknowledge their answer before moving to the next question
+- Use emojis sparingly for friendliness
+- If they provide multiple pieces of information, acknowledge all and still ask the next question
+- DO NOT provide lengthy tips or tutorials during onboarding
+- Focus on gathering information, not teaching
+
+Example responses:
+- "Great! So you're just starting out. That's exciting! 🌟 Which platform are you most interested in creating content for - YouTube, TikTok, or Twitch?"
+- "Gaming content is awesome! There's such a great community. What equipment do you currently have for creating content?"`;
 
     return systemPrompt;
   }
@@ -235,6 +302,84 @@ export class ConversationManager {
       createdAt: conv.createdAt,
       updatedAt: conv.updatedAt,
     }));
+  }
+
+  private async updateOnboardingContext(conversationId: string, userMessage: string): Promise<void> {
+    const conversation = await this.getConversation(conversationId);
+    if (!conversation || conversation.context.type !== 'onboarding') return;
+
+    const currentStep = conversation.context.step || 'welcome';
+    const responses = conversation.context.responses || {};
+    const messageLower = userMessage.toLowerCase();
+
+    let nextStep = currentStep;
+    let updates: Record<string, any> = {};
+
+    // State machine for onboarding flow
+    switch (currentStep) {
+      case 'welcome':
+        // User is responding to experience level question
+        if (messageLower.includes('1') || messageLower.includes('beginner') || messageLower.includes('starting')) {
+          responses.creatorLevel = 'beginner';
+          nextStep = 'platform';
+        } else if (messageLower.includes('2') || messageLower.includes('already') || messageLower.includes('grow')) {
+          responses.creatorLevel = 'intermediate';
+          nextStep = 'platform';
+        } else if (messageLower.includes('3') || messageLower.includes('experienced') || messageLower.includes('optimize')) {
+          responses.creatorLevel = 'advanced';
+          nextStep = 'platform';
+        }
+        break;
+
+      case 'platform':
+        // User is selecting platform
+        if (messageLower.includes('youtube')) {
+          responses.preferredPlatforms = ['youtube'];
+          nextStep = 'niche';
+        } else if (messageLower.includes('tiktok')) {
+          responses.preferredPlatforms = ['tiktok'];
+          nextStep = 'niche';
+        } else if (messageLower.includes('twitch')) {
+          responses.preferredPlatforms = ['twitch'];
+          nextStep = 'niche';
+        } else if (messageLower.includes('all') || messageLower.includes('multiple')) {
+          responses.preferredPlatforms = ['youtube', 'tiktok', 'twitch'];
+          nextStep = 'niche';
+        }
+        break;
+
+      case 'niche':
+        // User is describing their content niche
+        responses.contentNiche = userMessage; // Store full response for analysis
+        nextStep = 'equipment';
+        break;
+
+      case 'equipment':
+        // User is describing their equipment
+        responses.equipment = userMessage;
+        nextStep = 'goals';
+        break;
+
+      case 'goals':
+        // User is describing their goals and time commitment
+        responses.goals = userMessage;
+        nextStep = 'challenges';
+        break;
+
+      case 'challenges':
+        // User is describing their challenges
+        responses.challenges = userMessage;
+        nextStep = 'complete';
+        break;
+    }
+
+    // Update conversation context
+    updates = {
+      step: nextStep,
+      responses,
+    };
+
+    await this.updateContext(conversationId, updates);
   }
 }
 

@@ -9,6 +9,11 @@ const chatRequestSchema = z.object({
   conversationId: z.string().optional(),
   message: z.string().min(1).max(1000),
   includeKnowledge: z.boolean().optional().default(true),
+  context: z.object({
+    type: z.string(),
+    step: z.string().optional(),
+    responses: z.record(z.any()).optional(),
+  }).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -19,7 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { conversationId, message, includeKnowledge } = chatRequestSchema.parse(body);
+    const { conversationId, message, includeKnowledge, context } = chatRequestSchema.parse(body);
 
     // Get user ID from database
     const user = await prisma.user.findUnique({
@@ -34,7 +39,7 @@ export async function POST(request: NextRequest) {
     // Create or get conversation
     let convId = conversationId;
     if (!convId) {
-      const newConversation = await conversationManager.createConversation(user.id);
+      const newConversation = await conversationManager.createConversation(user.id, context);
       convId = newConversation.id;
     }
 

@@ -78,6 +78,7 @@ Just type 1, 2, or 3, or tell me in your own words!`,
           ...(conversationId && { conversationId }),
           message: input.trim(),
           includeKnowledge: true,
+          context: !conversationId ? { type: 'onboarding', step: 'welcome', responses: {} } : undefined,
         }),
       });
 
