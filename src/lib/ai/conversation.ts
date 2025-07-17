@@ -18,17 +18,24 @@ export class ConversationManager {
       updatedAt: new Date(),
     };
 
+    console.log('[ConversationManager] Creating conversation for user:', userId);
+
     this.conversationCache.set(conversation.id, conversation);
     
     // Save to database
-    await prisma.aiConversation.create({
-      data: {
-        id: conversation.id,
-        userId,
-        messages: [],
-        context: initialContext || {},
-      },
-    });
+    try {
+      await prisma.aiConversation.create({
+        data: {
+          id: conversation.id,
+          userId,
+          messages: [],
+          context: initialContext || {},
+        },
+      });
+    } catch (error) {
+      console.error('[ConversationManager] Database error:', error);
+      // Continue even if database save fails - the conversation is cached
+    }
 
     return conversation;
   }
