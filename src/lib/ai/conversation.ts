@@ -21,7 +21,7 @@ export class ConversationManager {
     this.conversationCache.set(conversation.id, conversation);
     
     // Save to database
-    await prisma.aIConversation.create({
+    await prisma.aiConversation.create({
       data: {
         id: conversation.id,
         userId,
@@ -40,7 +40,7 @@ export class ConversationManager {
     }
 
     // Load from database
-    const dbConversation = await prisma.aIConversation.findUnique({
+    const dbConversation = await prisma.aiConversation.findUnique({
       where: { id: conversationId },
     });
 
@@ -77,7 +77,7 @@ export class ConversationManager {
     conversation.updatedAt = new Date();
 
     // Update database
-    await prisma.aIConversation.update({
+    await prisma.aiConversation.update({
       where: { id: conversationId },
       data: {
         messages: conversation.messages,
@@ -321,7 +321,7 @@ Example responses:
     };
 
     // Update database
-    await prisma.aIConversation.update({
+    await prisma.aiConversation.update({
       where: { id: conversationId },
       data: {
         context: conversation.context,
@@ -333,7 +333,7 @@ Example responses:
   }
 
   async getUserConversations(userId: string, limit = 10): Promise<AIConversation[]> {
-    const conversations = await prisma.aIConversation.findMany({
+    const conversations = await prisma.aiConversation.findMany({
       where: { userId },
       orderBy: { updatedAt: 'desc' },
       take: limit,
