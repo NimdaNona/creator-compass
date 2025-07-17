@@ -14,6 +14,7 @@ import { exportAnalyticsToPDF, exportToCSV } from '@/lib/export';
 import { toast } from 'sonner';
 import { useRealtimeAnalytics } from '@/hooks/useRealtimeAnalytics';
 import { cn } from '@/lib/utils';
+import { AIAnalyticsInsights } from './AIAnalyticsInsights';
 import {
   BarChart3,
   TrendingUp,
@@ -388,6 +389,21 @@ export function AnalyticsDashboard() {
             format="currency"
           />
         </div>
+
+        {/* AI Insights */}
+        <AIAnalyticsInsights 
+          platform={selectedPlatform?.id || 'youtube'}
+          analyticsData={{
+            views: metrics.totalViews,
+            engagement: parseFloat(metrics.avgEngagement),
+            followers: metrics.totalFollowers,
+            avgWatchTime: 245,
+            topContent: contentPerformance.map(c => c.type),
+            peakHours: ['2-4 PM', '7-9 PM'],
+            demographics: { age: '18-34', gender: 'mixed', location: 'US/UK' },
+          }}
+          className="mb-6"
+        />
 
         {/* Analytics Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>

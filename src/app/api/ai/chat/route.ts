@@ -48,25 +48,71 @@ export async function POST(request: NextRequest) {
     const stream = new TransformStream();
     const writer = stream.writable.getWriter();
 
-    // Process message in background
+    // Process message in background with timeout
     (async () => {
+      let timeoutId: NodeJS.Timeout | null = null;
+      let isTimedOut = false;
+
       try {
+        // Set a 30-second timeout for the entire response
+        timeoutId = setTimeout(async () => {
+          isTimedOut = true;
+          console.error('Response timeout after 30 seconds');
+          try {
+            await writer.write(encoder.encode(`data: ${JSON.stringify({ 
+              error: 'Response timeout', 
+              timeout: true,
+              message: 'The AI is taking longer than expected. Please try again.'
+            })}\n\n`));
+            await writer.close();
+          } catch (e) {
+            // Writer might already be closed
+          }
+        }, 30000);
+
         const responseStream = await conversationManager.processUserMessage(
           convId,
           message,
           { includeKnowledge, stream: true }
         ) as AsyncGenerator<string>;
 
+        let hasContent = false;
         for await (const chunk of responseStream) {
+          if (isTimedOut) break;
+          hasContent = true;
           await writer.write(encoder.encode(`data: ${JSON.stringify({ content: chunk })}\n\n`));
         }
 
-        await writer.write(encoder.encode(`data: ${JSON.stringify({ done: true, conversationId: convId })}\n\n`));
+        if (!isTimedOut) {
+          // Clear timeout if we completed successfully
+          if (timeoutId) clearTimeout(timeoutId);
+          
+          // Ensure we send done signal
+          await writer.write(encoder.encode(`data: ${JSON.stringify({ 
+            done: true, 
+            conversationId: convId,
+            hasContent 
+          })}\n\n`));
+        }
       } catch (error) {
         console.error('Stream processing error:', error);
-        await writer.write(encoder.encode(`data: ${JSON.stringify({ error: 'Processing error' })}\n\n`));
+        if (!isTimedOut) {
+          try {
+            await writer.write(encoder.encode(`data: ${JSON.stringify({ 
+              error: 'Processing error',
+              message: error instanceof Error ? error.message : 'An unexpected error occurred'
+            })}\n\n`));
+          } catch (e) {
+            // Writer might already be closed
+          }
+        }
       } finally {
-        await writer.close();
+        if (timeoutId) clearTimeout(timeoutId);
+        try {
+          await writer.close();
+        } catch (e) {
+          // Writer might already be closed
+        }
       }
     })();
 

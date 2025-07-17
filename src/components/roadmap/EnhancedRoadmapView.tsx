@@ -11,6 +11,7 @@ import { Calendar, Clock, Target, Trophy, ChevronRight, Lock } from 'lucide-reac
 import DailyTaskCard from './DailyTaskCard';
 import MilestoneTracker from './MilestoneTracker';
 import ProgressPrediction from './ProgressPrediction';
+import { AIRoadmapAssistant } from './AIRoadmapAssistant';
 import { useAppStore } from '@/store/useAppStore';
 import { toast } from 'sonner';
 
@@ -182,6 +183,19 @@ export default function EnhancedRoadmapView() {
           </div>
         </Card>
       )}
+
+      {/* AI Roadmap Assistant */}
+      <AIRoadmapAssistant 
+        roadmapData={{
+          phases: [
+            { id: 1, name: 'Foundation', tasks: 30 },
+            { id: 2, name: 'Growth', tasks: 30 },
+            { id: 3, name: 'Scale', tasks: 30 },
+          ],
+          currentTasks: todaysTasks.map(t => t.title),
+        }}
+        userProgress={progress}
+      />
 
       {/* Today's Tasks */}
       {todaysTasks.length > 0 && (

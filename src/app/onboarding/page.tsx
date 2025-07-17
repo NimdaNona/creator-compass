@@ -9,6 +9,7 @@ import { GoalSetting } from '@/components/onboarding/GoalSetting';
 import { OnboardingComplete } from '@/components/onboarding/OnboardingComplete';
 import { OnboardingChoice } from '@/components/onboarding/OnboardingChoice';
 import { AIOnboarding } from '@/components/onboarding/AIOnboarding';
+import { AIOnboardingEnhanced } from '@/components/onboarding/AIOnboardingEnhanced';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Compass } from 'lucide-react';
@@ -22,11 +23,14 @@ function OnboardingContent() {
     setCurrentOnboardingStep,
     selectedPlatform,
     selectedNiche,
+    setSelectedPlatform,
+    setSelectedNiche,
     setOnboardingComplete
   } = useAppStore();
 
   const [step, setStep] = useState(currentOnboardingStep);
   const [onboardingMode, setOnboardingMode] = useState<'choice' | 'ai' | 'manual'>('ai');
+  const [useEnhancedAI, setUseEnhancedAI] = useState(true); // Toggle for enhanced version
 
   // Check for platform parameter from landing page
   useEffect(() => {
@@ -139,7 +143,17 @@ function OnboardingContent() {
           </div>
 
           {/* AI Onboarding Only */}
-          <AIOnboarding onComplete={handleAIComplete} />
+          {useEnhancedAI ? (
+            <AIOnboardingEnhanced 
+              onComplete={handleAIComplete}
+              selectedPlatform={selectedPlatform}
+              setSelectedPlatform={setSelectedPlatform}
+              selectedNiche={selectedNiche}
+              setSelectedNiche={setSelectedNiche}
+            />
+          ) : (
+            <AIOnboarding onComplete={handleAIComplete} />
+          )}
         </div>
       </div>
     </div>

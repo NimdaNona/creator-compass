@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PaywallBanner } from '@/components/paywall/PaywallBanner';
+import { AIResourceAssistant } from './AIResourceAssistant';
 import { useAppStore } from '@/store/useAppStore';
 // Resources will be fetched from API
 import {
@@ -619,6 +620,14 @@ export function ResourceLibrary() {
           </div>
         </div>
       </div>
+
+      {/* AI Resource Assistant */}
+      <AIResourceAssistant 
+        activeCategory={activeCategory}
+        budget={budgetFilter === 'budget' ? 200 : budgetFilter === 'premium' ? 1000 : 500}
+        userLevel={selectedPlatform?.id === 'youtube' ? 'intermediate' : 'beginner'}
+        className="mb-6"
+      />
 
       {/* Category Navigation */}
       <Tabs value={activeCategory} onValueChange={setActiveCategory}>

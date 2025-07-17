@@ -201,10 +201,14 @@ CONVERSATION FLOW:
 
 6. Challenges (current step: ${step === 'challenges' ? 'ACTIVE' : step === 'complete' ? 'COMPLETE' : 'PENDING'})
    - Ask what their biggest concerns or challenges are
+   - IMPORTANT: After they answer, acknowledge their challenge and move to step 7
 
 7. Complete (current step: ${step === 'complete' ? 'ACTIVE' : 'PENDING'})
-   - Summarize what you've learned
-   - Confirm you have everything needed for their roadmap
+   - Acknowledge their challenge first
+   - Summarize what you've learned about them
+   - Tell them you have everything needed to create their personalized roadmap
+   - End with excitement about their journey ahead
+   - Example: "That's a common challenge for new streamers! Building an audience takes time, but with the right strategies, you'll get there. 🎯\\n\\nGreat! I now have everything I need to create your personalized roadmap:\\n- You're just starting out as a gaming streamer on Twitch\\n- You have basic equipment to begin with\\n- You can dedicate 30 hours/week\\n- Your main goal is building an audience\\n\\nI'm excited to help you on this journey! Your custom 90-day roadmap is ready to guide you from your first stream to building a thriving community. Let's get started! 🚀"
 
 RESPONSE GUIDELINES:
 - Keep responses conversational and encouraging
@@ -247,18 +251,43 @@ Example responses:
     messages: OpenAI.Chat.ChatCompletionMessageParam[]
   ): AsyncGenerator<string> {
     let fullResponse = '';
+    let hasError = false;
     
-    const stream = await chatCompletionStream(messages);
-    
-    for await (const chunk of stream) {
-      if (chunk.content) {
-        fullResponse += chunk.content;
-        yield chunk.content;
+    try {
+      const stream = await chatCompletionStream(messages);
+      
+      for await (const chunk of stream) {
+        if (chunk.content) {
+          fullResponse += chunk.content;
+          yield chunk.content;
+        }
+        
+        if (chunk.done) {
+          // Save the complete response
+          await this.addMessage(conversationId, 'assistant', fullResponse);
+        }
+      }
+    } catch (error) {
+      hasError = true;
+      console.error('Stream error:', error);
+      
+      // If we have a partial response, save it
+      if (fullResponse) {
+        await this.addMessage(conversationId, 'assistant', fullResponse);
       }
       
-      if (chunk.done) {
-        // Save the complete response
-        await this.addMessage(conversationId, 'assistant', fullResponse);
+      // Yield error message
+      yield '\n\n[Error: Response was interrupted. Please try again.]';
+      throw error;
+    } finally {
+      // Ensure we always mark the stream as done
+      if (!hasError && fullResponse) {
+        // Ensure the response was saved
+        const saved = await this.getConversation(conversationId);
+        const lastMessage = saved?.messages[saved.messages.length - 1];
+        if (lastMessage?.role !== 'assistant' || lastMessage?.content !== fullResponse) {
+          await this.addMessage(conversationId, 'assistant', fullResponse);
+        }
       }
     }
   }
@@ -378,11 +407,18 @@ Example responses:
         responses.challenges = userMessage;
         nextStep = 'complete';
         
-        // Save onboarding data to user profile
-        await userContextService.updateUserContextFromOnboarding(
-          conversation.userId,
-          responses
-        );
+        // Save onboarding data to user profile - do this after response is sent
+        // to avoid interrupting the stream
+        setTimeout(async () => {
+          try {
+            await userContextService.updateUserContextFromOnboarding(
+              conversation.userId,
+              responses
+            );
+          } catch (error) {
+            console.error('Failed to save onboarding data:', error);
+          }
+        }, 1000);
         break;
     }
 

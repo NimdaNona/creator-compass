@@ -9,8 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import TemplateCard from './TemplateCard';
 import TemplateCreator from './TemplateCreator';
+import { AITemplateSuggestions } from './AITemplateSuggestions';
 import { Search, Filter, Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import { useSession } from 'next-auth/react';
 
 interface Template {
   id: string;
@@ -39,6 +41,9 @@ export default function TemplateLibrary() {
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showAISuggestions, setShowAISuggestions] = useState(true);
+  
+  const { data: session } = useSession();
 
   useEffect(() => {
     fetchCategories();
@@ -105,8 +110,27 @@ export default function TemplateLibrary() {
             Ready-to-use templates to accelerate your content creation
           </p>
         </div>
-        <TemplateCreator />
+        <div className="flex gap-2">
+          <Button
+            variant={showAISuggestions ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowAISuggestions(!showAISuggestions)}
+          >
+            {showAISuggestions ? 'Hide' : 'Show'} AI Suggestions
+          </Button>
+          <TemplateCreator />
+        </div>
       </div>
+
+      {/* AI Suggestions */}
+      {showAISuggestions && session && (
+        <AITemplateSuggestions
+          userLevel={session.user?.creatorLevel}
+          platform={selectedCategory}
+          niche={session.user?.niche}
+          className="mb-6"
+        />
+      )}
 
       {/* Search */}
       <div className="relative">
