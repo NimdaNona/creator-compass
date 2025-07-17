@@ -13,6 +13,7 @@ export default withAuth(
       pathname.startsWith('/auth') ||
       pathname === '/' ||
       pathname.startsWith('/pricing') ||
+      pathname.startsWith('/onboarding') ||
       pathname.startsWith('/_next') ||
       pathname.startsWith('/favicon') ||
       pathname.startsWith('/offline') ||
@@ -48,6 +49,7 @@ export default withAuth(
           pathname.startsWith('/auth') ||
           pathname === '/' ||
           pathname.startsWith('/pricing') ||
+          pathname.startsWith('/onboarding') ||
           pathname.startsWith('/_next') ||
           pathname.startsWith('/favicon') ||
           pathname.startsWith('/offline') ||
@@ -56,7 +58,8 @@ export default withAuth(
           pathname === '/sitemap.xml' ||
           pathname === '/robots.txt' ||
           pathname.startsWith('/sw.js') ||
-          pathname.startsWith('/api/stripe/webhook') // Allow webhook access
+          pathname.startsWith('/api/stripe/webhook') || // Allow webhook access
+          pathname.startsWith('/api/ai/chat') // Allow AI chat for onboarding
         ) {
           return true;
         }
