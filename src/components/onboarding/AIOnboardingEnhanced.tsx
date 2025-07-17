@@ -176,23 +176,29 @@ export function AIOnboardingEnhanced({
     setIsLoading(true);
 
     try {
+      const requestBody: any = {
+        message: messageToSend,
+        context: {
+          type: 'onboarding',
+          step: currentStep,
+          responses: {
+            equipment: selectedEquipment,
+            goals: selectedGoals,
+            platform: selectedPlatform,
+            niche: selectedNiche,
+          },
+        },
+      };
+
+      // Only include conversationId if it's not null
+      if (conversationId) {
+        requestBody.conversationId = conversationId;
+      }
+
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          conversationId,
-          message: messageToSend,
-          context: {
-            type: 'onboarding',
-            step: currentStep,
-            responses: {
-              equipment: selectedEquipment,
-              goals: selectedGoals,
-              platform: selectedPlatform,
-              niche: selectedNiche,
-            },
-          },
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
