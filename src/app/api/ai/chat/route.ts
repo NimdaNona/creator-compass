@@ -18,13 +18,16 @@ const chatRequestSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const body = await request.json();
     const { conversationId, message, includeKnowledge, context } = chatRequestSchema.parse(body);
+
+    // Allow unauthenticated access for onboarding flow
+    const isOnboarding = context?.type === 'onboarding';
+    
+    const session = await getServerSession(authOptions);
+    if (!isOnboarding && !session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     
     // Log environment check for debugging
     console.log('[Chat API] Processing request', {
@@ -34,20 +37,29 @@ export async function POST(request: NextRequest) {
       isVercel: !!process.env.VERCEL,
     });
 
-    // Get user ID from database
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { id: true },
-    });
+    // Get user ID from database or use anonymous ID for onboarding
+    let userId: string;
+    
+    if (isOnboarding) {
+      // Use a temporary anonymous user ID for onboarding
+      userId = 'onboarding-' + Math.random().toString(36).substr(2, 9);
+    } else {
+      const user = await prisma.user.findUnique({
+        where: { email: session!.user.email! },
+        select: { id: true },
+      });
 
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      if (!user) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      }
+      
+      userId = user.id;
     }
 
     // Create or get conversation
     let convId = conversationId;
     if (!convId) {
-      const newConversation = await conversationManager.createConversation(user.id, context);
+      const newConversation = await conversationManager.createConversation(userId, context);
       convId = newConversation.id;
     }
 

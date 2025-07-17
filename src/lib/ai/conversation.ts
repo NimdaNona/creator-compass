@@ -22,19 +22,21 @@ export class ConversationManager {
 
     this.conversationCache.set(conversation.id, conversation);
     
-    // Save to database
-    try {
-      await prisma.aiConversation.create({
-        data: {
-          id: conversation.id,
-          userId,
-          messages: [],
-          context: initialContext || {},
-        },
-      });
-    } catch (error) {
-      console.error('[ConversationManager] Database error:', error);
-      // Continue even if database save fails - the conversation is cached
+    // Save to database only for authenticated users
+    if (!userId.startsWith('onboarding-')) {
+      try {
+        await prisma.aiConversation.create({
+          data: {
+            id: conversation.id,
+            userId,
+            messages: [],
+            context: initialContext || {},
+          },
+        });
+      } catch (error) {
+        console.error('[ConversationManager] Database error:', error);
+        // Continue even if database save fails - the conversation is cached
+      }
     }
 
     return conversation;
@@ -83,14 +85,16 @@ export class ConversationManager {
     conversation.messages.push(message);
     conversation.updatedAt = new Date();
 
-    // Update database
-    await prisma.aiConversation.update({
-      where: { id: conversationId },
-      data: {
-        messages: conversation.messages,
-        updatedAt: conversation.updatedAt,
-      },
-    });
+    // Update database only for authenticated users
+    if (!conversation.userId.startsWith('onboarding-')) {
+      await prisma.aiConversation.update({
+        where: { id: conversationId },
+        data: {
+          messages: conversation.messages,
+          updatedAt: conversation.updatedAt,
+        },
+      });
+    }
   }
 
   async processUserMessage(
@@ -327,13 +331,15 @@ Example responses:
       ...updates,
     };
 
-    // Update database
-    await prisma.aiConversation.update({
-      where: { id: conversationId },
-      data: {
-        context: conversation.context,
-      },
-    });
+    // Update database only for authenticated users
+    if (!conversation.userId.startsWith('onboarding-')) {
+      await prisma.aiConversation.update({
+        where: { id: conversationId },
+        data: {
+          context: conversation.context,
+        },
+      });
+    }
 
     // Clear cache to ensure fresh data
     this.conversationCache.delete(conversationId);
