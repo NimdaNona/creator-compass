@@ -1,0 +1,70 @@
+[08:52:35.306] Running build in Washington, D.C., USA (East) – iad1
+[08:52:35.307] Build machine configuration: 4 cores, 8 GB
+[08:52:35.333] Cloning github.com/NimdaNona/creator-compass (Branch: main, Commit: 4636342)
+[08:52:35.793] Cloning completed: 460.000ms
+[08:52:39.182] Restored build cache from previous deployment (8g4i1VkceHfB6zUyog7VFNLES96r)
+[08:52:42.246] Running "vercel build"
+[08:52:42.745] Vercel CLI 44.4.3
+[08:52:43.106] Installing dependencies...
+[08:52:44.987] 
+[08:52:44.987] > creator-compass@0.1.0 postinstall
+[08:52:44.987] > prisma generate
+[08:52:44.988] 
+[08:52:45.778] Prisma schema loaded from prisma/schema.prisma
+[08:52:46.451] 
+[08:52:46.451] ✔ Generated Prisma Client (v6.11.1) to ./node_modules/@prisma/client in 324ms
+[08:52:46.452] 
+[08:52:46.452] Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+[08:52:46.452] 
+[08:52:46.452] Tip: Want to turn off tips and other hints? https://pris.ly/tip-4-nohints
+[08:52:46.452] 
+[08:52:46.476] 
+[08:52:46.476] up to date in 3s
+[08:52:46.476] 
+[08:52:46.476] 174 packages are looking for funding
+[08:52:46.476]   run `npm fund` for details
+[08:52:46.507] Detected Next.js version: 15.3.5
+[08:52:46.514] Running "npm run build"
+[08:52:46.634] 
+[08:52:46.634] > creator-compass@0.1.0 build
+[08:52:46.634] > prisma generate && next build
+[08:52:46.634] 
+[08:52:47.294] Prisma schema loaded from prisma/schema.prisma
+[08:52:47.839] ┌─────────────────────────────────────────────────────────┐
+[08:52:47.840] │  Update available 6.11.1 -> 6.12.0                      │
+[08:52:47.840] │  Run the following to update                            │
+[08:52:47.840] │    npm i --save-dev prisma@latest                       │
+[08:52:47.840] │    npm i @prisma/client@latest                          │
+[08:52:47.840] └─────────────────────────────────────────────────────────┘
+[08:52:47.840] 
+[08:52:47.840] ✔ Generated Prisma Client (v6.11.1) to ./node_modules/@prisma/client in 272ms
+[08:52:47.840] 
+[08:52:47.840] Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+[08:52:47.840] 
+[08:52:47.840] Tip: Want to turn off tips and other hints? https://pris.ly/tip-4-nohints
+[08:52:47.840] 
+[08:52:49.014]    ▲ Next.js 15.3.5
+[08:52:49.015] 
+[08:52:49.049]    Creating an optimized production build ...
+[08:53:04.178] Failed to compile.
+[08:53:04.178] 
+[08:53:04.178] ./src/app/api/ai/analytics-insights/route.ts
+[08:53:04.179] Module not found: Can't resolve '@/lib/ai/openai'
+[08:53:04.179] 
+[08:53:04.179] https://nextjs.org/docs/messages/module-not-found
+[08:53:04.179] 
+[08:53:04.179] ./src/app/api/ai/roadmap-analysis/route.ts
+[08:53:04.179] Module not found: Can't resolve '@/lib/ai/openai'
+[08:53:04.179] 
+[08:53:04.179] https://nextjs.org/docs/messages/module-not-found
+[08:53:04.179] 
+[08:53:04.179] ./src/app/api/ai/template-suggestions/route.ts
+[08:53:04.179] Module not found: Can't resolve '@/lib/ai/openai'
+[08:53:04.180] 
+[08:53:04.180] https://nextjs.org/docs/messages/module-not-found
+[08:53:04.180] 
+[08:53:04.181] 
+[08:53:04.181] > Build failed because of webpack errors
+[08:53:04.256] Error: Command "npm run build" exited with 1
+[08:53:05.334] 
+[08:53:08.122] Exiting build container
