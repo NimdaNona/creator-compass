@@ -114,7 +114,10 @@ function OnboardingContent() {
 
   const handleAIComplete = () => {
     setOnboardingComplete(true);
-    router.push('/dashboard');
+    // Add a small delay to ensure profile data is saved
+    setTimeout(() => {
+      router.push('/dashboard');
+    }, 500);
   };
 
   const CurrentComponent = currentStepData?.component;

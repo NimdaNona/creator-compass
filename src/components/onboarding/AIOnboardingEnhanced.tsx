@@ -286,9 +286,12 @@ export function AIOnboardingEnhanced({
                 setCurrentStep('challenges');
                 updateQuickOptions('challenges');
               } else if (assistantMessage.toLowerCase().includes('roadmap is ready') || 
-                        assistantMessage.toLowerCase().includes('everything i need')) {
+                        assistantMessage.toLowerCase().includes('everything i need') ||
+                        assistantMessage.toLowerCase().includes('start my creator journey')) {
                 setCurrentStep('complete');
                 setQuickOptions([]);
+                // Ensure isLoading is set to false so the button appears
+                setIsLoading(false);
               }
             } catch (e) {
               console.error('Error parsing SSE data:', e);

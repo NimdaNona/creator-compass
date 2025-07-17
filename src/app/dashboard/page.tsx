@@ -11,7 +11,9 @@ import { QuickActions } from '@/components/dashboard/QuickActions';
 import { AchievementsBanner } from '@/components/dashboard/AchievementsBanner';
 import { UsageWidget } from '@/components/dashboard/UsageWidget';
 import { AIInsights } from '@/components/dashboard/AIInsights';
+import { OnboardingGuide } from '@/components/dashboard/OnboardingGuide';
 import { DraggableContentCalendar } from '@/components/calendar/DraggableContentCalendar';
+import { AIAssistantWidget } from '@/components/ai/AIAssistantWidget';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -57,6 +59,9 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       <div className="container mx-auto px-4 py-8">
+        {/* Onboarding Guide for New Users */}
+        <OnboardingGuide />
+        
         {/* Header */}
         <div className="mb-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
@@ -106,7 +111,7 @@ export default function DashboardPage() {
         {/* Main Content */}
         <div className="grid lg:grid-cols-3 gap-8 mb-8">
           {/* Today's Tasks */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2" data-today-tasks>
             <TodaysTasks />
           </div>
           
@@ -129,7 +134,7 @@ export default function DashboardPage() {
               <Target className="w-4 h-4" />
               <span>Roadmap</span>
             </TabsTrigger>
-            <TabsTrigger value="calendar" className="flex items-center space-x-2">
+            <TabsTrigger value="calendar" className="flex items-center space-x-2" data-calendar-tab>
               <Calendar className="w-4 h-4" />
               <span>Calendar</span>
             </TabsTrigger>
@@ -148,6 +153,9 @@ export default function DashboardPage() {
           </TabsContent>
         </Tabs>
       </div>
+      
+      {/* AI Assistant Widget */}
+      <AIAssistantWidget />
     </div>
   );
 }

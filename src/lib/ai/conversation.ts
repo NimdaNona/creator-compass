@@ -177,30 +177,36 @@ IMPORTANT: You are conducting an ONBOARDING CONVERSATION, not providing general 
 Current Step: ${step}
 User Responses So Far: ${JSON.stringify(responses, null, 2)}
 
+CRITICAL RULES:
+- NEVER ask a question that has already been answered
+- Check the "User Responses So Far" before asking ANY question
+- If platform is already in responses.preferredPlatforms, do NOT ask about platform again
+- If a step is already complete, move to the next one
+
 CONVERSATION FLOW:
 1. Welcome & Creator Level (current step: ${step === 'welcome' ? 'ACTIVE' : 'COMPLETE'})
-   - Ask about their experience level (beginner/intermediate/advanced)
+   ${responses.creatorLevel ? '✓ ALREADY ANSWERED: ' + responses.creatorLevel : '- Ask about their experience level (beginner/intermediate/advanced)'}
    - When they respond with "1" or "just starting out", acknowledge they're a beginner
    - DO NOT provide tips yet - move to next question
 
 2. Platform Selection (current step: ${step === 'platform' ? 'ACTIVE' : step === 'welcome' ? 'PENDING' : 'COMPLETE'})
-   - Ask which platform they want to focus on: YouTube, TikTok, or Twitch
-   - Can also ask if they're interested in multiple platforms
+   ${responses.preferredPlatforms ? '✓ ALREADY ANSWERED: ' + responses.preferredPlatforms.join(', ') : '- Ask which platform they want to focus on: YouTube, TikTok, or Twitch'}
+   - IMPORTANT: If preferredPlatforms already exists in responses, SKIP this question entirely
 
 3. Content Niche (current step: ${step === 'niche' ? 'ACTIVE' : ['welcome', 'platform'].includes(step) ? 'PENDING' : 'COMPLETE'})
-   - Ask what type of content they want to create
+   ${responses.contentNiche ? '✓ ALREADY ANSWERED: ' + responses.contentNiche : '- Ask what type of content they want to create'}
    - Examples: gaming, education, lifestyle, comedy, etc.
 
 4. Equipment & Setup (current step: ${step === 'equipment' ? 'ACTIVE' : ['welcome', 'platform', 'niche'].includes(step) ? 'PENDING' : 'COMPLETE'})
-   - Ask about their current equipment
+   ${responses.equipment ? '✓ ALREADY ANSWERED: ' + responses.equipment : '- Ask about their current equipment'}
    - Phone/camera, microphone, lighting, computer specs
 
 5. Goals & Commitment (current step: ${step === 'goals' ? 'ACTIVE' : ['welcome', 'platform', 'niche', 'equipment'].includes(step) ? 'PENDING' : 'COMPLETE'})
-   - Ask about their content creation goals
+   ${responses.goals ? '✓ ALREADY ANSWERED: ' + responses.goals : '- Ask about their content creation goals'}
    - How much time they can dedicate per week
 
 6. Challenges (current step: ${step === 'challenges' ? 'ACTIVE' : step === 'complete' ? 'COMPLETE' : 'PENDING'})
-   - Ask what their biggest concerns or challenges are
+   ${responses.challenges ? '✓ ALREADY ANSWERED: ' + responses.challenges : '- Ask what their biggest concerns or challenges are'}
    - IMPORTANT: After they answer, acknowledge their challenge and move to step 7
 
 7. Complete (current step: ${step === 'complete' ? 'ACTIVE' : 'PENDING'})
@@ -208,9 +214,11 @@ CONVERSATION FLOW:
    - Summarize what you've learned about them
    - Tell them you have everything needed to create their personalized roadmap
    - End with excitement about their journey ahead
-   - Example: "That's a common challenge for new streamers! Building an audience takes time, but with the right strategies, you'll get there. 🎯\\n\\nGreat! I now have everything I need to create your personalized roadmap:\\n- You're just starting out as a gaming streamer on Twitch\\n- You have basic equipment to begin with\\n- You can dedicate 30 hours/week\\n- Your main goal is building an audience\\n\\nI'm excited to help you on this journey! Your custom 90-day roadmap is ready to guide you from your first stream to building a thriving community. Let's get started! 🚀"
+   - MUST include: "Click the 'Start My Creator Journey' button below to access your personalized dashboard!"
+   - Example: "That's a common challenge for new streamers! Building an audience takes time, but with the right strategies, you'll get there. 🎯\\n\\nGreat! I now have everything I need to create your personalized roadmap:\\n- You're just starting out as a gaming streamer on Twitch\\n- You have basic equipment to begin with\\n- You can dedicate 30 hours/week\\n- Your main goal is building an audience\\n\\nI'm excited to help you on this journey! Your custom 90-day roadmap is ready to guide you from your first stream to building a thriving community.\\n\\nClick the 'Start My Creator Journey' button below to access your personalized dashboard! 🚀"
 
 RESPONSE GUIDELINES:
+- ALWAYS check if a question has already been answered before asking it
 - Keep responses conversational and encouraging
 - Ask ONE main question at a time
 - Acknowledge their answer before moving to the next question
@@ -218,6 +226,7 @@ RESPONSE GUIDELINES:
 - If they provide multiple pieces of information, acknowledge all and still ask the next question
 - DO NOT provide lengthy tips or tutorials during onboarding
 - Focus on gathering information, not teaching
+- In the final complete step, ALWAYS mention the button to continue
 
 Example responses:
 - "Great! So you're just starting out. That's exciting! 🌟 Which platform are you most interested in creating content for - YouTube, TikTok, or Twitch?"
@@ -378,8 +387,17 @@ Example responses:
         } else if (messageLower.includes('twitch')) {
           responses.preferredPlatforms = ['twitch'];
           nextStep = 'niche';
-        } else if (messageLower.includes('all') || messageLower.includes('multiple')) {
+        } else if (messageLower.includes('all') || messageLower.includes('multiple') || 
+                   messageLower.includes('three') || messageLower.includes('each') ||
+                   messageLower.includes('variety')) {
+          // Handle various ways users might say "all platforms"
           responses.preferredPlatforms = ['youtube', 'tiktok', 'twitch'];
+          nextStep = 'niche';
+        } else {
+          // If we can't parse the platform, assume they mentioned something valid and store the raw response
+          // This prevents the AI from asking the same question again
+          responses.preferredPlatforms = ['youtube', 'tiktok', 'twitch']; // Default to all
+          responses.platformResponse = userMessage; // Store raw response for context
           nextStep = 'niche';
         }
         break;
