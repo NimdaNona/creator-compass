@@ -3,25 +3,34 @@ import { AIResponse, AIStreamResponse, ContentGenerationType } from './types';
 import { promptTemplates } from './prompt-templates';
 import { RateLimiter } from '../ratelimit';
 import { userContextService } from './user-context';
+import { getOpenAIApiKey, AI_CONFIG } from './config';
 
 // Singleton OpenAI client
 let openaiClient: OpenAI | null = null;
 
 export function getOpenAIClient(): OpenAI {
   if (!openaiClient) {
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = getOpenAIApiKey();
     if (!apiKey) {
-      throw new Error('OPENAI_API_KEY is not configured');
+      console.error('OPENAI_API_KEY is not configured in environment variables');
+      console.error('NODE_ENV:', process.env.NODE_ENV);
+      console.error('Available env vars:', Object.keys(process.env).filter(k => !k.includes('SECRET')).sort());
+      throw new Error('OPENAI_API_KEY is not configured. Please set it in your environment variables.');
     }
-    openaiClient = new OpenAI({ apiKey });
+    try {
+      openaiClient = new OpenAI({ apiKey });
+    } catch (error) {
+      console.error('Failed to initialize OpenAI client:', error);
+      throw new Error('Failed to initialize OpenAI client');
+    }
   }
   return openaiClient;
 }
 
 // Rate limiter for API calls
 const rateLimiter = new RateLimiter({
-  tokensPerInterval: 100,
-  interval: 'minute',
+  tokensPerInterval: AI_CONFIG.limits.rateLimit.tokensPerInterval,
+  interval: AI_CONFIG.limits.rateLimit.interval,
   fireImmediately: true,
 });
 
@@ -44,10 +53,10 @@ export async function chatCompletion(
 
     const client = getOpenAIClient();
     const completion = await client.chat.completions.create({
-      model: options?.model || 'gpt-4-turbo-preview',
+      model: options?.model || AI_CONFIG.models.chat,
       messages,
-      temperature: options?.temperature ?? 0.7,
-      max_tokens: options?.maxTokens ?? 2000,
+      temperature: options?.temperature ?? AI_CONFIG.limits.temperature,
+      max_tokens: options?.maxTokens ?? AI_CONFIG.limits.maxTokens,
       stream: false,
     });
 
@@ -81,10 +90,10 @@ export async function chatCompletionStream(
 
     const client = getOpenAIClient();
     const stream = await client.chat.completions.create({
-      model: options?.model || 'gpt-4-turbo-preview',
+      model: options?.model || AI_CONFIG.models.chat,
       messages,
-      temperature: options?.temperature ?? 0.7,
-      max_tokens: options?.maxTokens ?? 2000,
+      temperature: options?.temperature ?? AI_CONFIG.limits.temperature,
+      max_tokens: options?.maxTokens ?? AI_CONFIG.limits.maxTokens,
       stream: true,
     });
 
@@ -320,7 +329,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
   try {
     const client = getOpenAIClient();
     const response = await client.embeddings.create({
-      model: 'text-embedding-3-small',
+      model: AI_CONFIG.models.embedding,
       input: text,
     });
 
