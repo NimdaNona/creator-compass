@@ -25,6 +25,14 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { conversationId, message, includeKnowledge, context } = chatRequestSchema.parse(body);
+    
+    // Log environment check for debugging
+    console.log('[Chat API] Processing request', {
+      hasApiKey: !!process.env.OPENAI_API_KEY,
+      keyLength: process.env.OPENAI_API_KEY?.length || 0,
+      nodeEnv: process.env.NODE_ENV,
+      isVercel: !!process.env.VERCEL,
+    });
 
     // Get user ID from database
     const user = await prisma.user.findUnique({
@@ -125,10 +133,32 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Chat API error:', error);
+    
+    // Log detailed error information
+    if (error instanceof Error) {
+      console.error('[Chat API] Error details:', {
+        message: error.message,
+        stack: error.stack?.split('\n').slice(0, 3).join('\n'),
+        hasApiKey: !!process.env.OPENAI_API_KEY,
+      });
+      
+      // Return more specific error messages
+      if (error.message.includes('OpenAI') || error.message.includes('API key')) {
+        return NextResponse.json({ 
+          error: 'AI service configuration error', 
+          details: 'The AI service is not properly configured. Please check server logs.'
+        }, { status: 500 });
+      }
+    }
+    
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 });
     }
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }
 

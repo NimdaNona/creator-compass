@@ -3,38 +3,8 @@ import { AIResponse, AIStreamResponse, ContentGenerationType } from './types';
 import { promptTemplates } from './prompt-templates';
 import { RateLimiter } from '../ratelimit';
 import { userContextService } from './user-context';
-import { getOpenAIApiKey, AI_CONFIG } from './config';
-
-// Singleton OpenAI client - do not initialize at module level
-let openaiClient: OpenAI | null = null;
-
-export function getOpenAIClient(): OpenAI {
-  // Always check for API key at runtime, not module load time
-  if (!openaiClient) {
-    // Force runtime evaluation of environment variable
-    const apiKey = process.env.OPENAI_API_KEY || getOpenAIApiKey();
-    
-    if (!apiKey || apiKey.trim() === '') {
-      console.error('OPENAI_API_KEY is not configured in environment variables');
-      console.error('NODE_ENV:', process.env.NODE_ENV);
-      console.error('Runtime check:', typeof process !== 'undefined' && process.env);
-      console.error('Available env vars:', Object.keys(process.env || {}).filter(k => !k.includes('SECRET')).sort());
-      throw new Error('OPENAI_API_KEY is not configured. Please set it in your environment variables.');
-    }
-    
-    try {
-      // Initialize client with explicit configuration
-      openaiClient = new OpenAI({ 
-        apiKey: apiKey.trim(),
-        dangerouslyAllowBrowser: false, // Ensure this only runs server-side
-      });
-    } catch (error) {
-      console.error('Failed to initialize OpenAI client:', error);
-      throw new Error('Failed to initialize OpenAI client');
-    }
-  }
-  return openaiClient;
-}
+import { AI_CONFIG } from './config';
+import { createOpenAIClient } from './openai-client';
 
 // Rate limiter for API calls
 const rateLimiter = new RateLimiter({
@@ -60,7 +30,7 @@ export async function chatCompletion(
       throw new Error('Rate limit exceeded. Please try again later.');
     }
 
-    const client = getOpenAIClient();
+    const client = createOpenAIClient();
     const completion = await client.chat.completions.create({
       model: options?.model || AI_CONFIG.models.chat,
       messages,
@@ -109,7 +79,7 @@ export async function chatCompletionStream(
       throw new Error('Rate limit exceeded. Please try again later.');
     }
 
-    const client = getOpenAIClient();
+    const client = createOpenAIClient();
     const stream = await client.chat.completions.create({
       model: options?.model || AI_CONFIG.models.chat,
       messages,
@@ -365,7 +335,7 @@ export async function prioritizeTasks(
 // Embedding generation for semantic search
 export async function generateEmbedding(text: string): Promise<number[]> {
   try {
-    const client = getOpenAIClient();
+    const client = createOpenAIClient();
     const response = await client.embeddings.create({
       model: AI_CONFIG.models.embedding,
       input: text,
@@ -381,7 +351,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 // Moderate content for safety
 export async function moderateContent(content: string): Promise<boolean> {
   try {
-    const client = getOpenAIClient();
+    const client = createOpenAIClient();
     const response = await client.moderations.create({
       input: content,
     });
