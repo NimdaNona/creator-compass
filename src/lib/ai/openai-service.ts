@@ -5,20 +5,29 @@ import { RateLimiter } from '../ratelimit';
 import { userContextService } from './user-context';
 import { getOpenAIApiKey, AI_CONFIG } from './config';
 
-// Singleton OpenAI client
+// Singleton OpenAI client - do not initialize at module level
 let openaiClient: OpenAI | null = null;
 
 export function getOpenAIClient(): OpenAI {
+  // Always check for API key at runtime, not module load time
   if (!openaiClient) {
-    const apiKey = getOpenAIApiKey();
-    if (!apiKey) {
+    // Force runtime evaluation of environment variable
+    const apiKey = process.env.OPENAI_API_KEY || getOpenAIApiKey();
+    
+    if (!apiKey || apiKey.trim() === '') {
       console.error('OPENAI_API_KEY is not configured in environment variables');
       console.error('NODE_ENV:', process.env.NODE_ENV);
-      console.error('Available env vars:', Object.keys(process.env).filter(k => !k.includes('SECRET')).sort());
+      console.error('Runtime check:', typeof process !== 'undefined' && process.env);
+      console.error('Available env vars:', Object.keys(process.env || {}).filter(k => !k.includes('SECRET')).sort());
       throw new Error('OPENAI_API_KEY is not configured. Please set it in your environment variables.');
     }
+    
     try {
-      openaiClient = new OpenAI({ apiKey });
+      // Initialize client with explicit configuration
+      openaiClient = new OpenAI({ 
+        apiKey: apiKey.trim(),
+        dangerouslyAllowBrowser: false, // Ensure this only runs server-side
+      });
     } catch (error) {
       console.error('Failed to initialize OpenAI client:', error);
       throw new Error('Failed to initialize OpenAI client');
@@ -69,7 +78,19 @@ export async function chatCompletion(
     };
   } catch (error) {
     console.error('OpenAI API error:', error);
-    throw error;
+    // Provide more specific error messages
+    if (error instanceof Error) {
+      if (error.message.includes('OPENAI_API_KEY')) {
+        throw new Error('OpenAI API key configuration error. Please contact support.');
+      }
+      if (error.message.includes('rate limit')) {
+        throw new Error('Rate limit exceeded. Please try again in a moment.');
+      }
+      if (error.message.includes('model')) {
+        throw new Error('AI model temporarily unavailable. Please try again.');
+      }
+    }
+    throw new Error('AI service temporarily unavailable. Please try again.');
   }
 }
 
@@ -98,17 +119,34 @@ export async function chatCompletionStream(
     });
 
     return (async function* () {
-      for await (const chunk of stream) {
-        const content = chunk.choices[0]?.delta?.content || '';
-        if (content) {
-          yield { content, done: false };
+      try {
+        for await (const chunk of stream) {
+          const content = chunk.choices[0]?.delta?.content || '';
+          if (content) {
+            yield { content, done: false };
+          }
         }
+        yield { content: '', done: true };
+      } catch (streamError) {
+        console.error('Stream processing error:', streamError);
+        throw streamError;
       }
-      yield { content: '', done: true };
     })();
   } catch (error) {
     console.error('OpenAI streaming error:', error);
-    throw error;
+    // Provide more specific error messages for streaming
+    if (error instanceof Error) {
+      if (error.message.includes('OPENAI_API_KEY')) {
+        throw new Error('OpenAI API key configuration error. Please contact support.');
+      }
+      if (error.message.includes('rate limit')) {
+        throw new Error('Rate limit exceeded. Please try again in a moment.');
+      }
+      if (error.message.includes('model')) {
+        throw new Error('AI model temporarily unavailable. Please try again.');
+      }
+    }
+    throw new Error('AI service temporarily unavailable. Please try again.');
   }
 }
 
