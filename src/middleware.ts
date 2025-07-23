@@ -1,7 +1,7 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { checkRateLimit, formatRateLimitHeaders, createRateLimitError, type RateLimitType } from "@/lib/redis-ratelimit";
+import { checkRateLimitEdge, formatRateLimitHeaders, createRateLimitError, type RateLimitType } from "@/lib/redis-ratelimit-edge";
 
 // Determine rate limit type based on path
 function getRateLimitType(pathname: string): RateLimitType | null {
@@ -24,7 +24,13 @@ async function mainMiddleware(req: NextRequest, token: any) {
     const rateLimitType = getRateLimitType(pathname);
     
     if (rateLimitType) {
-      const rateLimitResult = await checkRateLimit(rateLimitType);
+      // Use IP address or user ID as identifier
+      const identifier = token?.email || 
+        req.headers.get('x-forwarded-for') || 
+        req.headers.get('x-real-ip') || 
+        'anonymous';
+      
+      const rateLimitResult = await checkRateLimitEdge(rateLimitType, identifier);
       
       if (!rateLimitResult.success) {
         return NextResponse.json(
