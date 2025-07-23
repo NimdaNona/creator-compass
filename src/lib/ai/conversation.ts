@@ -2,7 +2,7 @@ import { chatCompletionStream, chatCompletion } from './openai-service';
 import { knowledgeBase } from './knowledge-base';
 import { userContextService } from './user-context';
 import { ConversationMessage, AIConversation } from './types';
-import { prisma } from '../db';
+import { db } from '../db';
 import OpenAI from 'openai';
 
 export class ConversationManager {
@@ -25,7 +25,7 @@ export class ConversationManager {
     // Save to database only for authenticated users
     if (!userId.startsWith('onboarding-')) {
       try {
-        await prisma.aiConversation.create({
+        await db.aiConversation.create({
           data: {
             id: conversation.id,
             userId,
@@ -49,7 +49,7 @@ export class ConversationManager {
     }
 
     // Load from database
-    const dbConversation = await prisma.aiConversation.findUnique({
+    const dbConversation = await db.aiConversation.findUnique({
       where: { id: conversationId },
     });
 
@@ -87,7 +87,7 @@ export class ConversationManager {
 
     // Update database only for authenticated users
     if (!conversation.userId.startsWith('onboarding-')) {
-      await prisma.aiConversation.update({
+      await db.aiConversation.update({
         where: { id: conversationId },
         data: {
           messages: conversation.messages,
@@ -333,7 +333,7 @@ Example responses:
 
     // Update database only for authenticated users
     if (!conversation.userId.startsWith('onboarding-')) {
-      await prisma.aiConversation.update({
+      await db.aiConversation.update({
         where: { id: conversationId },
         data: {
           context: conversation.context,
@@ -346,7 +346,7 @@ Example responses:
   }
 
   async getUserConversations(userId: string, limit = 10): Promise<AIConversation[]> {
-    const conversations = await prisma.aiConversation.findMany({
+    const conversations = await db.aiConversation.findMany({
       where: { userId },
       orderBy: { updatedAt: 'desc' },
       take: limit,

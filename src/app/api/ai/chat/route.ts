@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { conversationManager } from '@/lib/ai/conversation';
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 import { z } from 'zod';
 import { checkFeatureLimit, incrementFeatureUsage } from '@/app/api/middleware/subscription-check';
 
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       // Use a temporary anonymous user ID for onboarding
       userId = 'onboarding-' + Math.random().toString(36).substr(2, 9);
     } else {
-      const user = await prisma.user.findUnique({
+      const user = await db.user.findUnique({
         where: { email: session!.user.email! },
         select: { id: true, subscription: true },
       });
@@ -209,7 +209,7 @@ export async function GET(request: NextRequest) {
     const conversationId = searchParams.get('conversationId');
 
     // Get user ID from database
-    const user = await prisma.user.findUnique({
+    const user = await db.user.findUnique({
       where: { email: session.user.email },
       select: { id: true },
     });
