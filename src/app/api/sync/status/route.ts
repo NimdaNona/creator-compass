@@ -23,14 +23,16 @@ export async function GET(request: NextRequest) {
         },
         stats: {
           select: {
-            points: true,
-            streak: true,
-            tasksCompleted: true,
-            currentPhase: true,
-            currentWeek: true,
+            totalPoints: true,
+            streakDays: true,
+            totalTasksCompleted: true,
             longestStreak: true,
-            totalTimeSpent: true,
-            lastActivityAt: true
+            lastActiveDate: true,
+            badges: true,
+            titles: true,
+            currentTitle: true,
+            weeklyGoal: true,
+            monthlyGoal: true
           }
         },
         subscription: {
@@ -75,9 +77,12 @@ export async function GET(request: NextRequest) {
               select: {
                 id: true,
                 name: true,
-                type: true,
-                target: true,
-                points: true
+                description: true,
+                requirement: true,
+                reward: true,
+                celebration: true,
+                platform: true,
+                niche: true
               }
             }
           },
@@ -130,8 +135,8 @@ export async function GET(request: NextRequest) {
       },
       achievements: {
         milestones: user.milestoneAchievements,
-        totalPoints: user.stats?.points || 0,
-        streak: user.stats?.streak || 0
+        totalPoints: user.stats?.totalPoints || 0,
+        streak: user.stats?.streakDays || 0
       },
       usage: user.usage.reduce((acc, u) => {
         acc[u.feature] = {
