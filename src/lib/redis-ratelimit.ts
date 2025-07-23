@@ -19,31 +19,31 @@ import { ratelimiters as inMemoryLimiters } from './ratelimit-api';
 // Rate limit configurations per tier
 const RATE_LIMITS = {
   free: {
-    general: 300,    // 300 req/min (5 req/sec)
-    ai: 30,          // 30 req/min
-    template: 20,    // 20 req/min
-    auth: 10,        // 10 req/min
-    stripe: 10,      // 10 req/min
-    export: 10,      // 10 req/min
-  },
-  pro: {
-    general: 600,    // 600 req/min (10 req/sec)
-    ai: 60,          // 60 req/min
-    template: 40,    // 40 req/min
+    general: 600,    // 600 req/min (10 req/sec) - Increased for better UX
+    ai: 60,          // 60 req/min - Increased for better chat experience
+    template: 30,    // 30 req/min
     auth: 20,        // 20 req/min
     stripe: 20,      // 20 req/min
-    export: 30,      // 30 req/min
+    export: 15,      // 15 req/min
   },
-  studio: {
+  pro: {
     general: 1200,   // 1200 req/min (20 req/sec)
     ai: 120,         // 120 req/min
-    template: 80,    // 80 req/min
-    auth: 30,        // 30 req/min
-    stripe: 30,      // 30 req/min
+    template: 60,    // 60 req/min
+    auth: 40,        // 40 req/min
+    stripe: 40,      // 40 req/min
     export: 60,      // 60 req/min
   },
+  studio: {
+    general: 2400,   // 2400 req/min (40 req/sec)
+    ai: 240,         // 240 req/min
+    template: 120,   // 120 req/min
+    auth: 60,        // 60 req/min
+    stripe: 60,      // 60 req/min
+    export: 120,     // 120 req/min
+  },
   public: {
-    auth: 5,         // 5 req/min for public auth endpoints
+    auth: 20,        // 20 req/min for public auth endpoints - Increased from 5
     webhook: 1000,   // 1000 req/min for webhooks
   }
 };

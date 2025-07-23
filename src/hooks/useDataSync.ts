@@ -30,14 +30,14 @@ export function useDataSync(options: UseSyncOptions = {}) {
       if (serverData.user) {
         // Update user profile
         if (serverData.user.profile) {
-          const { platformsSelected, nichesSelected } = serverData.user.profile;
+          const { selectedPlatform, selectedNiche } = serverData.user.profile;
           
-          if (platformsSelected && platformsSelected.length > 0) {
-            store.setSelectedPlatform(platformsSelected[0]);
+          if (selectedPlatform) {
+            store.setSelectedPlatform(selectedPlatform);
           }
           
-          if (nichesSelected && nichesSelected.length > 0) {
-            store.setSelectedNiche(nichesSelected[0]);
+          if (selectedNiche) {
+            store.setSelectedNiche(selectedNiche);
           }
         }
 

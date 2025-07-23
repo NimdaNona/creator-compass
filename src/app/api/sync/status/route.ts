@@ -16,8 +16,8 @@ export async function GET(request: NextRequest) {
       include: {
         profile: {
           select: {
-            platformsSelected: true,
-            nichesSelected: true,
+            selectedPlatform: true,
+            selectedNiche: true,
             preferences: true
           }
         },
