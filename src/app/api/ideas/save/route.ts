@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
 import { trackUsage } from '@/lib/usage';
+import { validatePlatformSwitch } from '@/lib/platform-validation';
 
 // Schema for saving an idea
 const saveIdeaSchema = z.object({
@@ -54,6 +55,20 @@ export async function POST(request: Request) {
           },
           { status: 403 }
         );
+      }
+    }
+
+    // Validate platform if provided
+    if (validatedData.platform) {
+      const platformValidation = await validatePlatformSwitch(user.id, validatedData.platform);
+      
+      if (!platformValidation.allowed) {
+        return NextResponse.json({ 
+          error: platformValidation.error, 
+          requiresUpgrade: platformValidation.requiresUpgrade,
+          currentPlatform: platformValidation.currentPlatform,
+          subscription: platformValidation.subscription
+        }, { status: 403 });
       }
     }
 

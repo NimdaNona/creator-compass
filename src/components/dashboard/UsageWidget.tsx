@@ -12,25 +12,32 @@ import {
   BarChart3,
   AlertCircle,
   Crown,
-  RefreshCw
+  RefreshCw,
+  Calendar,
+  Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 
 interface UsageData {
   usage: {
-    templates: { count: number; limit: number; resetAt: string; percentage: number };
-    platforms: { count: number; limit: number; resetAt: string; percentage: number };
-    exports: { count: number; limit: number; resetAt: string; percentage: number };
-    analytics: { count: number; limit: number; resetAt: string; percentage: number };
+    templates: { count: number; limit: number; resetAt: string; percentage: number; isDaily?: boolean };
+    platforms: { count: number; limit: number; resetAt: string; percentage: number; isDaily?: boolean };
+    exports: { count: number; limit: number; resetAt: string; percentage: number; isDaily?: boolean };
+    analytics: { count: number; limit: number; resetAt: string; percentage: number; isDaily?: boolean };
+    crossPlatform?: { count: number; limit: number; resetAt: string; percentage: number; isDaily?: boolean };
+    ideas?: { count: number; limit: number; resetAt: string; percentage: number; isDaily?: boolean };
   };
   limits: {
     templates: number;
     platforms: number;
     exports: number;
     analytics: number;
+    crossPlatform?: number;
+    ideas?: number;
   };
   plan: string;
+  timezone?: string;
 }
 
 const featureIcons = {
@@ -38,6 +45,8 @@ const featureIcons = {
   platforms: Layout,
   exports: Download,
   analytics: BarChart3,
+  crossPlatform: Layout,
+  ideas: Layout,
 };
 
 const featureNames = {
@@ -45,6 +54,8 @@ const featureNames = {
   platforms: 'Platforms',
   exports: 'Exports',
   analytics: 'Analytics',
+  crossPlatform: 'Cross-Platform',
+  ideas: 'Daily Ideas',
 };
 
 export function UsageWidget() {
@@ -61,7 +72,10 @@ export function UsageWidget() {
       setIsLoading(true);
       setError(null);
       
-      const response = await fetch('/api/usage');
+      // Get user's timezone
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      
+      const response = await fetch(`/api/usage?timezone=${encodeURIComponent(timezone)}`);
       if (!response.ok) {
         throw new Error('Failed to fetch usage data');
       }
@@ -126,29 +140,38 @@ export function UsageWidget() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Usage Overview</span>
-          <Badge variant={plan === 'free' ? 'outline' : 'default'}>
-            {plan === 'free' && 'Free Plan'}
-            {plan === 'premium' && (
-              <>
-                <Crown className="w-3 h-3 mr-1" />
-                Pro Plan
-              </>
-            )}
-            {plan === 'enterprise' && (
-              <>
-                <Crown className="w-3 h-3 mr-1" />
-                Studio Plan
-              </>
-            )}
-          </Badge>
-        </CardTitle>
+        <div className="space-y-1">
+          <CardTitle className="flex items-center justify-between">
+            <span>Usage Overview</span>
+            <Badge variant={plan === 'free' ? 'outline' : 'default'}>
+              {plan === 'free' && 'Free Plan'}
+              {plan === 'pro' && (
+                <>
+                  <Crown className="w-3 h-3 mr-1" />
+                  Pro Plan
+                </>
+              )}
+              {plan === 'studio' && (
+                <>
+                  <Crown className="w-3 h-3 mr-1" />
+                  Studio Plan
+                </>
+              )}
+            </Badge>
+          </CardTitle>
+          {usageData.timezone && (
+            <p className="text-xs text-muted-foreground">
+              Timezone: {usageData.timezone}
+            </p>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           {features.map((feature) => {
             const data = usage[feature];
+            if (!data) return null;
+            
             const Icon = featureIcons[feature];
             const isUnlimited = data.limit === -1;
             const isNearLimit = !isUnlimited && data.percentage >= 80;
@@ -200,9 +223,17 @@ export function UsageWidget() {
                       )}
                     />
                     {data.resetAt && (
-                      <p className="text-xs text-muted-foreground">
-                        Resets {format(new Date(data.resetAt), 'MMM d, yyyy')}
-                      </p>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        {data.isDaily ? (
+                          <Clock className="w-3 h-3" />
+                        ) : (
+                          <Calendar className="w-3 h-3" />
+                        )}
+                        <span>
+                          Resets {data.isDaily ? 'daily' : 'monthly'} • {' '}
+                          {formatDistanceToNow(new Date(data.resetAt), { addSuffix: true })}
+                        </span>
+                      </div>
                     )}
                   </>
                 )}

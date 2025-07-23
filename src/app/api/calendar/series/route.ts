@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
+import { validatePlatformSwitch } from '@/lib/platform-validation';
 
 // Schema for creating series
 const seriesSchema = z.object({
@@ -91,6 +92,18 @@ export async function POST(request: Request) {
     
     // Validate request body
     const validatedData = seriesSchema.parse(body);
+
+    // Validate platform selection
+    const platformValidation = await validatePlatformSwitch(user.id, validatedData.platform);
+    
+    if (!platformValidation.allowed) {
+      return NextResponse.json({ 
+        error: platformValidation.error, 
+        requiresUpgrade: platformValidation.requiresUpgrade,
+        currentPlatform: platformValidation.currentPlatform,
+        subscription: platformValidation.subscription
+      }, { status: 403 });
+    }
 
     // Create series
     const series = await prisma.contentSeries.create({

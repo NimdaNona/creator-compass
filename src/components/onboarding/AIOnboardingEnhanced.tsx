@@ -123,6 +123,9 @@ export function AIOnboardingEnhanced({
   const [selectedEquipment, setSelectedEquipment] = useState<string[]>([]);
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
   
+  // Store all responses collected during onboarding
+  const [collectedResponses, setCollectedResponses] = useState<Record<string, any>>({});
+  
   const { toast } = useToast();
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -176,17 +179,42 @@ export function AIOnboardingEnhanced({
     setIsLoading(true);
 
     try {
+      // Build responses object with all collected data
+      const responses: any = { ...collectedResponses };
+      
+      // Update responses based on current step
+      if (currentStep === 'welcome') {
+        if (messageToSend.toLowerCase().includes('starting') || messageToSend.includes('1')) {
+          responses.creatorLevel = 'beginner';
+        } else if (messageToSend.toLowerCase().includes('some') || messageToSend.includes('2')) {
+          responses.creatorLevel = 'intermediate';
+        } else if (messageToSend.toLowerCase().includes('experienced') || messageToSend.includes('3')) {
+          responses.creatorLevel = 'advanced';
+        }
+      }
+      
+      if (selectedPlatform) {
+        responses.preferredPlatforms = [selectedPlatform];
+      }
+      if (selectedNiche) {
+        responses.contentNiche = selectedNiche;
+      }
+      if (selectedEquipment.length > 0) {
+        responses.equipment = selectedEquipment;
+      }
+      if (selectedGoals.length > 0) {
+        responses.goals = selectedGoals;
+      }
+
+      // Update collected responses state
+      setCollectedResponses(responses);
+
       const requestBody: any = {
         message: messageToSend,
         context: {
           type: 'onboarding',
           step: currentStep,
-          responses: {
-            equipment: selectedEquipment,
-            goals: selectedGoals,
-            platform: selectedPlatform,
-            niche: selectedNiche,
-          },
+          responses: responses,
         },
       };
 
@@ -195,6 +223,13 @@ export function AIOnboardingEnhanced({
         requestBody.conversationId = conversationId;
       }
 
+      console.log('[Onboarding] Sending request:', {
+        conversationId,
+        currentStep,
+        message: messageToSend,
+        responses,
+      });
+
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -202,7 +237,9 @@ export function AIOnboardingEnhanced({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to send message');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('[Onboarding] API Error:', errorData);
+        throw new Error(errorData.error || 'Failed to send message');
       }
 
       const reader = response.body?.getReader();
@@ -246,10 +283,11 @@ export function AIOnboardingEnhanced({
 
               if (data.conversationId && !conversationId) {
                 setConversationId(data.conversationId);
+                console.log('[Onboarding] Conversation ID set:', data.conversationId);
               }
 
               if (data.error) {
-                console.error('Chat error:', data.error);
+                console.error('[Onboarding] Chat error:', data.error);
                 setError(data.message || 'An error occurred');
                 if (data.timeout) {
                   // Auto-retry on timeout
@@ -266,10 +304,18 @@ export function AIOnboardingEnhanced({
                 return;
               }
 
-              if (data.done && !data.hasContent) {
-                // No content received - likely an error
-                setError('No response received. Please try again.');
-                return;
+              if (data.done) {
+                console.log('[Onboarding] Response complete:', {
+                  hasContent: data.hasContent,
+                  assistantMessage: assistantMessage,
+                  conversationId: data.conversationId,
+                });
+                
+                if (!data.hasContent && !assistantMessage) {
+                  // No content received - likely an error
+                  setError('No response received. Please try again.');
+                  return;
+                }
               }
 
               // Update step based on AI response
@@ -306,13 +352,29 @@ export function AIOnboardingEnhanced({
         }
       }
     } catch (error) {
-      console.error('Chat error:', error);
+      console.error('[Onboarding] Chat error:', error);
       setError('Failed to send message. Please try again.');
-      toast({
-        title: "Connection Error",
-        description: "Failed to connect to the AI assistant. Please try again.",
-        variant: "destructive",
-      });
+      
+      // Provide a fallback response for critical onboarding steps
+      if (currentStep === 'welcome' && !conversationId) {
+        // Fallback for first message failure
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: "I apologize for the technical issue. Let me help you get started! Are you just starting out (1), have some experience (2), or are you an experienced creator (3)?",
+          timestamp: new Date(),
+        }]);
+        toast({
+          title: "Connection Issue",
+          description: "Using fallback mode. Your progress will be saved.",
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Connection Error",
+          description: "Failed to connect to the AI assistant. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
       inputRef.current?.focus();

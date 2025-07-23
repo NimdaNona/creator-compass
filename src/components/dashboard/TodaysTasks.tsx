@@ -1,13 +1,12 @@
 'use client';
 
-import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDailyTasks } from '@/hooks/useDailyTasks';
-import { useAppStore } from '@/store/useAppStore';
+import { useTaskCompletion } from '@/hooks/useTaskCompletion';
 import { 
   CheckCircle, 
   Clock, 
@@ -20,9 +19,8 @@ import {
 } from 'lucide-react';
 
 export function TodaysTasks() {
-  const { updateStreak } = useAppStore();
-  const { loading, todaysTasks, completeTask: completeDailyTask } = useDailyTasks();
-  const [celebratingTask, setCelebratingTask] = useState<string | null>(null);
+  const { loading, todaysTasks } = useDailyTasks();
+  const { completeTask, isTaskCelebrating, isProcessing } = useTaskCompletion();
 
   if (loading) {
     return (
@@ -45,14 +43,7 @@ export function TodaysTasks() {
 
   const handleTaskToggle = async (taskId: string, completed: boolean) => {
     if (completed) {
-      setCelebratingTask(taskId);
-      await completeDailyTask(taskId);
-      updateStreak();
-      
-      // Clear celebration after animation
-      setTimeout(() => {
-        setCelebratingTask(null);
-      }, 2000);
+      await completeTask(taskId);
     } else {
       // For now, we don't support uncompleting tasks via API
       // This would need a separate endpoint
@@ -138,7 +129,7 @@ export function TodaysTasks() {
           <div className="space-y-4">
             {todaysTasks.map((task) => {
               const isCompleted = task.completed;
-              const isCelebrating = celebratingTask === task.id;
+              const isCelebrating = isTaskCelebrating(task.id);
               const CategoryIcon = getCategoryIcon(task.category);
               
               if (task.locked) {
@@ -174,7 +165,7 @@ export function TodaysTasks() {
                       checked={isCompleted}
                       onCheckedChange={(checked) => handleTaskToggle(task.id, checked as boolean)}
                       className="mt-1"
-                      disabled={isCompleted}
+                      disabled={isCompleted || isProcessing}
                     />
                     
                     <div className="flex-1 min-w-0">
@@ -217,6 +208,7 @@ export function TodaysTasks() {
                             size="sm" 
                             variant="outline"
                             onClick={() => handleTaskToggle(task.id, true)}
+                            disabled={isProcessing}
                           >
                             Mark Complete
                           </Button>

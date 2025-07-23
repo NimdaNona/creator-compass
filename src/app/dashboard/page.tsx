@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/useAppStore';
+import { useDataSync } from '@/hooks/useDataSync';
 import { DashboardOverview } from '@/components/dashboard/DashboardOverview';
 import EnhancedRoadmapView from '@/components/roadmap/EnhancedRoadmapView';
 import { ProgressStats } from '@/components/dashboard/ProgressStats';
@@ -14,6 +15,7 @@ import { AIInsights } from '@/components/dashboard/AIInsights';
 import { OnboardingGuide } from '@/components/dashboard/OnboardingGuide';
 import { DraggableContentCalendar } from '@/components/calendar/DraggableContentCalendar';
 import { AIAssistantWidget } from '@/components/ai/AIAssistantWidget';
+import { SyncStatus } from '@/components/dashboard/SyncStatus';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,6 +38,13 @@ export default function DashboardPage() {
     selectedNiche, 
     progress
   } = useAppStore();
+  
+  // Enable data synchronization
+  useDataSync({
+    enableAutoSync: true,
+    syncOnMount: true,
+    syncOnFocus: true
+  });
 
   // Loading state or redirect to onboarding
   useEffect(() => {
@@ -82,6 +91,8 @@ export default function DashboardPage() {
                 <span className="text-sm text-muted-foreground">
                   Day {Math.floor((Date.now() - new Date(progress.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1} of 90
                 </span>
+                <span className="text-muted-foreground">•</span>
+                <SyncStatus />
               </div>
             </div>
             

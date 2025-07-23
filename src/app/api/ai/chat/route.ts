@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { conversationManager } from '@/lib/ai/conversation';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
+import { checkFeatureLimit, incrementFeatureUsage } from '@/app/api/middleware/subscription-check';
 
 const chatRequestSchema = z.object({
   conversationId: z.string().optional(),
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
     } else {
       const user = await prisma.user.findUnique({
         where: { email: session!.user.email! },
-        select: { id: true },
+        select: { id: true, subscription: true },
       });
 
       if (!user) {
@@ -54,6 +55,23 @@ export async function POST(request: NextRequest) {
       }
       
       userId = user.id;
+      
+      // Check AI usage limits for authenticated users
+      const isFreeTier = !user.subscription || user.subscription.status !== 'active';
+      const featureCheck = await checkFeatureLimit(userId, 'ai', isFreeTier);
+      
+      if (!featureCheck.allowed) {
+        return NextResponse.json(
+          { 
+            error: featureCheck.error || 'You have reached your monthly AI message limit',
+            limit: featureCheck.limit,
+            used: featureCheck.used,
+            requiresUpgrade: true,
+            currentPlan: user.subscription?.plan || 'free'
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // Create or get conversation
@@ -106,6 +124,11 @@ export async function POST(request: NextRequest) {
         if (!isTimedOut) {
           // Clear timeout if we completed successfully
           if (timeoutId) clearTimeout(timeoutId);
+          
+          // Increment AI usage for authenticated users
+          if (!isOnboarding && hasContent) {
+            await incrementFeatureUsage(userId, 'ai');
+          }
           
           // Ensure we send done signal
           await writer.write(encoder.encode(`data: ${JSON.stringify({ 

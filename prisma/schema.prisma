@@ -18,17 +18,18 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String?
-  access_token      String?
+  refresh_token     String?  @db.Text
+  access_token      String?  @db.Text
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String?
+  id_token          String?  @db.Text
   session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model Session {
@@ -37,6 +38,9 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([expires])
 }
 
 model User {
@@ -76,6 +80,11 @@ model User {
   userAIProfile          UserAIProfile?
   dynamicRoadmaps        DynamicRoadmap[]
   aiRecommendations      AIRecommendation[]
+  celebrations           Celebration[]
+  payments               Payment[]
+
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model VerificationToken {
@@ -90,19 +99,21 @@ model VerificationToken {
 model UserProfile {
   id               String   @id @default(cuid())
   userId           String   @unique
-  selectedPlatform String?
-  selectedNiche    String?
+  selectedPlatform String?  @db.VarChar(50)
+  selectedNiche    String?  @db.VarChar(50)
   startDate        DateTime @default(now())
   currentPhase     Int      @default(1)
   currentWeek      Int      @default(1)
-  goals            String?  // JSON string
-  preferences      String?  // JSON string
+  goals            Json?    // Properly typed JSON
+  preferences      Json?    // Properly typed JSON
   targetTimeframe  Int?     // in days
-  motivation       String?
+  motivation       String?  @db.Text
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([selectedPlatform, selectedNiche])
 }
 
 model UserProgress {
@@ -117,6 +128,7 @@ model UserProgress {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, taskId])
+  @@index([completedAt])
 }
 
 model UserAchievement {
@@ -139,8 +151,8 @@ model UserStats {
   longestStreak         Int      @default(0)
   lastActiveDate        DateTime @default(now())
   totalTasksCompleted   Int      @default(0)
-  badges                String?  // JSON string array
-  titles                String?  // JSON string array
+  badges                Json?    // Properly typed JSON array
+  titles                Json?    // Properly typed JSON array
   currentTitle          String?
   weeklyGoal            Int      @default(7)
   monthlyGoal           Int      @default(30)
@@ -162,6 +174,11 @@ model Celebration {
   duration  Int
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, isRead])
+  @@index([createdAt])
 }
 
 // Subscription models
@@ -207,6 +224,12 @@ model Payment {
   isYearly          Boolean  @default(false)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 // Webhook idempotency tracking
@@ -215,7 +238,10 @@ model ProcessedWebhookEvent {
   eventId   String   @unique
   type      String
   processed DateTime @default(now())
-  metadata  String?  // JSON string for debugging
+  metadata  Json?    // Properly typed JSON for debugging
+  
+  @@index([type])
+  @@index([processed])
 }
 
 // Usage tracking for features
@@ -280,7 +306,7 @@ model TaskCompletion {
   skipped     Boolean  @default(false)
   
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  task DailyTask @relation(fields: [taskId], references: [id])
+  task DailyTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
   
   @@unique([userId, taskId])
   @@index([userId])
@@ -311,7 +337,7 @@ model MilestoneAchievement {
   shared       Boolean  @default(false)
   
   user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  milestone Milestone @relation(fields: [milestoneId], references: [id])
+  milestone Milestone @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
   
   @@unique([userId, milestoneId])
 }
@@ -404,6 +430,7 @@ model ContentEngagement {
   @@index([userId, contentType])
   @@index([contentId])
   @@index([createdAt])
+  @@index([action])
 }
 
 // =============================================
@@ -429,7 +456,7 @@ model CalendarEvent {
   updatedAt       DateTime @updatedAt
   
   user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  series          ContentSeries? @relation(fields: [seriesId], references: [id])
+  series          ContentSeries? @relation(fields: [seriesId], references: [id], onDelete: SetNull)
   
   @@index([userId, scheduledDate])
   @@index([platform, status])
@@ -544,8 +571,8 @@ model ChallengeParticipation {
   startedAt       DateTime @default(now())
   completedAt     DateTime?
   
-  challenge       Challenge @relation(fields: [challengeId], references: [id])
-  profile         CommunityProfile @relation(fields: [profileId], references: [id])
+  challenge       Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  profile         CommunityProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
   
   @@unique([challengeId, profileId])
   @@index([status])
@@ -563,8 +590,8 @@ model Partnership {
   startedAt       DateTime @default(now())
   endedAt         DateTime?
   
-  user1           CommunityProfile @relation("PartnershipUser1", fields: [user1Id], references: [id])
-  user2           CommunityProfile @relation("PartnershipUser2", fields: [user2Id], references: [id])
+  user1           CommunityProfile @relation("PartnershipUser1", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2           CommunityProfile @relation("PartnershipUser2", fields: [user2Id], references: [id], onDelete: Cascade)
   
   @@unique([user1Id, user2Id])
   @@index([status])
@@ -585,7 +612,7 @@ model SuccessStory {
   likes           Int      @default(0)
   createdAt       DateTime @default(now())
   
-  profile         CommunityProfile @relation(fields: [profileId], references: [id])
+  profile         CommunityProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
   
   @@index([isApproved, isFeatured])
   @@index([platform])
@@ -605,8 +632,8 @@ model CollaborationRequest {
   createdAt       DateTime @default(now())
   respondedAt     DateTime?
   
-  requester       CommunityProfile @relation("CollabRequester", fields: [requesterId], references: [id])
-  receiver        CommunityProfile @relation("CollabReceiver", fields: [receiverId], references: [id])
+  requester       CommunityProfile @relation("CollabRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  receiver        CommunityProfile @relation("CollabReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
   
   @@index([status])
   @@index([requesterId, receiverId])

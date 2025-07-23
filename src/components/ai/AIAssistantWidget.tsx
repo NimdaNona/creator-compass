@@ -11,6 +11,8 @@ import { Bot, Send, Loader2, X, Minimize2, Maximize2, HelpCircle,
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
+import { FeatureUsageIndicator } from '@/components/usage/FeatureUsageIndicator';
+import { useSubscription } from '@/hooks/useSubscription';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -70,6 +72,8 @@ export function AIAssistantWidget({
   context 
 }: AIAssistantWidgetProps) {
   const [isMinimized, setIsMinimized] = useState(defaultMinimized);
+  const { subscription, isActive } = useSubscription();
+  const isFreeTier = !isActive || subscription?.plan === 'free';
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
@@ -127,7 +131,40 @@ export function AIAssistantWidget({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to send message');
+        const error = await response.json();
+        
+        // Handle subscription-related errors
+        if (error.requiresUpgrade) {
+          toast({
+            title: "AI Message Limit Reached",
+            description: error.error || 'You have reached your monthly AI message limit',
+            variant: "destructive",
+            action: {
+              label: "Upgrade",
+              onClick: () => window.location.href = '/pricing'
+            }
+          });
+          
+          // Show usage info if available
+          if (error.limit && error.used) {
+            toast({
+              title: "Usage Information",
+              description: `You've used ${error.used} of ${error.limit} AI messages this month`,
+            });
+          }
+          
+          // Add limit reached message to chat
+          setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: 'You\'ve reached your monthly AI message limit. Upgrade to Pro for unlimited AI assistance!',
+            timestamp: new Date(),
+            suggestions: ['View Pricing', 'Learn More']
+          }]);
+          
+          return;
+        }
+        
+        throw new Error(error.error || 'Failed to send message');
       }
 
       const reader = response.body?.getReader();
@@ -233,6 +270,16 @@ export function AIAssistantWidget({
   };
 
   const handleSuggestion = (suggestion: string) => {
+    // Handle special suggestions
+    if (suggestion === 'View Pricing') {
+      window.location.href = '/pricing';
+      return;
+    }
+    if (suggestion === 'Learn More') {
+      window.open('https://docs.creatorcompass.com/features/ai-assistant', '_blank');
+      return;
+    }
+    
     sendMessage(suggestion);
   };
 
@@ -367,6 +414,17 @@ export function AIAssistantWidget({
                 </div>
               )}
 
+              {/* Usage Indicator for Free Tier */}
+              {isFreeTier && messages.length > 1 && (
+                <div className="px-4 pb-2">
+                  <FeatureUsageIndicator 
+                    feature="ai" 
+                    compact
+                    showButton={false}
+                  />
+                </div>
+              )}
+              
               {/* Input */}
               <div className="p-4 border-t">
                 <div className="flex gap-2">

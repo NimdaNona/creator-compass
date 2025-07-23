@@ -4,15 +4,11 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { TemplateEngine } from '@/lib/template-system';
 import { trackUsage } from '@/lib/usage';
+import { withSubscription, checkFeatureLimit, incrementFeatureUsage } from '@/app/api/middleware/subscription-check';
 
-export async function POST(request: Request) {
+export const POST = withSubscription(async (request: Request, subscriptionCheck) => {
   try {
     const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const body = await request.json();
     const { templateId, values, save = false } = body;
 
@@ -25,7 +21,7 @@ export async function POST(request: Request) {
 
     // Get user
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email: session.user.email! },
       include: { subscription: true }
     });
 
@@ -33,15 +29,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Check usage limits
-    const usage = await trackUsage(user.id, 'templates');
-    if (!usage.allowed) {
+    // Check feature limits using new middleware
+    const featureCheck = await checkFeatureLimit(user.id, 'templates', subscriptionCheck.isFreeTier);
+    if (!featureCheck.allowed) {
       return NextResponse.json(
         { 
-          error: 'Template generation limit reached',
-          limit: usage.limit,
-          used: usage.used,
-          resetAt: usage.resetAt
+          error: featureCheck.error,
+          limit: featureCheck.limit,
+          used: featureCheck.used,
+          requiresUpgrade: true,
+          currentPlan: subscriptionCheck.subscription?.plan || 'free'
         },
         { status: 403 }
       );
@@ -95,8 +92,8 @@ export async function POST(request: Request) {
       values
     );
 
-    // Update usage
-    await trackUsage(user.id, 'templates', true);
+    // Update usage using new middleware
+    await incrementFeatureUsage(user.id, 'templates');
 
     // Save to user's library if requested
     let savedTemplate = null;
@@ -140,4 +137,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-}
+}, 'free', 'Template generation');

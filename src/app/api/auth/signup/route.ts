@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { hashPassword, validatePassword, generateToken } from '@/lib/password';
 import { sendVerificationEmail } from '@/lib/email';
+import { prisma } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already exists
-    const existingUser = await db.user.findUnique({
+    const existingUser = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
     });
 
@@ -51,32 +52,37 @@ export async function POST(request: NextRequest) {
     // Generate email verification token
     const verificationToken = generateToken();
 
-    // Create user
-    const user = await db.user.create({
-      data: {
-        email: email.toLowerCase(),
-        name: name || null,
-        password: hashedPassword,
-        emailVerificationToken: verificationToken,
-      },
+    // Create user, profile, and stats in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Create user
+      const user = await tx.user.create({
+        data: {
+          email: email.toLowerCase(),
+          name: name || null,
+          password: hashedPassword,
+          emailVerificationToken: verificationToken,
+        },
+      });
+
+      // Create user profile
+      await tx.userProfile.create({
+        data: {
+          userId: user.id,
+        },
+      });
+
+      // Create user stats
+      await tx.userStats.create({
+        data: {
+          userId: user.id,
+        },
+      });
+
+      return user;
     });
 
-    // Create user profile
-    await db.userProfile.create({
-      data: {
-        userId: user.id,
-      },
-    });
-
-    // Create user stats
-    await db.userStats.create({
-      data: {
-        userId: user.id,
-      },
-    });
-
-    // Send verification email
-    await sendVerificationEmail(user.email, verificationToken);
+    // Send verification email (outside transaction for better performance)
+    await sendVerificationEmail(result.email, verificationToken);
 
     return NextResponse.json({
       message: 'Account created successfully. Please check your email to verify your account.',

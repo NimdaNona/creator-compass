@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
+import { validatePlatformSwitch } from '@/lib/platform-validation';
 
 // Schema for updating events
 const updateEventSchema = z.object({
@@ -98,6 +99,20 @@ export async function PATCH(
 
     if (!existingEvent) {
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+    }
+
+    // Validate platform switch if platform is being changed
+    if (validatedData.platform && validatedData.platform !== existingEvent.platform) {
+      const validation = await validatePlatformSwitch(user.id, validatedData.platform);
+      
+      if (!validation.allowed) {
+        return NextResponse.json({ 
+          error: validation.error, 
+          requiresUpgrade: validation.requiresUpgrade,
+          currentPlatform: validation.currentPlatform,
+          subscription: validation.subscription
+        }, { status: 403 });
+      }
     }
 
     // Update event

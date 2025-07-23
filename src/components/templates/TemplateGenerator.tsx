@@ -23,6 +23,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { FeatureUsageIndicator } from '@/components/usage/FeatureUsageIndicator';
+import { useSubscription } from '@/hooks/useSubscription';
 
 interface TemplateVariable {
   name: string;
@@ -61,6 +63,9 @@ export default function TemplateGenerator({ templateId }: TemplateGeneratorProps
   const [generating, setGenerating] = useState(false);
   const [saveToLibrary, setSaveToLibrary] = useState(false);
   const [copied, setCopied] = useState(false);
+  const { subscription, isActive } = useSubscription();
+  
+  const isFreeTier = !isActive || subscription?.plan === 'free';
 
   useEffect(() => {
     fetchTemplate();
@@ -109,6 +114,24 @@ export default function TemplateGenerator({ templateId }: TemplateGeneratorProps
 
       if (!response.ok) {
         const error = await response.json();
+        
+        // Handle subscription-related errors
+        if (error.requiresUpgrade) {
+          toast.error(error.error || 'This feature requires an upgrade', {
+            action: {
+              label: 'Upgrade',
+              onClick: () => window.location.href = '/pricing'
+            }
+          });
+          
+          // Show usage info if available
+          if (error.limit && error.used) {
+            toast.info(`You've used ${error.used} of ${error.limit} templates this month`);
+          }
+          
+          return;
+        }
+        
         throw new Error(error.error || 'Failed to generate content');
       }
 
@@ -284,6 +307,14 @@ export default function TemplateGenerator({ templateId }: TemplateGeneratorProps
                 </Alert>
               </div>
 
+              {/* Usage Indicator for Free Tier */}
+              {isFreeTier && (
+                <FeatureUsageIndicator 
+                  feature="templates" 
+                  className="mb-4 p-4 bg-muted/50 rounded-lg"
+                />
+              )}
+              
               {/* Variable Inputs */}
               <div className="space-y-4">
                 {template.variables.map((variable) => (

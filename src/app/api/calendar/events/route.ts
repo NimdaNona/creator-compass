@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns';
+import { validatePlatformSwitch } from '@/lib/platform-validation';
 
 // Schema for creating/updating events
 const eventSchema = z.object({
@@ -123,6 +124,18 @@ export async function POST(request: Request) {
     
     // Validate request body
     const validatedData = eventSchema.parse(body);
+
+    // Validate platform selection
+    const platformValidation = await validatePlatformSwitch(user.id, validatedData.platform);
+    
+    if (!platformValidation.allowed) {
+      return NextResponse.json({ 
+        error: platformValidation.error, 
+        requiresUpgrade: platformValidation.requiresUpgrade,
+        currentPlatform: platformValidation.currentPlatform,
+        subscription: platformValidation.subscription
+      }, { status: 403 });
+    }
 
     // Create event
     const event = await prisma.calendarEvent.create({

@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAppStore } from '@/store/useAppStore';
+import { dataSync } from '@/services/dataSync';
 import { toast } from 'sonner';
 
 interface EnhancedTask {
@@ -65,6 +66,8 @@ export function useDailyTasks() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<TasksResponse | null>(null);
   const { selectedPlatform, selectedNiche } = useAppStore();
+  const fetchInProgressRef = useRef(false);
+  const lastFetchTimeRef = useRef(0);
 
   useEffect(() => {
     if (selectedPlatform && selectedNiche) {
@@ -74,6 +77,15 @@ export function useDailyTasks() {
 
   const fetchTasks = async () => {
     if (!selectedPlatform || !selectedNiche) return;
+
+    // Prevent duplicate fetches
+    if (fetchInProgressRef.current) return;
+    
+    // Debounce fetches (minimum 1 second between fetches)
+    const now = Date.now();
+    if (now - lastFetchTimeRef.current < 1000) return;
+
+    fetchInProgressRef.current = true;
 
     try {
       setLoading(true);
@@ -87,16 +99,25 @@ export function useDailyTasks() {
 
       const data = await response.json();
       setData(data);
+      lastFetchTimeRef.current = now;
     } catch (error) {
       console.error('Error fetching tasks:', error);
       toast.error('Failed to load tasks');
     } finally {
       setLoading(false);
+      fetchInProgressRef.current = false;
     }
   };
 
   const completeTask = async (taskId: string, completionData?: any) => {
     try {
+      // Queue sync update
+      dataSync.queueUpdate('task:completed', {
+        taskId,
+        ...completionData,
+        completedAt: new Date().toISOString()
+      });
+
       const response = await fetch('/api/tasks/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -110,8 +131,8 @@ export function useDailyTasks() {
 
       const result = await response.json();
       
-      // Show achievement celebrations
-      if (result.milestoneAchievements?.length > 0) {
+      // Show achievement celebrations only if not already completed
+      if (!result.alreadyCompleted && result.milestoneAchievements?.length > 0) {
         for (const achievement of result.milestoneAchievements) {
           toast.success(achievement.milestone.name, {
             description: achievement.milestone.celebration.message
@@ -119,12 +140,16 @@ export function useDailyTasks() {
         }
       }
 
-      // Refresh tasks
-      await fetchTasks();
+      // Refresh tasks after a short delay to allow for server processing
+      setTimeout(() => {
+        fetchTasks();
+      }, 100);
       
-      toast.success('Task completed!', {
-        description: `+${result.points} points earned`
-      });
+      if (!result.alreadyCompleted) {
+        toast.success('Task completed!', {
+          description: `+${result.points} points earned`
+        });
+      }
 
       return result;
     } catch (error: any) {

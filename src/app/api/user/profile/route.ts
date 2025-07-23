@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { dbUtils } from '@/lib/db';
 import { ratelimiters, rateLimit } from '@/lib/ratelimit-api';
+import { validatePlatformSwitch } from '@/lib/platform-validation';
 
 export async function GET(request: NextRequest) {
   // Apply rate limiting for user endpoints
@@ -56,6 +57,20 @@ export async function PUT(request: NextRequest) {
       targetTimeframe,
       motivation,
     } = body;
+
+    // Validate platform switch if platform is being changed
+    if (selectedPlatform !== undefined) {
+      const validation = await validatePlatformSwitch(session.user.id, selectedPlatform);
+      
+      if (!validation.allowed) {
+        return NextResponse.json({ 
+          error: validation.error, 
+          requiresUpgrade: validation.requiresUpgrade,
+          currentPlatform: validation.currentPlatform,
+          subscription: validation.subscription
+        }, { status: 403 });
+      }
+    }
 
     const updatedProfile = await dbUtils.updateUserProfile(session.user.id, {
       selectedPlatform,

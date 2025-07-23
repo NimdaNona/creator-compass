@@ -46,7 +46,10 @@ export function useUsageTracking(): UseUsageTrackingReturn {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch('/api/usage');
+      // Get user's timezone
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+      const response = await fetch(`/api/usage?timezone=${encodeURIComponent(timezone)}`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch usage data');
@@ -75,12 +78,15 @@ export function useUsageTracking(): UseUsageTrackingReturn {
     }
 
     try {
+      // Get user's timezone
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
       const response = await fetch('/api/usage', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ feature, increment }),
+        body: JSON.stringify({ feature, increment, timezone }),
       });
 
       if (!response.ok) {

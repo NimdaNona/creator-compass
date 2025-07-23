@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db';
 import { z } from 'zod';
 import { trackUsage } from '@/lib/usage';
 import { addDays, setHours, setMinutes } from 'date-fns';
+import { validatePlatformSwitch } from '@/lib/platform-validation';
 
 // Schema for bulk event creation
 const bulkEventSchema = z.object({
@@ -73,6 +74,21 @@ export async function POST(request: Request) {
         },
         { status: 403 }
       );
+    }
+
+    // Validate platform for all events
+    const uniquePlatforms = [...new Set(validatedData.events.map(e => e.platform))];
+    for (const platform of uniquePlatforms) {
+      const platformValidation = await validatePlatformSwitch(user.id, platform);
+      
+      if (!platformValidation.allowed) {
+        return NextResponse.json({ 
+          error: platformValidation.error, 
+          requiresUpgrade: platformValidation.requiresUpgrade,
+          currentPlatform: platformValidation.currentPlatform,
+          subscription: platformValidation.subscription
+        }, { status: 403 });
+      }
     }
 
     let eventsToCreate = validatedData.events;

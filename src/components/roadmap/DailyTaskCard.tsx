@@ -35,6 +35,7 @@ import {
   Star
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTaskCompletion } from '@/hooks/useTaskCompletion';
 
 interface EnhancedTask {
   id: string;
@@ -71,47 +72,54 @@ interface EnhancedTask {
 
 interface DailyTaskCardProps {
   task: EnhancedTask;
-  onComplete: (taskId: string, data: any) => Promise<void>;
+  onComplete?: (taskId: string, data: any) => Promise<void>;
   compact?: boolean;
 }
 
 export default function DailyTaskCard({ task, onComplete, compact = false }: DailyTaskCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isCompleting, setIsCompleting] = useState(false);
   const [timeSpent, setTimeSpent] = useState(task.timeEstimate.toString());
   const [notes, setNotes] = useState('');
   const [quality, setQuality] = useState<string>('3');
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
+  const { completeTask, isProcessing, isTaskCelebrating } = useTaskCompletion();
 
   const handleComplete = async () => {
-    setIsCompleting(true);
     try {
-      await onComplete(task.id, {
+      const options = {
         timeSpent: parseInt(timeSpent),
         notes,
         quality: parseInt(quality),
         skipped: false
-      });
+      };
+      
+      if (onComplete) {
+        await onComplete(task.id, options);
+      } else {
+        await completeTask(task.id, options);
+      }
+      
       setShowCompleteDialog(false);
     } catch (error) {
       console.error('Error completing task:', error);
-    } finally {
-      setIsCompleting(false);
     }
   };
 
   const handleSkip = async () => {
-    setIsCompleting(true);
     try {
-      await onComplete(task.id, {
-        skipped: true
-      });
+      const options = { skipped: true };
+      
+      if (onComplete) {
+        await onComplete(task.id, options);
+      } else {
+        await completeTask(task.id, options);
+      }
     } catch (error) {
       console.error('Error skipping task:', error);
-    } finally {
-      setIsCompleting(false);
     }
   };
+  
+  const isCelebrating = isTaskCelebrating(task.id);
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -156,7 +164,8 @@ export default function DailyTaskCard({ task, onComplete, compact = false }: Dai
     return (
       <Card className={cn(
         "p-4 transition-all",
-        task.completed && "opacity-75 bg-muted/50"
+        task.completed && "opacity-75 bg-muted/50",
+        isCelebrating && "celebrate"
       )}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 flex-1">
@@ -184,7 +193,7 @@ export default function DailyTaskCard({ task, onComplete, compact = false }: Dai
           {!task.completed && (
             <Dialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>
               <DialogTrigger asChild>
-                <Button size="sm">Complete</Button>
+                <Button size="sm" disabled={isProcessing}>Complete</Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
@@ -235,13 +244,13 @@ export default function DailyTaskCard({ task, onComplete, compact = false }: Dai
                   <Button
                     variant="outline"
                     onClick={handleSkip}
-                    disabled={isCompleting}
+                    disabled={isProcessing}
                   >
                     Skip Task
                   </Button>
                   <Button
                     onClick={handleComplete}
-                    disabled={isCompleting}
+                    disabled={isProcessing}
                   >
                     Complete Task
                   </Button>
@@ -257,7 +266,8 @@ export default function DailyTaskCard({ task, onComplete, compact = false }: Dai
   return (
     <Card className={cn(
       "overflow-hidden transition-all",
-      task.completed && "opacity-75 bg-muted/50"
+      task.completed && "opacity-75 bg-muted/50",
+      isCelebrating && "celebrate"
     )}>
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
         <div className="p-4">
@@ -396,13 +406,13 @@ export default function DailyTaskCard({ task, onComplete, compact = false }: Dai
                   variant="outline"
                   size="sm"
                   onClick={handleSkip}
-                  disabled={isCompleting}
+                  disabled={isProcessing}
                 >
                   Skip Task
                 </Button>
                 <Dialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>
                   <DialogTrigger asChild>
-                    <Button size="sm">
+                    <Button size="sm" disabled={isProcessing}>
                       Complete Task
                     </Button>
                   </DialogTrigger>
@@ -460,7 +470,7 @@ export default function DailyTaskCard({ task, onComplete, compact = false }: Dai
                       </Button>
                       <Button
                         onClick={handleComplete}
-                        disabled={isCompleting}
+                        disabled={isProcessing}
                       >
                         Complete Task
                       </Button>

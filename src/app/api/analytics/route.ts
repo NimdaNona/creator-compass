@@ -3,17 +3,14 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { subDays, startOfDay, endOfDay, format } from 'date-fns';
+import { withSubscription } from '@/app/api/middleware/subscription-check';
 
-export async function GET(request: NextRequest) {
+export const GET = withSubscription(async (request: Request, subscriptionCheck) => {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email: session.user.email! },
       include: { subscription: true }
     });
 
@@ -21,19 +18,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Check subscription status
-    const isActive = user.subscription?.status === 'active';
-    if (!isActive) {
-      return NextResponse.json(
-        { 
-          error: 'Analytics is a premium feature',
-          upgradeRequired: true
-        },
-        { status: 403 }
-      );
-    }
-
-    const searchParams = request.nextUrl.searchParams;
+    const searchParams = (request as NextRequest).nextUrl.searchParams;
     const timeRange = searchParams.get('timeRange') || '30days';
     const platform = searchParams.get('platform') || 'all';
 
@@ -179,4 +164,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+}, 'pro', 'Analytics dashboard');
