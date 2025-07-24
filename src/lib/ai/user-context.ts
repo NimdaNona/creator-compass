@@ -1,5 +1,7 @@
-import { prisma } from '@/lib/db';
 import { User, UserAIProfile, Profile, UserStats, Subscription } from '@prisma/client';
+import type { PrismaClient } from '@prisma/client';
+
+type DBType = PrismaClient;
 
 export interface UserContext {
   // Basic info
@@ -44,6 +46,16 @@ export class UserContextService {
   private static instance: UserContextService;
   private contextCache = new Map<string, { context: UserContext; timestamp: number }>();
   private CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+  private dbInstance: DBType | null = null;
+
+  // Lazy load database
+  private async getDb(): Promise<DBType> {
+    if (!this.dbInstance) {
+      const { db } = await import('@/lib/db');
+      this.dbInstance = db;
+    }
+    return this.dbInstance;
+  }
 
   static getInstance(): UserContextService {
     if (!UserContextService.instance) {
@@ -61,7 +73,8 @@ export class UserContextService {
 
     try {
       // Fetch comprehensive user data
-      const user = await prisma.user.findUnique({
+      const db = await this.getDb();
+      const user = await db.user.findUnique({
         where: { id: userId },
         include: {
           userAIProfile: true,
@@ -119,7 +132,8 @@ export class UserContextService {
       const challengesList = this.parseListFromText(challenges);
 
       // Update or create UserAIProfile
-      await prisma.userAIProfile.upsert({
+      const db = await this.getDb();
+      await db.userAIProfile.upsert({
         where: { userId },
         update: {
           creatorLevel,
@@ -147,7 +161,7 @@ export class UserContextService {
 
       // Update user profile with platform preferences
       if (preferredPlatforms.length > 0) {
-        await prisma.profile.update({
+        await db.profile.update({
           where: { userId },
           data: {
             selectedPlatform: preferredPlatforms[0], // Primary platform

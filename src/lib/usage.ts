@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 import { startOfMonth, endOfMonth, addMonths, startOfDay, endOfDay, addDays } from 'date-fns';
 import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 
@@ -99,7 +99,7 @@ export async function trackUsage(
   timezone: string = 'UTC'
 ): Promise<{ allowed: boolean; limit: number; used: number; resetAt: Date }> {
   // Get user with subscription and profile (for timezone)
-  const user = await prisma.user.findUnique({
+  const user = await db.user.findUnique({
     where: { id: userId },
     include: { 
       subscription: true,
@@ -129,7 +129,7 @@ export async function trackUsage(
   const limit = limits[feature];
 
   // Get or create usage record
-  let usage = await prisma.usageTracking.findUnique({
+  let usage = await db.usageTracking.findUnique({
     where: {
       userId_feature: {
         userId,
@@ -140,7 +140,7 @@ export async function trackUsage(
 
   // If no usage record exists, create one
   if (!usage) {
-    usage = await prisma.usageTracking.create({
+    usage = await db.usageTracking.create({
       data: {
         userId,
         feature,
@@ -151,7 +151,7 @@ export async function trackUsage(
     });
   } else if (shouldReset(usage.resetAt)) {
     // Reset if the reset date has passed
-    usage = await prisma.usageTracking.update({
+    usage = await db.usageTracking.update({
       where: { id: usage.id },
       data: {
         count: 0,
@@ -165,7 +165,7 @@ export async function trackUsage(
 
   // Increment if requested and allowed
   if (increment && allowed) {
-    usage = await prisma.usageTracking.update({
+    usage = await db.usageTracking.update({
       where: { id: usage.id },
       data: { count: { increment: 1 } },
     });
@@ -181,7 +181,7 @@ export async function trackUsage(
 
 export async function getUsageStats(userId: string, timezone: string = 'UTC') {
   // Get user with subscription and profile
-  const user = await prisma.user.findUnique({
+  const user = await db.user.findUnique({
     where: { id: userId },
     include: { 
       subscription: true,
@@ -213,7 +213,7 @@ export async function getUsageStats(userId: string, timezone: string = 'UTC') {
   }
 
   // Get all usage records
-  const usageRecords = await prisma.usageTracking.findMany({
+  const usageRecords = await db.usageTracking.findMany({
     where: { userId },
   });
 
@@ -260,7 +260,7 @@ export async function resetExpiredUsage() {
   const now = new Date();
   
   // Find all usage records that need to be reset
-  const recordsToReset = await prisma.usageTracking.findMany({
+  const recordsToReset = await db.usageTracking.findMany({
     where: {
       resetAt: {
         lte: now,
@@ -280,7 +280,7 @@ export async function resetExpiredUsage() {
     const userPreferences = record.user.profile?.preferences as any;
     const userTimezone = userPreferences?.timezone || 'UTC';
     
-    return prisma.usageTracking.update({
+    return db.usageTracking.update({
       where: { id: record.id },
       data: {
         count: 0,

@@ -1,9 +1,21 @@
 import { chatCompletion } from './openai-service';
 import { knowledgeBase } from './knowledge-base';
 import { UserAIProfile, DynamicRoadmap, RoadmapPhase, DynamicTask } from './types';
-import { prisma } from '../db';
+import type { PrismaClient } from '@prisma/client';
+
+type DBType = PrismaClient;
 
 export class RoadmapGenerator {
+  private dbInstance: DBType | null = null;
+
+  // Lazy load database
+  private async getDb(): Promise<DBType> {
+    if (!this.dbInstance) {
+      const { db } = await import('@/lib/db');
+      this.dbInstance = db;
+    }
+    return this.dbInstance;
+  }
   async generatePersonalizedRoadmap(
     userId: string,
     userProfile: UserAIProfile
@@ -25,7 +37,8 @@ export class RoadmapGenerator {
     };
 
     // Save to database
-    await prisma.dynamicRoadmap.create({
+    const db = await this.getDb();
+    await db.dynamicRoadmap.create({
       data: {
         id: roadmap.id,
         userId,
@@ -288,7 +301,8 @@ export class RoadmapGenerator {
     reason: string,
     adjustmentType: 'accelerate' | 'slow-down' | 'pivot'
   ): Promise<DynamicRoadmap> {
-    const roadmap = await prisma.dynamicRoadmap.findFirst({
+    const db = await this.getDb();
+    const roadmap = await db.dynamicRoadmap.findFirst({
       where: { id: roadmapId, userId },
     });
 
@@ -304,7 +318,7 @@ export class RoadmapGenerator {
     );
 
     // Update roadmap
-    const updatedRoadmap = await prisma.dynamicRoadmap.update({
+    const updatedRoadmap = await db.dynamicRoadmap.update({
       where: { id: roadmapId },
       data: {
         phases: adjustments.phases,

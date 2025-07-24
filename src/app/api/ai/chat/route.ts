@@ -1,10 +1,13 @@
+console.log('[Chat Route] File loaded - checking imports...');
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { conversationManager } from '@/lib/ai/conversation';
-import { db } from '@/lib/db';
 import { z } from 'zod';
 import { checkFeatureLimit, incrementFeatureUsage } from '@/app/api/middleware/subscription-check';
+
+console.log('[Chat Route] All imports completed successfully');
 
 const chatRequestSchema = z.object({
   conversationId: z.string().optional(),
@@ -36,6 +39,7 @@ export async function POST(request: NextRequest) {
       keyLength: process.env.OPENAI_API_KEY?.length || 0,
       nodeEnv: process.env.NODE_ENV,
       isVercel: !!process.env.VERCEL,
+      isOnboarding,
     });
 
     // Get user ID from database or use anonymous ID for onboarding
@@ -45,40 +49,57 @@ export async function POST(request: NextRequest) {
       // Use a temporary anonymous user ID for onboarding
       userId = 'onboarding-' + Math.random().toString(36).substr(2, 9);
     } else {
-      const user = await db.user.findUnique({
-        where: { email: session!.user.email! },
-        select: { id: true, subscription: true },
-      });
+      try {
+        console.log('[Chat API] Before db check');
+        // Dynamically import db to avoid Turbopack issues
+        const { db } = await import('@/lib/db');
+        
+        console.log('[Chat API] Before user query');
+        const user = await db.user.findUnique({
+          where: { email: session!.user.email! },
+          select: { id: true, subscription: true },
+        });
 
-      if (!user) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
-      }
-      
-      userId = user.id;
-      
-      // Check AI usage limits for authenticated users
-      const isFreeTier = !user.subscription || user.subscription.status !== 'active';
-      const featureCheck = await checkFeatureLimit(userId, 'ai', isFreeTier);
-      
-      if (!featureCheck.allowed) {
-        return NextResponse.json(
-          { 
-            error: featureCheck.error || 'You have reached your monthly AI message limit',
-            limit: featureCheck.limit,
-            used: featureCheck.used,
-            requiresUpgrade: true,
-            currentPlan: user.subscription?.plan || 'free'
-          },
-          { status: 403 }
-        );
+        if (!user) {
+          return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        }
+        
+        userId = user.id;
+        
+        // Check subscription limits
+        const isFreeTier = !user.subscription || user.subscription.plan === 'free';
+        const featureCheck = await checkFeatureLimit(user.id, 'ai', isFreeTier);
+        if (!featureCheck.allowed) {
+          return NextResponse.json(
+            { 
+              error: featureCheck.error || 'You have reached your monthly AI message limit',
+              limit: featureCheck.limit,
+              used: featureCheck.used,
+              requiresUpgrade: true,
+              currentPlan: user.subscription?.plan || 'free'
+            },
+            { status: 403 }
+          );
+        }
+      } catch (error: any) {
+        console.error('[Chat API] Error getting user from database:', error);
+        throw error;
       }
     }
 
     // Create or get conversation
     let convId = conversationId;
     if (!convId) {
-      const newConversation = await conversationManager.createConversation(userId, context);
-      convId = newConversation.id;
+      console.log('[Chat API] Creating new conversation for user:', userId);
+      try {
+        const newConversation = await conversationManager.createConversation(userId, context);
+        convId = newConversation.id;
+        console.log('[Chat API] Created conversation:', convId);
+      } catch (createError: any) {
+        console.error('[Chat API] Error creating conversation:', createError);
+        console.error('[Chat API] Create error stack:', createError.stack);
+        throw createError;
+      }
     }
 
     // Create a streaming response
@@ -92,6 +113,7 @@ export async function POST(request: NextRequest) {
       let isTimedOut = false;
 
       try {
+        console.log('[Chat API] Starting stream processing');
         // Set a 30-second timeout for the entire response
         timeoutId = setTimeout(async () => {
           isTimedOut = true;
@@ -108,11 +130,20 @@ export async function POST(request: NextRequest) {
           }
         }, 30000);
 
-        const responseStream = await conversationManager.processUserMessage(
-          convId,
-          message,
-          { includeKnowledge, stream: true }
-        ) as AsyncGenerator<string>;
+        console.log('[Chat API] Before processUserMessage');
+        let responseStream: AsyncGenerator<string>;
+        try {
+          responseStream = await conversationManager.processUserMessage(
+            convId,
+            message,
+            { includeKnowledge, stream: true }
+          ) as AsyncGenerator<string>;
+          console.log('[Chat API] After processUserMessage');
+        } catch (pmError: any) {
+          console.error('[Chat API] processUserMessage error:', pmError);
+          console.error('[Chat API] processUserMessage stack:', pmError.stack);
+          throw pmError;
+        }
 
         let hasContent = false;
         for await (const chunk of responseStream) {
@@ -137,13 +168,20 @@ export async function POST(request: NextRequest) {
             hasContent 
           })}\n\n`));
         }
-      } catch (error) {
-        console.error('Stream processing error:', error);
+      } catch (error: any) {
+        console.error('[Chat API] Stream processing error:', error);
+        console.error('[Chat API] Error type:', typeof error);
+        console.error('[Chat API] Error name:', error?.name);
+        console.error('[Chat API] Error message:', error?.message);
+        console.error('[Chat API] Error stack:', error?.stack);
+        
         if (!isTimedOut) {
           try {
             await writer.write(encoder.encode(`data: ${JSON.stringify({ 
               error: 'Processing error',
-              message: error instanceof Error ? error.message : 'An unexpected error occurred'
+              message: error instanceof Error ? error.message : 'An unexpected error occurred',
+              errorType: error?.name || 'Unknown',
+              errorStack: error?.stack?.split('\n').slice(0, 3).join('\n')
             })}\n\n`));
           } catch (e) {
             // Writer might already be closed
@@ -197,43 +235,4 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Get conversation history
-export async function GET(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { searchParams } = new URL(request.url);
-    const conversationId = searchParams.get('conversationId');
-
-    // Get user ID from database
-    const user = await db.user.findUnique({
-      where: { email: session.user.email },
-      select: { id: true },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
-    if (conversationId) {
-      // Get specific conversation
-      const conversation = await conversationManager.getConversation(conversationId);
-      
-      if (!conversation || conversation.userId !== user.id) {
-        return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
-      }
-
-      return NextResponse.json({ conversation });
-    } else {
-      // Get user's conversations
-      const conversations = await conversationManager.getUserConversations(user.id);
-      return NextResponse.json({ conversations });
-    }
-  } catch (error) {
-    console.error('Get conversations error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
+// GET functionality moved to separate route file to avoid Turbopack parsing issues

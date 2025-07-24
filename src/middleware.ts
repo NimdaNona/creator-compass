@@ -67,7 +67,21 @@ async function mainMiddleware(req: NextRequest, token: any) {
     pathname.startsWith('/icon') ||
     pathname === '/sitemap.xml' ||
     pathname === '/robots.txt' ||
-    pathname.startsWith('/sw.js')
+    pathname.startsWith('/sw.js') ||
+    pathname.startsWith('/api/ai/test-db') || // Allow test endpoint
+    pathname.startsWith('/api/test-db-simple') || // Allow simple test
+    pathname.startsWith('/api/test-db-direct') || // Allow direct test
+    pathname.startsWith('/api/test-inline') || // Allow inline test
+    pathname.startsWith('/api/ai/chat-test') || // Allow chat test
+    pathname.startsWith('/api/ai/conversations') || // Allow conversations endpoint
+    pathname.startsWith('/api/ai/chat-simple') || // Allow simple chat endpoint
+    pathname.startsWith('/api/ai/test-minimal') || // Allow minimal test endpoint
+    pathname.startsWith('/api/test-db') || // Allow any test-db endpoint
+    pathname.startsWith('/api/public-test') || // Allow public test endpoint
+    pathname.startsWith('/api/ai/chat-v2') || // Allow new chat endpoint
+    pathname.startsWith('/api/ai/test-cache') || // Allow cache test endpoint
+    pathname.startsWith('/api/ai/test-conversation-flow') || // Allow flow test endpoint
+    pathname.startsWith('/api/ai/test-db-conversation') // Allow db conversation test endpoint
   ) {
     return NextResponse.next();
   }
@@ -111,7 +125,21 @@ export default withAuth(
           pathname === '/robots.txt' ||
           pathname.startsWith('/sw.js') ||
           pathname.startsWith('/api/stripe/webhook') || // Allow webhook access
-          pathname.startsWith('/api/ai/chat') // Allow AI chat for onboarding
+          pathname.startsWith('/api/ai/chat') || // Allow AI chat for onboarding
+          pathname.startsWith('/api/ai/test-db') || // Allow test endpoint
+          pathname.startsWith('/api/test-db-direct') || // Allow direct test
+          pathname.startsWith('/api/test-db-simple') || // Allow simple test
+          pathname.startsWith('/api/test-inline') || // Allow inline test
+          pathname.startsWith('/api/ai/chat-test') || // Allow chat test
+          pathname.startsWith('/api/ai/conversations') || // Allow conversations endpoint
+          pathname.startsWith('/api/ai/chat-simple') || // Allow simple chat endpoint
+          pathname.startsWith('/api/ai/test-minimal') || // Allow minimal test endpoint
+          pathname.startsWith('/api/test-db') || // Allow any test-db endpoint
+          pathname.startsWith('/api/public-test') || // Allow public test endpoint
+          pathname.startsWith('/api/ai/chat-v2') || // Allow new chat endpoint
+          pathname.startsWith('/api/ai/test-cache') || // Allow cache test endpoint
+          pathname.startsWith('/api/ai/test-conversation-flow') || // Allow flow test endpoint
+          pathname.startsWith('/api/ai/test-db-conversation') // Allow db conversation test endpoint
         ) {
           return true;
         }

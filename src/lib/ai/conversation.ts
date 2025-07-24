@@ -2,11 +2,24 @@ import { chatCompletionStream, chatCompletion } from './openai-service';
 import { knowledgeBase } from './knowledge-base';
 import { userContextService } from './user-context';
 import { ConversationMessage, AIConversation } from './types';
-import { db } from '../db';
 import OpenAI from 'openai';
+import type { PrismaClient } from '@prisma/client';
+import { getConversationCache, setConversationManager } from './conversation-cache';
+
+type DBType = PrismaClient;
 
 export class ConversationManager {
-  private conversationCache = new Map<string, AIConversation>();
+  private conversationCache = getConversationCache();
+  private dbInstance: DBType | null = null;
+
+  // Lazy load database
+  private async getDb(): Promise<DBType> {
+    if (!this.dbInstance) {
+      const { db } = await import('@/lib/db');
+      this.dbInstance = db;
+    }
+    return this.dbInstance;
+  }
 
   async createConversation(userId: string, initialContext?: Record<string, any>): Promise<AIConversation> {
     const conversation: AIConversation = {
@@ -18,24 +31,56 @@ export class ConversationManager {
       updatedAt: new Date(),
     };
 
-    console.log('[ConversationManager] Creating conversation for user:', userId);
+    console.log('[ConversationManager] Creating conversation:', {
+      id: conversation.id,
+      userId,
+      context: initialContext,
+      cacheSize: this.conversationCache.size
+    });
 
     this.conversationCache.set(conversation.id, conversation);
+    console.log('[ConversationManager] Conversation cached. New cache size:', this.conversationCache.size);
     
-    // Save to database only for authenticated users
-    if (!userId.startsWith('onboarding-')) {
-      try {
-        await db.aiConversation.create({
-          data: {
-            id: conversation.id,
-            userId,
-            messages: [],
-            context: initialContext || {},
-          },
-        });
-      } catch (error) {
-        console.error('[ConversationManager] Database error:', error);
-        // Continue even if database save fails - the conversation is cached
+    // Always save to database to ensure persistence across module boundaries
+    try {
+      const db = await this.getDb();
+      
+      // For onboarding users, we need to ensure they have a valid user record
+      if (userId.startsWith('onboarding-')) {
+        // Create a temporary user record for onboarding
+        try {
+          await db.user.create({
+            data: {
+              id: userId,
+              email: `${userId}@temp.local`,
+              emailVerified: null, // Changed from false to null (DateTime or null expected)
+              name: 'Onboarding User',
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
+          });
+          console.log('[ConversationManager] Created temporary user for onboarding');
+        } catch (userError: any) {
+          if (userError.code !== 'P2002') { // Ignore unique constraint errors
+            console.error('[ConversationManager] Error creating temp user:', userError);
+          }
+        }
+      }
+      
+      await db.aIConversation.create({
+        data: {
+          id: conversation.id,
+          userId,
+          messages: [],
+          context: initialContext || {},
+        },
+      });
+      console.log('[ConversationManager] Conversation saved to database');
+    } catch (error: any) {
+      console.error('[ConversationManager] Database error:', error);
+      // Only continue for onboarding users
+      if (!userId.startsWith('onboarding-')) {
+        throw error; // Re-throw for authenticated users
       }
     }
 
@@ -43,29 +88,41 @@ export class ConversationManager {
   }
 
   async getConversation(conversationId: string): Promise<AIConversation | null> {
-    // Check cache first
-    if (this.conversationCache.has(conversationId)) {
-      return this.conversationCache.get(conversationId)!;
-    }
-
-    // Load from database
-    const dbConversation = await db.aiConversation.findUnique({
-      where: { id: conversationId },
+    console.log('[ConversationManager] Getting conversation:', {
+      conversationId,
+      cacheSize: this.conversationCache.size,
+      hasInCache: this.conversationCache.has(conversationId)
     });
 
-    if (!dbConversation) return null;
+    // Always load from database to ensure consistency across module boundaries
+    try {
+      const db = await this.getDb();
+      const dbConversation = await db.aIConversation.findUnique({
+        where: { id: conversationId },
+      });
 
-    const conversation: AIConversation = {
-      id: dbConversation.id,
-      userId: dbConversation.userId,
-      messages: dbConversation.messages as ConversationMessage[],
-      context: dbConversation.context as Record<string, any>,
-      createdAt: dbConversation.createdAt,
-      updatedAt: dbConversation.updatedAt,
-    };
+      if (!dbConversation) {
+        console.log('[ConversationManager] Conversation not found in database');
+        return null;
+      }
 
-    this.conversationCache.set(conversation.id, conversation);
-    return conversation;
+      const conversation: AIConversation = {
+        id: dbConversation.id,
+        userId: dbConversation.userId,
+        messages: dbConversation.messages as ConversationMessage[],
+        context: dbConversation.context as Record<string, any>,
+        createdAt: dbConversation.createdAt,
+        updatedAt: dbConversation.updatedAt,
+      };
+
+      // Update cache after loading from database
+      this.conversationCache.set(conversation.id, conversation);
+      console.log('[ConversationManager] Loaded from database and cached');
+      return conversation;
+    } catch (error) {
+      console.error('[ConversationManager] Error loading conversation:', error);
+      return null;
+    }
   }
 
   async addMessage(
@@ -85,15 +142,22 @@ export class ConversationManager {
     conversation.messages.push(message);
     conversation.updatedAt = new Date();
 
-    // Update database only for authenticated users
-    if (!conversation.userId.startsWith('onboarding-')) {
-      await db.aiConversation.update({
+    // Always update database to ensure persistence
+    try {
+      const db = await this.getDb();
+      await db.aIConversation.update({
         where: { id: conversationId },
         data: {
           messages: conversation.messages,
           updatedAt: conversation.updatedAt,
         },
       });
+    } catch (error) {
+      console.error('[ConversationManager] Error updating message:', error);
+      // For onboarding users, continue without database update
+      if (!conversation.userId.startsWith('onboarding-')) {
+        throw error; // Re-throw for authenticated users
+      }
     }
   }
 
@@ -105,11 +169,13 @@ export class ConversationManager {
       stream?: boolean;
     }
   ): Promise<AsyncGenerator<string> | string> {
-    const conversation = await this.getConversation(conversationId);
-    if (!conversation) throw new Error('Conversation not found');
+    try {
+      console.log('[ConversationManager] processUserMessage - getting conversation');
+      const conversation = await this.getConversation(conversationId);
+      if (!conversation) throw new Error('Conversation not found');
 
-    // Add user message
-    await this.addMessage(conversationId, 'user', userMessage);
+      // Add user message
+      await this.addMessage(conversationId, 'user', userMessage);
 
     // Update onboarding context if applicable
     if (conversation.context.type === 'onboarding') {
@@ -134,6 +200,11 @@ export class ConversationManager {
       const response = await this.getCompleteResponse(messages);
       await this.addMessage(conversationId, 'assistant', response);
       return response;
+    }
+    } catch (error: any) {
+      console.error('[ConversationManager] processUserMessage error:', error);
+      console.error('[ConversationManager] Error stack:', error.stack);
+      throw error;
     }
   }
 
@@ -331,14 +402,21 @@ Example responses:
       ...updates,
     };
 
-    // Update database only for authenticated users
-    if (!conversation.userId.startsWith('onboarding-')) {
-      await db.aiConversation.update({
+    // Always update database to ensure persistence
+    try {
+      const db = await this.getDb();
+      await db.aIConversation.update({
         where: { id: conversationId },
         data: {
           context: conversation.context,
         },
       });
+    } catch (error) {
+      console.error('[ConversationManager] Error updating context:', error);
+      // For onboarding users, continue without database update
+      if (!conversation.userId.startsWith('onboarding-')) {
+        throw error; // Re-throw for authenticated users
+      }
     }
 
     // Clear cache to ensure fresh data
@@ -346,7 +424,9 @@ Example responses:
   }
 
   async getUserConversations(userId: string, limit = 10): Promise<AIConversation[]> {
-    const conversations = await db.aiConversation.findMany({
+    try {
+      const db = await this.getDb();
+      const conversations = await db.aIConversation.findMany({
       where: { userId },
       orderBy: { updatedAt: 'desc' },
       take: limit,
@@ -360,6 +440,10 @@ Example responses:
       createdAt: conv.createdAt,
       updatedAt: conv.updatedAt,
     }));
+    } catch (error) {
+      console.error('[ConversationManager] Error getting user conversations:', error);
+      return [];
+    }
   }
 
   private async updateOnboardingContext(conversationId: string, userMessage: string): Promise<void> {
@@ -463,8 +547,9 @@ Example responses:
   }
 }
 
-// Export singleton instance
+// Create singleton instance
 export const conversationManager = new ConversationManager();
+setConversationManager(conversationManager);
 
 // Helper function for onboarding conversations
 export async function createOnboardingConversation(userId: string): Promise<AIConversation> {

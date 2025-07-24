@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
+    const user = await db.user.findUnique({
       where: { email: session.user.email },
       include: {
         profile: {
@@ -56,17 +56,18 @@ export async function GET(request: NextRequest) {
           },
           take: 100 // Recent completions only
         },
-        roadmapProgress: {
+        dynamicRoadmaps: {
+          where: {
+            isActive: true
+          },
           select: {
-            roadmapId: true,
-            currentPhase: true,
-            currentWeek: true,
-            currentDay: true,
-            completedTasks: true,
-            totalTasks: true,
-            progressPercentage: true,
-            startedAt: true,
-            lastActivityAt: true
+            id: true,
+            title: true,
+            description: true,
+            phases: true,
+            customizedFor: true,
+            adjustments: true,
+            generatedAt: true
           }
         },
         milestoneAchievements: {
@@ -91,7 +92,7 @@ export async function GET(request: NextRequest) {
           },
           take: 50
         },
-        usage: {
+        usageTracking: {
           select: {
             feature: true,
             count: true,
@@ -127,7 +128,7 @@ export async function GET(request: NextRequest) {
         subscription: user.subscription
       },
       progress: {
-        roadmaps: user.roadmapProgress,
+        roadmaps: user.dynamicRoadmaps,
         todaysCompletions: todaysCompletions.length,
         totalCompletions: user.taskCompletions.length,
         completedTaskIds: user.taskCompletions.map(tc => tc.taskId),
@@ -138,7 +139,7 @@ export async function GET(request: NextRequest) {
         totalPoints: user.stats?.totalPoints || 0,
         streak: user.stats?.streakDays || 0
       },
-      usage: user.usage.reduce((acc, u) => {
+      usage: user.usageTracking.reduce((acc, u) => {
         acc[u.feature] = {
           count: u.count,
           limit: u.limit,

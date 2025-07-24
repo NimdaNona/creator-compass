@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 
 export interface SubscriptionCheckResult {
   hasAccess: boolean;
@@ -35,7 +35,7 @@ export async function requireSubscription(
     }
 
     // Get user with subscription
-    const user = await prisma.user.findUnique({
+    const user = await db.user.findUnique({
       where: { email: session.user.email },
       include: {
         subscription: true,
@@ -150,7 +150,7 @@ export async function checkFeatureLimit(
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     
-    const usage = await prisma.userUsage.findFirst({
+    const usage = await db.usageTracking.findFirst({
       where: {
         userId,
         month: startOfMonth
@@ -213,7 +213,7 @@ export async function incrementFeatureUsage(
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    await prisma.userUsage.upsert({
+    await db.usageTracking.upsert({
       where: {
         userId_month: {
           userId,
