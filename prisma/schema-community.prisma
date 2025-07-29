@@ -1,0 +1,317 @@
+// =============================================
+// Sprint 5: Community & Collaboration Features
+// =============================================
+
+// Community Posts and Forums
+model CommunityPost {
+  id             String   @id @default(cuid())
+  title          String
+  content        String   @db.Text
+  category       String   // general, help, showcase, feedback, collaboration, resources, tutorials, announcements
+  tags           String[]
+  authorId       String
+  likes          Int      @default(0)
+  likedBy        String[] // Array of user IDs who liked
+  replies        Int      @default(0)
+  views          Int      @default(0)
+  isPinned       Boolean  @default(false)
+  isLocked       Boolean  @default(false)
+  isFeatured     Boolean  @default(false)
+  attachments    Json?    // Array of attachment objects
+  lastActivityAt DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  author        User               @relation("UserPosts", fields: [authorId], references: [id], onDelete: Cascade)
+  postReplies   CommunityReply[]
+  notifications Notification[]
+  
+  @@index([authorId])
+  @@index([category])
+  @@index([tags])
+  @@index([lastActivityAt])
+}
+
+model CommunityReply {
+  id          String   @id @default(cuid())
+  postId      String
+  authorId    String
+  content     String   @db.Text
+  likes       Int      @default(0)
+  likedBy     String[] // Array of user IDs who liked
+  attachments Json?    // Array of attachment objects
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  post          CommunityPost  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author        User           @relation("UserReplies", fields: [authorId], references: [id], onDelete: Cascade)
+  notifications Notification[]
+  
+  @@index([postId])
+  @@index([authorId])
+}
+
+// Creator Collaborations
+model CreatorCollaboration {
+  id             String   @id @default(cuid())
+  creatorId      String
+  title          String
+  description    String   @db.Text
+  type           String   // video, stream, podcast, series, event, product, service, other
+  status         String   // open, in_progress, completed, cancelled
+  requirements   String[]
+  deliverables   String[]
+  timeline       String
+  compensation   String?
+  location       String?  // remote, specific location
+  niches         String[]
+  platforms      String[]
+  minFollowers   Int?
+  tags           String[]
+  applicants     Json     @default("[]") // Array of applicant objects
+  collaborators  String[] // Array of user IDs
+  milestones     Json?    // Array of milestone objects
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  creator        User               @relation("CreatorCollaborations", fields: [creatorId], references: [id], onDelete: Cascade)
+  applications   CollaborationApplication[]
+  notifications  Notification[]
+  
+  @@index([creatorId])
+  @@index([status])
+  @@index([type])
+  @@index([niches])
+}
+
+model CollaborationApplication {
+  id              String   @id @default(cuid())
+  collaborationId String
+  applicantId     String
+  message         String   @db.Text
+  experience      String   @db.Text
+  portfolio       String[]
+  status          String   // pending, accepted, rejected
+  reviewNotes     String?  @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  collaboration Collaboration @relation(fields: [collaborationId], references: [id], onDelete: Cascade)
+  applicant     User          @relation("CollaborationApplications", fields: [applicantId], references: [id], onDelete: Cascade)
+  
+  @@unique([collaborationId, applicantId])
+  @@index([applicantId])
+  @@index([status])
+}
+
+// Mentorship System
+model MentorshipProfile {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  isMentor      Boolean  @default(false)
+  expertise     String[]
+  bio           String   @db.Text
+  experience    String   // years of experience
+  achievements  String[]
+  availability  Json     // Availability schedule
+  sessionRate   Float?   // Cost per session (null for free)
+  languages     String[]
+  timezone      String
+  style         String   // teaching style: structured, flexible, hands-on, theoretical
+  specialties   String[]
+  maxMentees    Int      @default(5)
+  isActive      Boolean  @default(true)
+  rating        Float    @default(0)
+  reviewCount   Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mentorMatches  MentorshipMatch[]   @relation("MentorMatches")
+  menteeMatches  MentorshipMatch[]   @relation("MenteeMatches")
+  sessions       MentorshipSession[]
+  
+  @@index([expertise])
+  @@index([isActive])
+}
+
+model MentorshipMatch {
+  id         String   @id @default(cuid())
+  mentorId   String
+  menteeId   String
+  status     String   // pending, active, completed, cancelled
+  goals      String[]
+  duration   Json     // Expected duration and commitment
+  progress   Json?    // Progress tracking
+  feedback   Json?    // Mutual feedback
+  matchScore Float?   // AI-calculated compatibility score
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  mentor  MentorshipProfile @relation("MentorMatches", fields: [mentorId], references: [id])
+  mentee  MentorshipProfile @relation("MenteeMatches", fields: [menteeId], references: [id])
+  
+  @@unique([mentorId, menteeId])
+  @@index([status])
+}
+
+model MentorshipSession {
+  id          String   @id @default(cuid())
+  matchId     String
+  mentorId    String
+  scheduledAt DateTime
+  duration    Int      // Duration in minutes
+  type        String   // video_call, chat, async_feedback, workshop
+  agenda      String[]
+  notes       String?  @db.Text
+  recording   String?  // URL to recording if applicable
+  feedback    Json?    // Post-session feedback
+  status      String   // scheduled, completed, cancelled, no_show
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  mentor MentorshipProfile @relation(fields: [mentorId], references: [id])
+  
+  @@index([matchId])
+  @@index([scheduledAt])
+  @@index([status])
+}
+
+// Community Events
+model CommunityEvent {
+  id           String   @id @default(cuid())
+  hostId       String
+  title        String
+  description  String   @db.Text
+  type         String   // workshop, webinar, meetup, stream, q&a, conference, challenge, other
+  startTime    DateTime
+  endTime      DateTime
+  timezone     String
+  location     Json     // { type: 'online' | 'in_person' | 'hybrid', platform?, url?, address? }
+  capacity     Int?
+  attendees    String[] // Array of user IDs
+  waitlist     String[] // Array of user IDs
+  requirements String[]
+  agenda       Json?    // Array of agenda items
+  resources    Json?    // Links to resources, materials
+  recording    String?  // URL to recording after event
+  tags         String[]
+  status       String   // upcoming, live, completed, cancelled
+  coHosts      String[] // Array of user IDs
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  host          User           @relation("EventHost", fields: [hostId], references: [id])
+  registrations Registration[]
+  notifications Notification[]
+  
+  @@index([hostId])
+  @@index([startTime])
+  @@index([type])
+  @@index([status])
+}
+
+model Registration {
+  id        String   @id @default(cuid())
+  eventId   String
+  userId    String
+  status    String   // registered, waitlisted, attended, no_show, cancelled
+  createdAt DateTime @default(now())
+  
+  event CommunityEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([eventId, userId])
+  @@index([userId])
+  @@index([status])
+}
+
+// Community Challenges
+model CommunityChallenge {
+  id                String   @id @default(cuid())
+  creatorId         String
+  title             String
+  description       String   @db.Text
+  type              String   // content, growth, creativity, engagement, technical, educational, community
+  difficulty        String   // beginner, intermediate, advanced
+  rules             String[]
+  prizes            Json?    // Array of prize objects
+  startDate         DateTime
+  endDate           DateTime
+  submissionDeadline DateTime
+  requirements      String[]
+  judgingCriteria   Json     // Array of criteria with weights
+  participants      String[] // Array of user IDs
+  tags              String[]
+  status            String   // upcoming, active, judging, completed
+  isFeatured        Boolean  @default(false)
+  winners           Json?    // Array of winner objects
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  creator      User                    @relation("ChallengeCreator", fields: [creatorId], references: [id])
+  submissions  ChallengeSubmission[]
+  leaderboard  ChallengeLeaderboard[]
+  notifications Notification[]
+  
+  @@index([creatorId])
+  @@index([status])
+  @@index([type])
+  @@index([startDate, endDate])
+}
+
+model ChallengeSubmission {
+  id          String   @id @default(cuid())
+  challengeId String
+  userId      String
+  title       String
+  description String   @db.Text
+  content     Json     // Submission content (URLs, text, etc.)
+  score       Float?   // Judge score
+  feedback    Json?    // Judge feedback
+  status      String   // submitted, under_review, approved, rejected
+  submittedAt DateTime @default(now())
+  
+  challenge CommunityChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([challengeId, userId])
+  @@index([userId])
+  @@index([status])
+}
+
+model ChallengeLeaderboard {
+  id          String   @id @default(cuid())
+  challengeId String
+  userId      String
+  score       Float
+  rank        Int
+  metadata    Json?    // Additional scoring details
+  updatedAt   DateTime @updatedAt
+  
+  challenge CommunityChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([challengeId, userId])
+  @@index([challengeId, rank])
+}
+
+// Update User model relations (add these to the existing User model)
+// posts              CommunityPost[]            @relation("UserPosts")
+// replies            CommunityReply[]           @relation("UserReplies")
+// collaborations     CreatorCollaboration[]     @relation("CreatorCollaborations")
+// applications       CollaborationApplication[] @relation("CollaborationApplications")
+// hostedEvents       CommunityEvent[]           @relation("EventHost")
+// eventRegistrations Registration[]
+// challenges         CommunityChallenge[]       @relation("ChallengeCreator")
+// submissions        ChallengeSubmission[]
+
+// Update Notification model (add these notification types)
+// - new_reply: Someone replied to your post
+// - post_liked: Your post was liked
+// - collaboration_application: New application for your collaboration
+// - collaboration_accepted: Your collaboration application was accepted
+// - mentorship_request: New mentorship request
+// - event_reminder: Upcoming event reminder
+// - challenge_update: Challenge status update
+// - community_mention: You were mentioned in a post/reply

@@ -58,6 +58,25 @@ export function OnboardingComplete({ onNext }: OnboardingCompleteProps) {
           throw new Error('Failed to save profile');
         }
 
+        // Initialize the user's journey state for AI guidance
+        await fetch('/api/ai/journey', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action: 'initialize_journey',
+            data: {
+              isFirstTime: true,
+              platform: selectedPlatform.id,
+              niche: selectedNiche.id,
+            }
+          }),
+        });
+
+        // Set a flag for first dashboard visit
+        localStorage.setItem('firstDashboardVisit', 'true');
+
         toast.success('Your profile has been created successfully!');
       } catch (error) {
         console.error('Error saving profile:', error);

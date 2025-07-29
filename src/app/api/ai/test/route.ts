@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getOpenAIClient } from '@/lib/ai/openai-service';
+import { createOpenAIClient } from '@/lib/ai/openai-client';
 
 export async function GET(request: NextRequest) {
   try {
     // Test if OpenAI client can be initialized
-    const client = getOpenAIClient();
+    const client = createOpenAIClient();
     
     // Test with a simple completion
     const completion = await client.chat.completions.create({

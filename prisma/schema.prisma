@@ -18,12 +18,12 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String?  @db.Text
-  access_token      String?  @db.Text
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String?  @db.Text
+  id_token          String? @db.Text
   session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -38,50 +38,70 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId])
   @@index([expires])
 }
 
 model User {
-  id                    String    @id @default(cuid())
-  name                  String?
-  email                 String    @unique
-  emailVerified         DateTime?
+  id                     String    @id @default(cuid())
+  name                   String?
+  email                  String    @unique
+  emailVerified          DateTime?
   emailVerificationToken String?   @unique
-  image                 String?
-  password              String?   // For email/password authentication
-  passwordResetToken    String?   @unique
-  passwordResetExpires  DateTime?
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  image                  String?
+  password               String? // For email/password authentication
+  passwordResetToken     String?   @unique
+  passwordResetExpires   DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 
-  accounts Account[]
-  sessions Session[]
-  profile  UserProfile?
-  progress UserProgress[]
-  achievements UserAchievement[]
-  stats    UserStats?
-  subscription UserSubscription?
-  usageTracking UsageTracking[]
-  taskCompletions TaskCompletion[]
-  milestoneAchievements MilestoneAchievement[]
-  contentRecommendations ContentRecommendation[]
-  generatedTemplates GeneratedTemplate[]
-  calendarEvents         CalendarEvent[]
-  contentSeries          ContentSeries[]
-  contentIdeas           ContentIdea[]
-  communityProfile       CommunityProfile?
+  accounts                Account[]
+  sessions                Session[]
+  profile                 UserProfile?
+  progress                UserProgress[]
+  achievements            UserAchievement[]
+  stats                   UserStats?
+  subscription            UserSubscription?
+  usageTracking           UsageTracking[]
+  taskCompletions         TaskCompletion[]
+  milestoneAchievements   MilestoneAchievement[]
+  contentRecommendations  ContentRecommendation[]
+  generatedTemplates      GeneratedTemplate[]
+  calendarEvents          CalendarEvent[]
+  contentSeries           ContentSeries[]
+  contentIdeas            ContentIdea[]
+  communityProfile        CommunityProfile?
   notificationPreferences Json?
-  notifications          Notification[]
-  resourceRatings        ResourceRating[]
-  aiConversations        AIConversation[]
-  generatedContent       GeneratedContent[]
-  userAIProfile          UserAIProfile?
-  dynamicRoadmaps        DynamicRoadmap[]
-  aiRecommendations      AIRecommendation[]
-  celebrations           Celebration[]
-  payments               Payment[]
+  notifications           Notification[]
+  resourceRatings         ResourceRating[]
+  aiConversations         AIConversation[]
+  generatedContent        GeneratedContent[]
+  userAIProfile           UserAIProfile?
+  dynamicRoadmaps         DynamicRoadmap[]
+  aiRecommendations       AIRecommendation[]
+  celebrations            Celebration[]
+  payments                Payment[]
+  userJourneyState        UserJourneyState?
+  aiInteractions          AIInteraction[]
+  conversationMemories    ConversationMemory[]
+  aiPersonality           AIPersonality?
+
+  // Sprint 5: Community & Collaboration Relations
+  posts               CommunityPost[]            @relation("UserPosts")
+  replies             CommunityReply[]           @relation("UserReplies")
+  collaborations      CreatorCollaboration[]     @relation("CreatorCollaborations")
+  applications        CollaborationApplication[] @relation("CollaborationApplications")
+  hostedEvents        CommunityEvent[]           @relation("EventHost")
+  eventRegistrations  Registration[]
+  challenges          CommunityChallenge[]       @relation("ChallengeCreator")
+  submissions         ChallengeSubmission[]
+  leaderboardEntries  ChallengeLeaderboard[]
+  platformConnections PlatformConnection[]
+  scheduledPosts      ScheduledPost[]
+  errorLogs           ErrorLog[]
+  performanceMetrics  PerformanceMetric[]
+  MentorshipProfile   MentorshipProfile?
 
   @@index([createdAt])
   @@index([updatedAt])
@@ -104,15 +124,15 @@ model UserProfile {
   startDate        DateTime @default(now())
   currentPhase     Int      @default(1)
   currentWeek      Int      @default(1)
-  goals            Json?    // Properly typed JSON
-  preferences      Json?    // Properly typed JSON
-  targetTimeframe  Int?     // in days
+  goals            Json? // Properly typed JSON
+  preferences      Json? // Properly typed JSON
+  targetTimeframe  Int? // in days
   motivation       String?  @db.Text
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([selectedPlatform, selectedNiche])
 }
 
@@ -129,6 +149,7 @@ model UserProgress {
 
   @@unique([userId, taskId])
   @@index([completedAt])
+  @@index([userId, completedAt]) // For user progress queries
 }
 
 model UserAchievement {
@@ -141,23 +162,24 @@ model UserAchievement {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, achievementId])
+  @@index([unlockedAt]) // For recent achievements
 }
 
 model UserStats {
-  id                    String   @id @default(cuid())
-  userId                String   @unique
-  totalPoints           Int      @default(0)
-  streakDays            Int      @default(0)
-  longestStreak         Int      @default(0)
-  lastActiveDate        DateTime @default(now())
-  totalTasksCompleted   Int      @default(0)
-  badges                Json?    // Properly typed JSON array
-  titles                Json?    // Properly typed JSON array
-  currentTitle          String?
-  weeklyGoal            Int      @default(7)
-  monthlyGoal           Int      @default(30)
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  totalPoints         Int      @default(0)
+  streakDays          Int      @default(0)
+  longestStreak       Int      @default(0)
+  lastActiveDate      DateTime @default(now())
+  totalTasksCompleted Int      @default(0)
+  badges              Json? // Properly typed JSON array
+  titles              Json? // Properly typed JSON array
+  currentTitle        String?
+  weeklyGoal          Int      @default(7)
+  monthlyGoal         Int      @default(30)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -165,7 +187,7 @@ model UserStats {
 model Celebration {
   id        String   @id @default(cuid())
   userId    String
-  type      String   // achievement, level_up, streak
+  type      String // achievement, level_up, streak
   title     String
   message   String
   icon      String
@@ -174,59 +196,59 @@ model Celebration {
   duration  Int
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
-  
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId, isRead])
   @@index([createdAt])
 }
 
 // Subscription models
 model UserSubscription {
-  id                 String    @id @default(cuid())
-  userId             String    @unique
-  stripeCustomerId   String?   @unique
-  stripeSubscriptionId String? @unique
-  stripePriceId      String?
-  yearlyPriceId      String?   // For tracking yearly price ID
-  status             String    @default("free") // free, active, canceled, past_due, unpaid
-  plan               String    @default("free") // free, premium, enterprise
-  isYearly           Boolean   @default(false)
-  currentPeriodStart DateTime?
-  currentPeriodEnd   DateTime?
-  canceledAt         DateTime?
-  cancelAtPeriodEnd  Boolean   @default(false)
-  trialStart         DateTime?
-  trialEnd           DateTime?
-  trialEndsAt        DateTime? // For trial management
-  pausedAt           DateTime? // For pause functionality
-  resumesAt          DateTime? // For resume functionality
-  downgradeScheduledAt DateTime? // For scheduled downgrades
+  id                    String    @id @default(cuid())
+  userId                String    @unique
+  stripeCustomerId      String?   @unique
+  stripeSubscriptionId  String?   @unique
+  stripePriceId         String?
+  yearlyPriceId         String? // For tracking yearly price ID
+  status                String    @default("free") // free, active, canceled, past_due, unpaid
+  plan                  String    @default("free") // free, premium, enterprise
+  isYearly              Boolean   @default(false)
+  currentPeriodStart    DateTime?
+  currentPeriodEnd      DateTime?
+  canceledAt            DateTime?
+  cancelAtPeriodEnd     Boolean   @default(false)
+  trialStart            DateTime?
+  trialEnd              DateTime?
+  trialEndsAt           DateTime? // For trial management
+  pausedAt              DateTime? // For pause functionality
+  resumesAt             DateTime? // For resume functionality
+  downgradeScheduledAt  DateTime? // For scheduled downgrades
   upgradeProtectedUntil DateTime? // Prevent immediate downgrades
-  referralCode       String?   @unique // For referral program
-  referredBy         String?   // Who referred this user
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  referralCode          String?   @unique // For referral program
+  referredBy            String? // Who referred this user
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Payment {
-  id                String   @id @default(cuid())
-  userId            String
-  stripePaymentId   String   @unique
-  stripeInvoiceId   String?
-  amount            Int      // in cents
-  currency          String   @default("usd")
-  status            String   // succeeded, failed, pending
-  description       String?
-  plan              String   // premium, enterprise
-  isYearly          Boolean  @default(false)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
+  id              String   @id @default(cuid())
+  userId          String
+  stripePaymentId String   @unique
+  stripeInvoiceId String?
+  amount          Int // in cents
+  currency        String   @default("usd")
+  status          String // succeeded, failed, pending
+  description     String?
+  plan            String // premium, enterprise
+  isYearly        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId])
   @@index([status])
   @@index([createdAt])
@@ -238,26 +260,26 @@ model ProcessedWebhookEvent {
   eventId   String   @unique
   type      String
   processed DateTime @default(now())
-  metadata  Json?    // Properly typed JSON for debugging
-  
+  metadata  Json? // Properly typed JSON for debugging
+
   @@index([type])
   @@index([processed])
 }
 
 // Usage tracking for features
 model UsageTracking {
-  id        String   @id @default(cuid())
-  userId    String
-  feature   String   // 'templates', 'platforms', 'exports', 'analytics'
-  count     Int      @default(0)
-  limit     Int
-  resetAt   DateTime
+  id         String   @id @default(cuid())
+  userId     String
+  feature    String // 'templates', 'platforms', 'exports', 'analytics'
+  count      Int      @default(0)
+  limit      Int
+  resetAt    DateTime
   lastUsedAt DateTime @default(now()) // Track when feature was last used
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@unique([userId, feature])
   @@index([userId])
   @@index([resetAt])
@@ -267,29 +289,29 @@ model UsageTracking {
 
 // Enhanced daily tasks with rich content
 model DailyTask {
-  id                String   @id @default(cuid())
-  roadmapId         String   // e.g., "youtube_gaming_phase1_week1"
-  platform          String   // youtube, tiktok, twitch
-  niche             String   // gaming, education, lifestyle, etc.
-  phase             Int
-  week              Int
-  dayRange          String   // e.g., "Day 1", "Days 3-4"
-  title             String
-  description       String   @db.Text
-  instructions      Json     // Detailed step-by-step instructions
-  timeEstimate      Int      // in minutes
-  difficulty        String   // beginner, intermediate, advanced
-  category          String   // content, technical, community, analytics, monetization
-  platformSpecific  Json     // { tips: [], bestPractices: [], commonMistakes: [] }
-  successMetrics    Json     // [{ metric, target, howToMeasure }]
-  resources         Json     // [{ type, title, url?, content? }]
-  prerequisites     Json?    // Array of prerequisite task IDs
-  relatedTasks      Json?    // Array of related task IDs
-  orderIndex        Int      // For sorting tasks within a day
-  metadata          Json?    // Additional metadata from research docs
-  
+  id               String @id @default(cuid())
+  roadmapId        String // e.g., "youtube_gaming_phase1_week1"
+  platform         String // youtube, tiktok, twitch
+  niche            String // gaming, education, lifestyle, etc.
+  phase            Int
+  week             Int
+  dayRange         String // e.g., "Day 1", "Days 3-4"
+  title            String
+  description      String @db.Text
+  instructions     Json // Detailed step-by-step instructions
+  timeEstimate     Int // in minutes
+  difficulty       String // beginner, intermediate, advanced
+  category         String // content, technical, community, analytics, monetization
+  platformSpecific Json // { tips: [], bestPractices: [], commonMistakes: [] }
+  successMetrics   Json // [{ metric, target, howToMeasure }]
+  resources        Json // [{ type, title, url?, content? }]
+  prerequisites    Json? // Array of prerequisite task IDs
+  relatedTasks     Json? // Array of related task IDs
+  orderIndex       Int // For sorting tasks within a day
+  metadata         Json? // Additional metadata from research docs
+
   completions TaskCompletion[]
-  
+
   @@index([roadmapId])
   @@index([platform, niche])
   @@index([phase, week])
@@ -301,45 +323,46 @@ model TaskCompletion {
   userId      String
   taskId      String
   completedAt DateTime @default(now())
-  timeSpent   Int?     // in minutes
+  timeSpent   Int? // in minutes
   notes       String?  @db.Text
-  quality     Int?     // 1-5 rating
+  quality     Int? // 1-5 rating
   skipped     Boolean  @default(false)
-  
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   task DailyTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  
+
   @@unique([userId, taskId])
   @@index([userId])
   @@index([completedAt])
+  @@index([userId, completedAt]) // For user task history
 }
 
 // Milestone definitions for achievements
 model Milestone {
-  id           String   @id @default(cuid())
-  name         String
-  description  String   @db.Text
-  requirement  Json     // { type: 'task_completion' | 'metric_achievement' | 'time_based', value }
-  reward       Json     // { type: 'badge' | 'feature_unlock' | 'template_access', value }
-  celebration  Json     // { type: 'modal' | 'confetti' | 'notification', message, sharePrompt? }
-  platform     String?  // null for cross-platform milestones
-  niche        String?  // null for general milestones
-  orderIndex   Int      // For displaying in order
-  
+  id          String  @id @default(cuid())
+  name        String
+  description String  @db.Text
+  requirement Json // { type: 'task_completion' | 'metric_achievement' | 'time_based', value }
+  reward      Json // { type: 'badge' | 'feature_unlock' | 'template_access', value }
+  celebration Json // { type: 'modal' | 'confetti' | 'notification', message, sharePrompt? }
+  platform    String? // null for cross-platform milestones
+  niche       String? // null for general milestones
+  orderIndex  Int // For displaying in order
+
   achievements MilestoneAchievement[]
 }
 
 // Track user milestone achievements
 model MilestoneAchievement {
-  id           String   @id @default(cuid())
-  userId       String
-  milestoneId  String
-  achievedAt   DateTime @default(now())
-  shared       Boolean  @default(false)
-  
-  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String   @id @default(cuid())
+  userId      String
+  milestoneId String
+  achievedAt  DateTime @default(now())
+  shared      Boolean  @default(false)
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   milestone Milestone @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
-  
+
   @@unique([userId, milestoneId])
 }
 
@@ -347,43 +370,45 @@ model MilestoneAchievement {
 model ContentRecommendation {
   id          String   @id @default(cuid())
   userId      String
-  contentType String   // task, template, tip, resource, milestone
-  contentId   String   // ID of the recommended content
-  score       Float    // Recommendation score (0-1)
-  reason      String   // Why this was recommended
+  contentType String // task, template, tip, resource, milestone
+  contentId   String // ID of the recommended content
+  score       Float // Recommendation score (0-1)
+  reason      String // Why this was recommended
   shown       Boolean  @default(false)
   engaged     Boolean  @default(false)
   dismissed   Boolean  @default(false)
   createdAt   DateTime @default(now())
-  
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId, shown])
   @@index([createdAt])
+  @@index([userId, contentType, shown]) // For type-specific recommendations
 }
 
 // Store generated templates
 model GeneratedTemplate {
-  id         String   @id @default(cuid())
-  userId     String
-  category   String   // video_script, thumbnail, description, etc.
-  type       String   // hook, structure, outro, etc.
-  title      String
-  content    Json     // The actual template content with variables
-  variables  Json     // Variables used in the template
-  platform   String
-  niche      String
-  isPublic   Boolean  @default(false) // For sharing templates
-  uses       Int      @default(0)
-  rating     Float?   // Average rating from users
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  
+  id        String   @id @default(cuid())
+  userId    String
+  category  String // video_script, thumbnail, description, etc.
+  type      String // hook, structure, outro, etc.
+  title     String
+  content   Json // The actual template content with variables
+  variables Json // Variables used in the template
+  platform  String
+  niche     String
+  isPublic  Boolean  @default(false) // For sharing templates
+  uses      Int      @default(0)
+  rating    Float? // Average rating from users
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId])
   @@index([category, type])
   @@index([platform, niche])
+  @@index([isPublic, rating]) // For discovering popular templates
 }
 
 // Template ratings for community feedback
@@ -391,10 +416,10 @@ model TemplateRating {
   id         String   @id @default(cuid())
   userId     String
   templateId String
-  rating     Int      // 1-5
+  rating     Int // 1-5
   review     String?  @db.Text
   createdAt  DateTime @default(now())
-  
+
   @@unique([userId, templateId])
   @@index([templateId])
 }
@@ -404,15 +429,15 @@ model QuickTip {
   id         String   @id @default(cuid())
   title      String
   content    String   @db.Text
-  category   String   // growth, engagement, monetization, technical
-  platform   String?  // null for general tips
-  niche      String?  // null for general tips
-  difficulty String   // beginner, intermediate, advanced
-  tags       Json     // Array of tags for searchability
-  source     String?  // Reference to research doc
+  category   String // growth, engagement, monetization, technical
+  platform   String? // null for general tips
+  niche      String? // null for general tips
+  difficulty String // beginner, intermediate, advanced
+  tags       Json // Array of tags for searchability
+  source     String? // Reference to research doc
   isActive   Boolean  @default(true)
   createdAt  DateTime @default(now())
-  
+
   @@index([platform, niche])
   @@index([category])
   @@index([tags])
@@ -422,16 +447,17 @@ model QuickTip {
 model ContentEngagement {
   id          String   @id @default(cuid())
   userId      String
-  contentType String   // task, template, tip, resource
+  contentType String // task, template, tip, resource
   contentId   String
-  action      String   // viewed, completed, shared, saved, dismissed
-  duration    Int?     // Time spent in seconds
+  action      String // viewed, completed, shared, saved, dismissed
+  duration    Int? // Time spent in seconds
   createdAt   DateTime @default(now())
-  
+
   @@index([userId, contentType])
   @@index([contentId])
   @@index([createdAt])
   @@index([action])
+  @@index([userId, createdAt]) // For user activity timeline
 }
 
 // =============================================
@@ -440,25 +466,25 @@ model ContentEngagement {
 
 // Content Calendar
 model CalendarEvent {
-  id              String   @id @default(cuid())
-  userId          String
-  title           String
-  description     String?  @db.Text
-  platform        String
-  contentType     String   // video, short, stream, post
-  status          String   // idea, draft, ready, scheduled, published
-  scheduledDate   DateTime
-  publishedDate   DateTime?
-  tags            String[]
-  seriesId        String?
-  color           String?  // For visual organization
-  duration        Int?     // Duration in minutes (for videos/streams)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  series          ContentSeries? @relation(fields: [seriesId], references: [id], onDelete: SetNull)
-  
+  id            String    @id @default(cuid())
+  userId        String
+  title         String
+  description   String?   @db.Text
+  platform      String
+  contentType   String // video, short, stream, post
+  status        String // idea, draft, ready, scheduled, published
+  scheduledDate DateTime
+  publishedDate DateTime?
+  tags          String[]
+  seriesId      String?
+  color         String? // For visual organization
+  duration      Int? // Duration in minutes (for videos/streams)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  series ContentSeries? @relation(fields: [seriesId], references: [id], onDelete: SetNull)
+
   @@index([userId, scheduledDate])
   @@index([platform, status])
   @@index([seriesId])
@@ -466,76 +492,76 @@ model CalendarEvent {
 
 // Content Series for recurring content
 model ContentSeries {
-  id              String   @id @default(cuid())
-  userId          String
-  name            String
-  description     String?  @db.Text
-  platform        String
-  frequency       String   // daily, weekly, biweekly, monthly
-  defaultDay      Int?     // 0-6 for day of week
-  defaultTime     String?  // HH:MM format
-  isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  
-  user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  events          CalendarEvent[]
-  
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?  @db.Text
+  platform    String
+  frequency   String // daily, weekly, biweekly, monthly
+  defaultDay  Int? // 0-6 for day of week
+  defaultTime String? // HH:MM format
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  user   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events CalendarEvent[]
+
   @@index([userId, isActive])
 }
 
 // Content Ideas Generator
 model ContentIdea {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   userId          String
   title           String
-  description     String   @db.Text
-  hook            String?  @db.Text
+  description     String    @db.Text
+  hook            String?   @db.Text
   platform        String
   contentType     String
-  category        String   // trending, evergreen, seasonal, series
-  status          String   @default("new") // new, saved, used, discarded
-  rating          Int?     // User rating 1-5
-  source          String?  // trending, generated, user, template
-  implemented     Boolean  @default(false)
+  category        String // trending, evergreen, seasonal, series
+  status          String    @default("new") // new, saved, used, discarded
+  rating          Int? // User rating 1-5
+  source          String? // trending, generated, user, template
+  implemented     Boolean   @default(false)
   implementedAt   DateTime?
-  calendarEventId String?  // Link to calendar when implemented
-  tags            String[] @default([])
-  notes           String?  @db.Text
-  metadata        Json?    // Additional metadata (difficulty, engagement, format, etc)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  calendarEventId String? // Link to calendar when implemented
+  tags            String[]  @default([])
+  notes           String?   @db.Text
+  metadata        Json? // Additional metadata (difficulty, engagement, format, etc)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId, status])
   @@index([platform, category])
 }
 
 // Community Profile
 model CommunityProfile {
-  id                    String   @id @default(cuid())
-  userId                String   @unique
-  displayName           String
-  bio                   String?  @db.Text
-  avatar                String?
-  platforms             String[] // Array of platform IDs
-  niche                 String
-  level                 Int      @default(1)
-  isPublic              Boolean  @default(false)
-  allowMessages         Boolean  @default(false)
-  allowCollabRequests   Boolean  @default(true)
-  socialLinks           Json?    // { twitter: "", instagram: "", etc }
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-  
-  user                  User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  sentPartnerships      Partnership[] @relation("PartnershipUser1")
-  receivedPartnerships  Partnership[] @relation("PartnershipUser2")
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  displayName         String
+  bio                 String?  @db.Text
+  avatar              String?
+  platforms           String[] // Array of platform IDs
+  niche               String
+  level               Int      @default(1)
+  isPublic            Boolean  @default(false)
+  allowMessages       Boolean  @default(false)
+  allowCollabRequests Boolean  @default(true)
+  socialLinks         Json? // { twitter: "", instagram: "", etc }
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user                    User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sentPartnerships        Partnership[]            @relation("PartnershipUser1")
+  receivedPartnerships    Partnership[]            @relation("PartnershipUser2")
   challengeParticipations ChallengeParticipation[]
-  successStories        SuccessStory[]
-  collaborationRequests CollaborationRequest[] @relation("CollabRequester")
-  collaborationOffers   CollaborationRequest[] @relation("CollabReceiver")
-  
+  successStories          SuccessStory[]
+  collaborationRequests   CollaborationRequest[]   @relation("CollabRequester")
+  collaborationOffers     CollaborationRequest[]   @relation("CollabReceiver")
+
   @@index([isPublic])
   @@index([niche])
 }
@@ -545,118 +571,128 @@ model Challenge {
   id              String   @id @default(cuid())
   title           String
   description     String   @db.Text
-  type            String   // growth, content, engagement, consistency
-  platform        String?  // null for all platforms
+  type            String // growth, content, engagement, consistency
+  platform        String? // null for all platforms
   startDate       DateTime
   endDate         DateTime
-  difficulty      String   // beginner, intermediate, advanced
-  requirements    Json     // Specific challenge requirements
-  rewards         Json     // Points, badges, features to unlock
+  difficulty      String // beginner, intermediate, advanced
+  requirements    Json // Specific challenge requirements
+  rewards         Json // Points, badges, features to unlock
   maxParticipants Int?
   isActive        Boolean  @default(true)
   createdAt       DateTime @default(now())
-  
-  participants    ChallengeParticipation[]
-  
+
+  participants ChallengeParticipation[]
+
   @@index([isActive, startDate])
   @@index([type, platform])
 }
 
 // Challenge Participation
 model ChallengeParticipation {
-  id              String   @id @default(cuid())
-  challengeId     String
-  profileId       String
-  status          String   @default("active") // active, completed, abandoned
-  progress        Json     // Track specific progress metrics
-  startedAt       DateTime @default(now())
-  completedAt     DateTime?
-  
-  challenge       Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
-  profile         CommunityProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  
+  id          String    @id @default(cuid())
+  challengeId String
+  profileId   String
+  status      String    @default("active") // active, completed, abandoned
+  progress    Json // Track specific progress metrics
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  challenge Challenge        @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  profile   CommunityProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
   @@unique([challengeId, profileId])
   @@index([status])
 }
 
 // Accountability Partnerships
 model Partnership {
-  id              String   @id @default(cuid())
-  user1Id         String
-  user2Id         String
-  status          String   @default("pending") // pending, active, paused, ended
-  goals           Json?    // Shared goals and commitments
+  id               String    @id @default(cuid())
+  user1Id          String
+  user2Id          String
+  status           String    @default("pending") // pending, active, paused, ended
+  goals            Json? // Shared goals and commitments
   checkInFrequency String? // daily, weekly, biweekly
-  lastCheckIn     DateTime?
-  startedAt       DateTime @default(now())
-  endedAt         DateTime?
-  
-  user1           CommunityProfile @relation("PartnershipUser1", fields: [user1Id], references: [id], onDelete: Cascade)
-  user2           CommunityProfile @relation("PartnershipUser2", fields: [user2Id], references: [id], onDelete: Cascade)
-  
+  lastCheckIn      DateTime?
+  startedAt        DateTime  @default(now())
+  endedAt          DateTime?
+
+  user1 CommunityProfile @relation("PartnershipUser1", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2 CommunityProfile @relation("PartnershipUser2", fields: [user2Id], references: [id], onDelete: Cascade)
+
   @@unique([user1Id, user2Id])
   @@index([status])
 }
 
 // Success Stories
 model SuccessStory {
-  id              String   @id @default(cuid())
-  profileId       String
-  title           String
-  content         String   @db.Text
-  metrics         Json     // Growth numbers, milestones achieved
-  platform        String
-  timeframe       String   // How long it took
-  tips            String[] // Key tips for others
-  isApproved      Boolean  @default(false)
-  isFeatured      Boolean  @default(false)
-  likes           Int      @default(0)
-  createdAt       DateTime @default(now())
-  
-  profile         CommunityProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  
+  id         String   @id @default(cuid())
+  profileId  String
+  title      String
+  content    String   @db.Text
+  metrics    Json // Growth numbers, milestones achieved
+  platform   String
+  timeframe  String // How long it took
+  tips       String[] // Key tips for others
+  isApproved Boolean  @default(false)
+  isFeatured Boolean  @default(false)
+  likes      Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  profile CommunityProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
   @@index([isApproved, isFeatured])
   @@index([platform])
 }
 
 // Collaboration Requests
 model CollaborationRequest {
-  id              String   @id @default(cuid())
-  requesterId     String
-  receiverId      String
-  type            String   // collab, guest, series, challenge
-  title           String
-  description     String   @db.Text
-  platform        String
-  status          String   @default("pending") // pending, accepted, declined, completed
-  scheduledDate   DateTime?
-  createdAt       DateTime @default(now())
-  respondedAt     DateTime?
-  
-  requester       CommunityProfile @relation("CollabRequester", fields: [requesterId], references: [id], onDelete: Cascade)
-  receiver        CommunityProfile @relation("CollabReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
-  
+  id            String    @id @default(cuid())
+  requesterId   String
+  receiverId    String
+  type          String // collab, guest, series, challenge
+  title         String
+  description   String    @db.Text
+  platform      String
+  status        String    @default("pending") // pending, accepted, declined, completed
+  scheduledDate DateTime?
+  createdAt     DateTime  @default(now())
+  respondedAt   DateTime?
+
+  requester CommunityProfile @relation("CollabRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  receiver  CommunityProfile @relation("CollabReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
   @@index([status])
   @@index([requesterId, receiverId])
 }
 
 // In-app Notifications
 model Notification {
-  id              String   @id @default(cuid())
-  userId          String
-  type            String   // task_reminder, milestone, streak, community, collab
-  title           String
-  message         String
-  actionUrl       String?
-  actionLabel     String?
-  priority        String   @default("normal") // low, normal, high, urgent
-  isRead          Boolean  @default(false)
-  readAt          DateTime?
-  createdAt       DateTime @default(now())
-  expiresAt       DateTime?
-  
-  user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id          String    @id @default(cuid())
+  userId      String
+  type        String // task_reminder, milestone, streak, community, collab
+  title       String
+  message     String
+  actionUrl   String?
+  actionLabel String?
+  priority    String    @default("normal") // low, normal, high, urgent
+  isRead      Boolean   @default(false)
+  readAt      DateTime?
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime?
+
+  user                   User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  CommunityPost          CommunityPost?        @relation(fields: [communityPostId], references: [id])
+  communityPostId        String?
+  CommunityReply         CommunityReply?       @relation(fields: [communityReplyId], references: [id])
+  communityReplyId       String?
+  CreatorCollaboration   CreatorCollaboration? @relation(fields: [creatorCollaborationId], references: [id])
+  creatorCollaborationId String?
+  CommunityEvent         CommunityEvent?       @relation(fields: [communityEventId], references: [id])
+  communityEventId       String?
+  CommunityChallenge     CommunityChallenge?   @relation(fields: [communityChallengeId], references: [id])
+  communityChallengeId   String?
+
   @@index([userId, isRead])
   @@index([type, priority])
   @@index([createdAt])
@@ -667,21 +703,21 @@ model Resource {
   id          String   @id @default(cuid())
   title       String
   description String   @db.Text
-  category    String   // guides, tools, templates, tutorials, community, analytics, monetization
-  type        String   // article, video, tool, template, course, community, service
+  category    String // guides, tools, templates, tutorials, community, analytics, monetization
+  type        String // article, video, tool, template, course, community, service
   url         String?
   content     String?  @db.Text
-  platform    String?  // youtube, tiktok, twitch, or null for cross-platform
+  platform    String? // youtube, tiktok, twitch, or null for cross-platform
   isPremium   Boolean  @default(false)
   tags        String[]
-  metadata    Json?    // Additional data like author, difficulty, etc.
+  metadata    Json? // Additional data like author, difficulty, etc.
   views       Int      @default(0)
-  rating      Float?   // Average rating
+  rating      Float? // Average rating
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   ratings ResourceRating[]
-  
+
   @@index([category])
   @@index([platform])
   @@index([isPremium])
@@ -692,14 +728,14 @@ model ResourceRating {
   id         String   @id @default(cuid())
   userId     String
   resourceId String
-  rating     Int      // 1-5
+  rating     Int // 1-5
   review     String?  @db.Text
   helpful    Int      @default(0) // Helpful votes
   createdAt  DateTime @default(now())
-  
+
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
-  
+
   @@unique([userId, resourceId])
   @@index([resourceId])
 }
@@ -710,13 +746,13 @@ model ResourceRating {
 model AIConversation {
   id        String   @id @default(cuid())
   userId    String
-  messages  Json     // Array of conversation messages
-  context   Json     // Conversation context and metadata
+  messages  Json // Array of conversation messages
+  context   Json // Conversation context and metadata
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId])
   @@index([updatedAt])
 }
@@ -725,54 +761,54 @@ model AIConversation {
 model GeneratedContent {
   id        String   @id @default(cuid())
   userId    String
-  type      String   // bio, content-idea, caption, script, thumbnail, etc.
+  type      String // bio, content-idea, caption, script, thumbnail, etc.
   prompt    String   @db.Text
-  content   Json     // The generated content
-  metadata  Json?    // Additional metadata (platform, niche, etc.)
-  rating    Int?     // User rating of the generated content
+  content   Json // The generated content
+  metadata  Json? // Additional metadata (platform, niche, etc.)
+  rating    Int? // User rating of the generated content
   used      Boolean  @default(false) // Whether the user used this content
   createdAt DateTime @default(now())
-  
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId, type])
   @@index([createdAt])
 }
 
 // User AI Profile for personalization
 model UserAIProfile {
-  id               String   @id @default(cuid())
-  userId           String   @unique
-  creatorLevel     String   // beginner, intermediate, advanced
-  equipment        Json     // Array of equipment owned/planned
-  goals            String[] // Array of creator goals
-  challenges       String[] // Array of challenges faced
-  timeCommitment   String   // hours per week available
-  contentStyle     String?  // Preferred content style
-  personalityTraits String[] // For tone matching
-  aiAssessment     Json?    // Full AI assessment data
-  onboardingCompleted Boolean @default(false) // Track if onboarding is complete
-  onboardingData   Json?    // Full onboarding responses
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  creatorLevel        String // beginner, intermediate, advanced
+  equipment           Json // Array of equipment owned/planned
+  goals               String[] // Array of creator goals
+  challenges          String[] // Array of challenges faced
+  timeCommitment      String // hours per week available
+  contentStyle        String? // Preferred content style
+  personalityTraits   String[] // For tone matching
+  aiAssessment        Json? // Full AI assessment data
+  onboardingCompleted Boolean  @default(false) // Track if onboarding is complete
+  onboardingData      Json? // Full onboarding responses
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // Dynamic Roadmaps generated by AI
 model DynamicRoadmap {
-  id           String   @id @default(cuid())
-  userId       String
-  title        String
-  description  String   @db.Text
-  phases       Json     // Array of customized phases
-  customizedFor Json    // User profile snapshot when generated
-  adjustments  Json     // Array of adjustments made over time
-  isActive     Boolean  @default(true)
-  generatedAt  DateTime @default(now())
-  
+  id            String   @id @default(cuid())
+  userId        String
+  title         String
+  description   String   @db.Text
+  phases        Json // Array of customized phases
+  customizedFor Json // User profile snapshot when generated
+  adjustments   Json // Array of adjustments made over time
+  isActive      Boolean  @default(true)
+  generatedAt   DateTime @default(now())
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId, isActive])
 }
 
@@ -780,20 +816,528 @@ model DynamicRoadmap {
 model AIRecommendation {
   id              String   @id @default(cuid())
   userId          String
-  type            String   // equipment, content, strategy, task
+  type            String // equipment, content, strategy, task
   title           String
   description     String   @db.Text
-  priority        String   // high, medium, low
+  priority        String // high, medium, low
   reason          String   @db.Text // Why this was recommended
-  actionItems     Json?    // Specific action items
-  estimatedImpact String?  // Expected impact description
-  timeframe       String?  // When to implement
+  actionItems     Json? // Specific action items
+  estimatedImpact String? // Expected impact description
+  timeframe       String? // When to implement
   implemented     Boolean  @default(false)
   dismissed       Boolean  @default(false)
   createdAt       DateTime @default(now())
-  
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId, type])
   @@index([implemented, dismissed])
+}
+
+// User Journey State tracking for AI guidance
+model UserJourneyState {
+  id                  String    @id @default(cuid())
+  userId              String    @unique
+  currentStage        String // discovery, foundation, growth, scale, mastery
+  currentFocus        String? // Current area of focus (e.g., "setting up channel", "first video", "growing audience")
+  completedMilestones Json // Array of completed journey milestones
+  activeGoals         Json // Current focus areas and goals
+  aiInsights          Json // Accumulated AI insights about user preferences and behavior
+  nextSteps           Json // AI-generated next steps and recommendations
+  journeyMetadata     Json? // Additional journey tracking data
+  lastGuidanceAt      DateTime? // Last time AI provided guidance
+  guidanceFrequency   String    @default("adaptive") // adaptive, daily, weekly, minimal
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([currentStage])
+  @@index([updatedAt])
+}
+
+// AI Interaction tracking for learning and improvement
+model AIInteraction {
+  id              String   @id @default(cuid())
+  userId          String
+  interactionType String // guidance, suggestion, coaching, analysis, tutorial, celebration
+  context         Json // Page, feature, user state when interaction occurred
+  interaction     Json // What AI suggested/did
+  userResponse    String? // accepted, dismissed, modified, completed
+  responseData    Json? // Additional response data (e.g., modified values)
+  impact          Json? // Measured impact of the interaction
+  sessionId       String? // Group related interactions
+  metadata        Json? // Additional tracking data
+  createdAt       DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, interactionType])
+  @@index([userId, createdAt])
+  @@index([sessionId])
+  @@index([userResponse])
+}
+
+// Conversation Memory Models for Persistent AI Assistant
+model ConversationMemory {
+  id               String   @id @default(cuid())
+  userId           String
+  conversationId   String   @unique
+  messages         Json // Array of messages with roles and content
+  summary          String?  @db.Text // AI-generated summary of the conversation
+  keyInsights      Json? // Important points extracted from conversation
+  userPreferences  Json? // Learned preferences from conversation
+  topicTags        String[] // Topics discussed for quick retrieval
+  emotionalContext Json? // User's emotional state tracking
+  actionItems      Json? // Extracted action items and follow-ups
+  lastActiveAt     DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, lastActiveAt])
+  @@index([topicTags])
+}
+
+model AIPersonality {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  personalityType    String   @default("guide") // guide, coach, cheerleader, analyst, mentor
+  communicationStyle Json // formal/casual, encouraging/direct, detailed/concise
+  adaptations        Json // Learned adaptations based on user interactions
+  responsePatterns   Json // Common response patterns and templates
+  vocabularyPrefs    Json? // User's preferred terminology and language
+  topicExpertise     Json? // Areas where AI has provided most value
+  interactionStats   Json? // Statistics about interaction patterns
+  lastUpdated        DateTime @updatedAt
+  createdAt          DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// =============================================
+// Sprint 5: Community & Collaboration Features
+// =============================================
+
+// Community Posts and Forums
+model CommunityPost {
+  id             String   @id @default(cuid())
+  title          String
+  content        String   @db.Text
+  category       String // general, help, showcase, feedback, collaboration, resources, tutorials, announcements
+  tags           String[]
+  authorId       String
+  likes          Int      @default(0)
+  likedBy        String[] // Array of user IDs who liked
+  replies        Int      @default(0)
+  views          Int      @default(0)
+  isPinned       Boolean  @default(false)
+  isLocked       Boolean  @default(false)
+  isFeatured     Boolean  @default(false)
+  attachments    Json? // Array of attachment objects
+  lastActivityAt DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  author        User             @relation("UserPosts", fields: [authorId], references: [id], onDelete: Cascade)
+  postReplies   CommunityReply[]
+  notifications Notification[]
+
+  @@index([authorId])
+  @@index([category])
+  @@index([tags])
+  @@index([lastActivityAt])
+}
+
+model CommunityReply {
+  id          String   @id @default(cuid())
+  postId      String
+  authorId    String
+  content     String   @db.Text
+  likes       Int      @default(0)
+  likedBy     String[] // Array of user IDs who liked
+  attachments Json? // Array of attachment objects
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  post          CommunityPost  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author        User           @relation("UserReplies", fields: [authorId], references: [id], onDelete: Cascade)
+  notifications Notification[]
+
+  @@index([postId])
+  @@index([authorId])
+}
+
+// Creator Collaborations
+model CreatorCollaboration {
+  id            String   @id @default(cuid())
+  creatorId     String
+  title         String
+  description   String   @db.Text
+  type          String // video, stream, podcast, series, event, product, service, other
+  status        String // open, in_progress, completed, cancelled
+  requirements  String[]
+  deliverables  String[]
+  timeline      String
+  compensation  String?
+  location      String? // remote, specific location
+  niches        String[]
+  platforms     String[]
+  minFollowers  Int?
+  tags          String[]
+  applicants    Json     @default("[]") // Array of applicant objects
+  collaborators String[] // Array of user IDs
+  milestones    Json? // Array of milestone objects
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  creator       User                       @relation("CreatorCollaborations", fields: [creatorId], references: [id], onDelete: Cascade)
+  applications  CollaborationApplication[]
+  notifications Notification[]
+
+  @@index([creatorId])
+  @@index([status])
+  @@index([type])
+  @@index([niches])
+}
+
+model CollaborationApplication {
+  id              String   @id @default(cuid())
+  collaborationId String
+  applicantId     String
+  message         String   @db.Text
+  experience      String   @db.Text
+  portfolio       String[]
+  status          String // pending, accepted, rejected
+  reviewNotes     String?  @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  collaboration CreatorCollaboration @relation(fields: [collaborationId], references: [id], onDelete: Cascade)
+  applicant     User                 @relation("CollaborationApplications", fields: [applicantId], references: [id], onDelete: Cascade)
+
+  @@unique([collaborationId, applicantId])
+  @@index([applicantId])
+  @@index([status])
+}
+
+// Mentorship System
+model MentorshipProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  isMentor     Boolean  @default(false)
+  expertise    String[]
+  bio          String   @db.Text
+  experience   String // years of experience
+  achievements String[]
+  availability Json // Availability schedule
+  sessionRate  Float? // Cost per session (null for free)
+  languages    String[]
+  timezone     String
+  style        String // teaching style: structured, flexible, hands-on, theoretical
+  specialties  String[]
+  maxMentees   Int      @default(5)
+  isActive     Boolean  @default(true)
+  rating       Float    @default(0)
+  reviewCount  Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mentorMatches MentorshipMatch[]   @relation("MentorMatches")
+  menteeMatches MentorshipMatch[]   @relation("MenteeMatches")
+  sessions      MentorshipSession[]
+
+  @@index([expertise])
+  @@index([isActive])
+}
+
+model MentorshipMatch {
+  id         String   @id @default(cuid())
+  mentorId   String
+  menteeId   String
+  status     String // pending, active, completed, cancelled
+  goals      String[]
+  duration   Json // Expected duration and commitment
+  progress   Json? // Progress tracking
+  feedback   Json? // Mutual feedback
+  matchScore Float? // AI-calculated compatibility score
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  mentor MentorshipProfile @relation("MentorMatches", fields: [mentorId], references: [id])
+  mentee MentorshipProfile @relation("MenteeMatches", fields: [menteeId], references: [id])
+
+  @@unique([mentorId, menteeId])
+  @@index([status])
+}
+
+model MentorshipSession {
+  id          String   @id @default(cuid())
+  matchId     String
+  mentorId    String
+  scheduledAt DateTime
+  duration    Int // Duration in minutes
+  type        String // video_call, chat, async_feedback, workshop
+  agenda      String[]
+  notes       String?  @db.Text
+  recording   String? // URL to recording if applicable
+  feedback    Json? // Post-session feedback
+  status      String // scheduled, completed, cancelled, no_show
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  mentor MentorshipProfile @relation(fields: [mentorId], references: [id])
+
+  @@index([matchId])
+  @@index([scheduledAt])
+  @@index([status])
+}
+
+// Community Events
+model CommunityEvent {
+  id           String   @id @default(cuid())
+  hostId       String
+  title        String
+  description  String   @db.Text
+  type         String // workshop, webinar, meetup, stream, q&a, conference, challenge, other
+  startTime    DateTime
+  endTime      DateTime
+  timezone     String
+  location     Json // { type: 'online' | 'in_person' | 'hybrid', platform?, url?, address? }
+  capacity     Int?
+  attendees    String[] // Array of user IDs
+  waitlist     String[] // Array of user IDs
+  requirements String[]
+  agenda       Json? // Array of agenda items
+  resources    Json? // Links to resources, materials
+  recording    String? // URL to recording after event
+  tags         String[]
+  status       String // upcoming, live, completed, cancelled
+  coHosts      String[] // Array of user IDs
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  host          User           @relation("EventHost", fields: [hostId], references: [id])
+  registrations Registration[]
+  notifications Notification[]
+
+  @@index([hostId])
+  @@index([startTime])
+  @@index([type])
+  @@index([status])
+}
+
+model Registration {
+  id        String   @id @default(cuid())
+  eventId   String
+  userId    String
+  status    String // registered, waitlisted, attended, no_show, cancelled
+  createdAt DateTime @default(now())
+
+  event CommunityEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@index([userId])
+  @@index([status])
+}
+
+// Community Challenges
+model CommunityChallenge {
+  id                 String   @id @default(cuid())
+  creatorId          String
+  title              String
+  description        String   @db.Text
+  type               String // content, growth, creativity, engagement, technical, educational, community
+  difficulty         String // beginner, intermediate, advanced
+  rules              String[]
+  prizes             Json? // Array of prize objects
+  startDate          DateTime
+  endDate            DateTime
+  submissionDeadline DateTime
+  requirements       String[]
+  judgingCriteria    Json // Array of criteria with weights
+  participants       String[] // Array of user IDs
+  tags               String[]
+  status             String // upcoming, active, judging, completed
+  isFeatured         Boolean  @default(false)
+  winners            Json? // Array of winner objects
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  creator       User                   @relation("ChallengeCreator", fields: [creatorId], references: [id])
+  submissions   ChallengeSubmission[]
+  leaderboard   ChallengeLeaderboard[]
+  notifications Notification[]
+
+  @@index([creatorId])
+  @@index([status])
+  @@index([type])
+  @@index([startDate, endDate])
+}
+
+model ChallengeSubmission {
+  id          String   @id @default(cuid())
+  challengeId String
+  userId      String
+  title       String
+  description String   @db.Text
+  content     Json // Submission content (URLs, text, etc.)
+  score       Float? // Judge score
+  feedback    Json? // Judge feedback
+  status      String // submitted, under_review, approved, rejected
+  submittedAt DateTime @default(now())
+
+  challenge CommunityChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([challengeId, userId])
+  @@index([userId])
+  @@index([status])
+}
+
+model ChallengeLeaderboard {
+  id          String   @id @default(cuid())
+  challengeId String
+  userId      String
+  score       Float
+  rank        Int
+  metadata    Json? // Additional scoring details
+  updatedAt   DateTime @updatedAt
+
+  challenge CommunityChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([challengeId, userId])
+  @@index([challengeId, rank])
+}
+
+// Update User model relations (add these to the existing User model)
+// posts              CommunityPost[]            @relation("UserPosts")
+// replies            CommunityReply[]           @relation("UserReplies")
+// collaborations     CreatorCollaboration[]     @relation("CreatorCollaborations")
+// applications       CollaborationApplication[] @relation("CollaborationApplications")
+// hostedEvents       CommunityEvent[]           @relation("EventHost")
+// eventRegistrations Registration[]
+// challenges         CommunityChallenge[]       @relation("ChallengeCreator")
+// submissions        ChallengeSubmission[]
+
+// Update Notification model (add these notification types)
+// - new_reply: Someone replied to your post
+// - post_liked: Your post was liked
+// - collaboration_application: New application for your collaboration
+// - collaboration_accepted: Your collaboration application was accepted
+// - mentorship_request: New mentorship request
+// - event_reminder: Upcoming event reminder
+// - challenge_update: Challenge status update
+// - community_mention: You were mentioned in a post/reply
+
+// =============================================
+// Sprint 7: Platform Integrations
+// =============================================
+
+// Platform connections for OAuth
+model PlatformConnection {
+  id           String    @id @default(cuid())
+  userId       String
+  platform     String // youtube, tiktok, instagram, twitter
+  accountId    String // Platform-specific account ID
+  accountName  String?
+  accountImage String?
+  accessToken  String    @db.Text
+  refreshToken String?   @db.Text
+  tokenExpiry  DateTime?
+  scopes       String[]
+  isActive     Boolean   @default(true)
+  metadata     Json? // Platform-specific metadata (followers, etc.)
+  lastSyncedAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scheduledPosts ScheduledPost[]
+
+  @@unique([userId, platform, accountId])
+  @@index([userId, platform])
+  @@index([isActive])
+}
+
+// Scheduled posts for content automation
+model ScheduledPost {
+  id                   String    @id @default(cuid())
+  userId               String
+  platformConnectionId String
+  title                String?
+  content              String    @db.Text
+  media                Json? // Array of media objects { url, type, thumbnail?, etc. }
+  hashtags             String[]
+  scheduledFor         DateTime
+  timezone             String    @default("UTC")
+  status               String    @default("scheduled") // scheduled, publishing, published, failed, cancelled
+  publishedAt          DateTime?
+  platformPostId       String? // ID of the post on the platform
+  error                String?   @db.Text
+  retryCount           Int       @default(0)
+  maxRetries           Int       @default(3)
+  contentType          String // post, video, short, story, reel, etc.
+  crossPost            Boolean   @default(false)
+  crossPostPlatforms   String[] // Platforms to cross-post to
+  metadata             Json? // Platform-specific settings
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platformConnection PlatformConnection @relation(fields: [platformConnectionId], references: [id], onDelete: Cascade)
+
+  @@index([userId, scheduledFor])
+  @@index([platformConnectionId, status])
+  @@index([scheduledFor, status])
+}
+
+// =============================================
+// Sprint 8: Performance & Error Monitoring
+// =============================================
+
+// Error logging for production monitoring
+model ErrorLog {
+  id             String   @id @default(cuid())
+  userId         String?
+  message        String   @db.Text
+  stack          String?  @db.Text
+  componentStack String?  @db.Text
+  errorType      String // client, server, api, network, chunk, runtime
+  errorBoundary  String? // page, section, component
+  url            String?
+  userAgent      String?  @db.Text
+  metadata       Json? // Additional error metadata
+  createdAt      DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([errorType])
+  @@index([createdAt])
+}
+
+// Performance metrics tracking
+model PerformanceMetric {
+  id            String   @id @default(cuid())
+  userId        String?
+  metricName    String // FCP, LCP, FID, CLS, TTFB, custom.*
+  value         Float
+  rating        String // good, needs-improvement, poor
+  componentName String?
+  url           String?
+  userAgent     String?  @db.Text
+  createdAt     DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([metricName])
+  @@index([rating])
+  @@index([createdAt])
+  @@index([url])
 }

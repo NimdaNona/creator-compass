@@ -2,20 +2,19 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { useAppStore } from '@/store/useAppStore';
 import { useDataSync } from '@/hooks/useDataSync';
 import { DashboardOverview } from '@/components/dashboard/DashboardOverview';
 import EnhancedRoadmapView from '@/components/roadmap/EnhancedRoadmapView';
-import { ProgressStats } from '@/components/dashboard/ProgressStats';
-import { TodaysTasks } from '@/components/dashboard/TodaysTasks';
-import { QuickActions } from '@/components/dashboard/QuickActions';
-import { AchievementsBanner } from '@/components/dashboard/AchievementsBanner';
-import { UsageWidget } from '@/components/dashboard/UsageWidget';
-import { AIInsights } from '@/components/dashboard/AIInsights';
 import { OnboardingGuide } from '@/components/dashboard/OnboardingGuide';
 import { DraggableContentCalendar } from '@/components/calendar/DraggableContentCalendar';
-import { AIAssistantWidget } from '@/components/ai/AIAssistantWidget';
+import { PersistentAIAssistant } from '@/components/ai/PersistentAIAssistant';
+import { ProactiveSuggestions } from '@/components/ai/ProactiveSuggestions';
 import { SyncStatus } from '@/components/dashboard/SyncStatus';
+import { WelcomeTour } from '@/components/dashboard/WelcomeTour';
+import { ContextualHelpTooltips } from '@/components/dashboard/ContextualHelpTooltips';
+import { AdaptiveDashboardLayout } from '@/components/dashboard/AdaptiveDashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,6 +32,7 @@ import {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { data: session } = useSession();
   const { 
     selectedPlatform, 
     selectedNiche, 
@@ -70,6 +70,12 @@ export default function DashboardPage() {
       <div className="container mx-auto px-4 py-8">
         {/* Onboarding Guide for New Users */}
         <OnboardingGuide />
+        
+        {/* Welcome Tour for First Dashboard Visit */}
+        <WelcomeTour />
+        
+        {/* Proactive AI Suggestions */}
+        <ProactiveSuggestions className="mb-6" />
         
         {/* Header */}
         <div className="mb-8">
@@ -113,41 +119,32 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Achievement Banner */}
-        <AchievementsBanner />
-
-        {/* Overview Stats */}
-        <ProgressStats />
-
-        {/* Main Content */}
-        <div className="grid lg:grid-cols-3 gap-8 mb-8">
-          {/* Today's Tasks */}
-          <div className="lg:col-span-2" data-today-tasks>
-            <TodaysTasks />
-          </div>
-          
-          {/* Quick Actions & Usage Sidebar */}
-          <div className="space-y-6">
-            <QuickActions />
-            <UsageWidget />
-            <AIInsights />
-          </div>
+        {/* Adaptive Dashboard Layout */}
+        <div className="mb-8">
+          {session?.user?.id ? (
+            <AdaptiveDashboardLayout userId={session.user.id} />
+          ) : (
+            <div className="text-center py-12">
+              <Compass className="h-8 w-8 animate-spin mx-auto mb-4" />
+              <p className="text-muted-foreground">Loading your personalized dashboard...</p>
+            </div>
+          )}
         </div>
 
         {/* Detailed Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="overview" className="flex items-center space-x-2">
+            <TabsTrigger value="overview" className="flex items-center justify-center space-x-1 sm:space-x-2">
               <TrendingUp className="w-4 h-4" />
-              <span>Overview</span>
+              <span className="hidden sm:inline">Overview</span>
             </TabsTrigger>
-            <TabsTrigger value="roadmap" className="flex items-center space-x-2">
+            <TabsTrigger value="roadmap" className="flex items-center justify-center space-x-1 sm:space-x-2">
               <Target className="w-4 h-4" />
-              <span>Roadmap</span>
+              <span className="hidden sm:inline">Roadmap</span>
             </TabsTrigger>
-            <TabsTrigger value="calendar" className="flex items-center space-x-2" data-calendar-tab>
+            <TabsTrigger value="calendar" className="flex items-center justify-center space-x-1 sm:space-x-2" data-calendar-tab>
               <Calendar className="w-4 h-4" />
-              <span>Calendar</span>
+              <span className="hidden sm:inline">Calendar</span>
             </TabsTrigger>
           </TabsList>
 
@@ -165,8 +162,11 @@ export default function DashboardPage() {
         </Tabs>
       </div>
       
-      {/* AI Assistant Widget */}
-      <AIAssistantWidget />
+      {/* Persistent AI Assistant */}
+      <PersistentAIAssistant defaultMinimized={false} />
+      
+      {/* Contextual Help Tooltips */}
+      <ContextualHelpTooltips />
     </div>
   );
 }

@@ -19,6 +19,7 @@ export function NotificationPanel({ onClose, onNotificationRead }: NotificationP
   const router = useRouter();
   const panelRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'unread'>('all');
+  const [isClosing, setIsClosing] = useState(false);
   const { 
     notifications, 
     loading, 
@@ -34,18 +35,25 @@ export function NotificationPanel({ onClose, onNotificationRead }: NotificationP
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
-        onClose();
+        handleClose();
       }
     }
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [onClose]);
+  }, []);
 
   // Fetch notifications on mount
   useEffect(() => {
     fetchNotifications(activeTab === 'unread');
   }, [fetchNotifications, activeTab]);
+
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+    }, 300);
+  };
 
   const handleMarkAllAsRead = async () => {
     await markAllAsRead();
@@ -63,7 +71,7 @@ export function NotificationPanel({ onClose, onNotificationRead }: NotificationP
 
   const handleSettingsClick = () => {
     router.push('/settings/notifications');
-    onClose();
+    handleClose();
   };
 
   const filteredNotifications = activeTab === 'unread' 
@@ -73,40 +81,47 @@ export function NotificationPanel({ onClose, onNotificationRead }: NotificationP
   return (
     <div
       ref={panelRef}
+      role="dialog"
+      aria-label="Notifications panel"
+      aria-modal="true"
       className={cn(
         "absolute right-0 top-12 w-96 bg-background border rounded-lg shadow-lg z-50",
-        "animate-in fade-in-0 zoom-in-95 slide-in-from-top-2"
+        "transition-all duration-300 ease-out",
+        isClosing 
+          ? "opacity-0 scale-95 translate-y-2" 
+          : "opacity-100 scale-100 translate-y-0 animate-in fade-in-0 zoom-in-95 slide-in-from-top-2"
       )}
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b">
-        <h3 className="font-semibold text-lg">Notifications</h3>
+        <h3 className="font-semibold text-lg" id="notifications-title">Notifications</h3>
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             size="icon"
             className="h-8 w-8"
             onClick={handleMarkAllAsRead}
-            title="Mark all as read"
+            aria-label="Mark all notifications as read"
           >
-            <CheckCheck className="h-4 w-4" />
+            <CheckCheck className="h-4 w-4" aria-hidden="true" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
             className="h-8 w-8"
             onClick={handleSettingsClick}
-            title="Notification settings"
+            aria-label="Open notification settings"
           >
-            <Settings className="h-4 w-4" />
+            <Settings className="h-4 w-4" aria-hidden="true" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            onClick={onClose}
+            onClick={handleClose}
+            aria-label="Close notifications panel"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4" aria-hidden="true" />
           </Button>
         </div>
       </div>
@@ -125,25 +140,40 @@ export function NotificationPanel({ onClose, onNotificationRead }: NotificationP
                 <Loader2 className="h-6 w-6 animate-spin" />
               </div>
             ) : filteredNotifications.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                {activeTab === 'unread' 
-                  ? "You're all caught up! No unread notifications."
-                  : "No notifications yet."}
+              <div className="flex flex-col items-center justify-center py-12 px-6 text-center animate-fadeIn">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center animate-pulse">
+                  <CheckCheck className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2">
+                  {activeTab === 'unread' 
+                    ? "All caught up!"
+                    : "No notifications yet"}
+                </h3>
+                <p className="text-sm text-muted-foreground max-w-sm">
+                  {activeTab === 'unread' 
+                    ? "You've read all your notifications. Great job staying on top of things!"
+                    : "When you receive notifications about your content, achievements, or community updates, they'll appear here."}
+                </p>
               </div>
             ) : (
               <div className="divide-y">
-                {filteredNotifications.map((notification) => (
-                  <NotificationItem
+                {filteredNotifications.map((notification, index) => (
+                  <div
                     key={notification.id}
-                    notification={notification}
-                    onClick={() => handleNotificationClick(notification)}
-                    onDelete={() => {
-                      deleteNotification(notification.id);
-                      if (!notification.isRead) {
-                        onNotificationRead?.();
-                      }
-                    }}
-                  />
+                    className="stagger-item"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <NotificationItem
+                      notification={notification}
+                      onClick={() => handleNotificationClick(notification)}
+                      onDelete={() => {
+                        deleteNotification(notification.id);
+                        if (!notification.isRead) {
+                          onNotificationRead?.();
+                        }
+                      }}
+                    />
+                  </div>
                 ))}
                 
                 {hasMore && (

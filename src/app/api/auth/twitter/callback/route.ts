@@ -1,0 +1,90 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { kv } from '@vercel/kv';
+import { TwitterService } from '@/lib/platforms/twitter-service';
+import { prisma } from '@/lib/db';
+
+export async function GET(request: NextRequest) {
+  try {
+    const searchParams = request.nextUrl.searchParams;
+    const code = searchParams.get('code');
+    const state = searchParams.get('state');
+    const error = searchParams.get('error');
+
+    if (error) {
+      return NextResponse.redirect(
+        new URL(`/integrations?error=${error}`, request.url)
+      );
+    }
+
+    if (!code || !state) {
+      return NextResponse.redirect(
+        new URL('/integrations?error=missing_params', request.url)
+      );
+    }
+
+    // Verify state
+    const stateData = await kv.get(`oauth_state:${state}`);
+    if (!stateData) {
+      return NextResponse.redirect(
+        new URL('/integrations?error=invalid_state', request.url)
+      );
+    }
+
+    const { userId, platform } = JSON.parse(stateData as string);
+    if (platform !== 'twitter') {
+      return NextResponse.redirect(
+        new URL('/integrations?error=platform_mismatch', request.url)
+      );
+    }
+
+    // Get code verifier for PKCE
+    const codeVerifier = await kv.get(`twitter_pkce:${state}`);
+    if (!codeVerifier) {
+      return NextResponse.redirect(
+        new URL('/integrations?error=missing_pkce', request.url)
+      );
+    }
+
+    // Delete state and PKCE from KV
+    await kv.del(`oauth_state:${state}`);
+    await kv.del(`twitter_pkce:${state}`);
+
+    // Create Twitter service and connect with PKCE
+    const twitterService = new TwitterService();
+    const connection = await twitterService.connect(code, codeVerifier as string);
+    
+    // Set userId
+    connection.userId = userId;
+
+    // Save connection to database
+    const saved = await prisma.platformConnection.upsert({
+      where: {
+        userId_platform_accountId: {
+          userId,
+          platform: 'twitter',
+          accountId: connection.accountId
+        }
+      },
+      update: {
+        accessToken: connection.accessToken,
+        refreshToken: connection.refreshToken,
+        tokenExpiry: connection.tokenExpiry,
+        isActive: true,
+        updatedAt: new Date()
+      },
+      create: {
+        ...connection,
+        userId
+      }
+    });
+
+    return NextResponse.redirect(
+      new URL('/integrations?success=twitter', request.url)
+    );
+  } catch (error) {
+    console.error('Twitter OAuth callback error:', error);
+    return NextResponse.redirect(
+      new URL('/integrations?error=connection_failed', request.url)
+    );
+  }
+}

@@ -212,10 +212,10 @@ export default function SignInPage() {
 
         {/* Success Message */}
         {messageText && (
-          <Card className="mb-6 border-green-200 bg-green-50 dark:bg-green-950/20">
+          <Card className="mb-6 border-green-200 bg-green-50 dark:bg-green-950/20" role="status" aria-live="polite">
             <CardContent className="p-4">
               <div className="flex items-center space-x-2">
-                <Check className="w-5 h-5 text-green-500" />
+                <Check className="w-5 h-5 text-green-500" aria-hidden="true" />
                 <p className="text-sm text-green-600 dark:text-green-400">{messageText}</p>
               </div>
             </CardContent>
@@ -224,11 +224,11 @@ export default function SignInPage() {
 
         {/* Error Message */}
         {(error || formError) && (
-          <Card className="mb-6 border-red-200 bg-red-50 dark:bg-red-950/20">
+          <Card className="mb-6 border-red-200 bg-red-50 dark:bg-red-950/20" role="alert" aria-live="assertive">
             <CardContent className="p-4">
               <div className="flex items-center space-x-2">
-                <AlertCircle className="w-5 h-5 text-red-500" />
-                <p className="text-sm text-red-600 dark:text-red-400">
+                <AlertCircle className="w-5 h-5 text-red-500" aria-hidden="true" />
+                <p className="text-sm text-red-600 dark:text-red-400" id="email-error password-error">
                   {formError || (
                     error === 'OAuthSignin' ? 'Error occurred during sign in. Please try again.' :
                     error === 'OAuthCallback' ? 'Error occurred during authentication. Please try again.' :
@@ -294,7 +294,7 @@ export default function SignInPage() {
                       Email
                     </label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
                       <input
                         type="email"
                         id="email"
@@ -303,6 +303,9 @@ export default function SignInPage() {
                         onChange={handleChange}
                         placeholder="you@example.com"
                         required
+                        aria-label="Email address"
+                        aria-describedby="email-error"
+                        aria-invalid={formError ? "true" : "false"}
                         className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                       />
                     </div>
@@ -319,7 +322,7 @@ export default function SignInPage() {
                         </Link>
                       </div>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
                         <input
                           type={showPassword ? 'text' : 'password'}
                           id="password"
@@ -328,14 +331,18 @@ export default function SignInPage() {
                           onChange={handleChange}
                           placeholder="••••••••"
                           required
+                          aria-label="Password"
+                          aria-describedby="password-error"
+                          aria-invalid={formError ? "true" : "false"}
                           className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
                           className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          aria-label={showPassword ? "Hide password" : "Show password"}
                         >
-                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          {showPassword ? <EyeOff className="w-4 h-4" aria-hidden="true" /> : <Eye className="w-4 h-4" aria-hidden="true" />}
                         </button>
                       </div>
                     </div>

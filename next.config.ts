@@ -28,6 +28,14 @@ const nextConfig: NextConfig = {
   // Performance optimizations
   compress: true,
   poweredByHeader: false,
+  productionBrowserSourceMaps: false,
+  reactStrictMode: true,
+  
+  // Experimental features for better performance
+  experimental: {
+    optimizeCss: true,
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-*', 'date-fns'],
+  },
   
   // ESLint configuration
   eslint: {

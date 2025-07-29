@@ -134,11 +134,14 @@ export function CelebrationModal({ celebration, onClose }: CelebrationModalProps
 
       {/* Modal Content */}
       <Card 
-        className={`relative mx-4 max-w-md w-full transform transition-all duration-300 ${
-          isVisible ? 'scale-100 translate-y-0' : 'scale-90 translate-y-4'
+        className={`relative mx-4 max-w-md w-full transform transition-all duration-500 ease-out ${
+          isVisible ? 'scale-100 translate-y-0 opacity-100' : 'scale-75 translate-y-8 opacity-0'
         } ${getAnimationClass()}`}
         onClick={(e) => e.stopPropagation()}
-        style={{ borderColor: celebration.color }}
+        style={{ 
+          borderColor: celebration.color,
+          boxShadow: `0 20px 40px -15px ${celebration.color}40`
+        }}
       >
         <CardContent className="p-6 text-center relative">
           {/* Close Button */}

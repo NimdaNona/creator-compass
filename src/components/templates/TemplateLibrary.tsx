@@ -186,16 +186,33 @@ export default function TemplateLibrary() {
                 ))}
               </div>
             ) : filteredTemplates.length === 0 ? (
-              <Card className="p-12 text-center">
-                <p className="text-muted-foreground mb-4">
-                  No templates found matching your criteria
-                </p>
-                <Button variant="outline" onClick={() => {
-                  setSearchQuery('');
-                  setSelectedType(null);
-                }}>
-                  Clear Filters
-                </Button>
+              <Card className="p-12 text-center bg-gradient-to-br from-muted/50 to-muted/30 border-dashed animate-fadeIn">
+                <div className="space-y-4">
+                  <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center animate-pulse">
+                    <Search className="w-8 h-8 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">No templates found</h3>
+                    <p className="text-muted-foreground mb-4">
+                      {searchQuery ? `No templates match "${searchQuery}"` : 'No templates available for this selection'}
+                    </p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                    {(searchQuery || selectedType) && (
+                      <Button variant="outline" onClick={() => {
+                        setSearchQuery('');
+                        setSelectedType(null);
+                      }}>
+                        <Filter className="w-4 h-4 mr-2" />
+                        Clear Filters
+                      </Button>
+                    )}
+                    <Button onClick={() => setShowAISuggestions(true)}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Get AI Suggestions
+                    </Button>
+                  </div>
+                </div>
               </Card>
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

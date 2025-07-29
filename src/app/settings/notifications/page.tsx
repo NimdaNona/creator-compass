@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Save, Loader2 } from 'lucide-react';
+import { Save, Loader2, Bell, BellOff, Clock, Moon, Sun, Mail, Smartphone, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -10,6 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useNotificationToast } from '@/components/notifications/NotificationProvider';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Slider } from '@/components/ui/slider';
 
 export default function NotificationSettingsPage() {
   const router = useRouter();
@@ -25,9 +28,12 @@ export default function NotificationSettingsPage() {
     subscriptionAlerts: true,
     emailNotifications: true,
     pushNotifications: false,
+    soundEnabled: true,
+    soundVolume: 70,
     reminderTime: '09:00',
     quietHoursStart: '22:00',
-    quietHoursEnd: '08:00'
+    quietHoursEnd: '08:00',
+    notificationFrequency: 'normal' // 'minimal', 'normal', 'all'
   });
 
   useEffect(() => {
@@ -114,24 +120,102 @@ export default function NotificationSettingsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-3xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Notification Settings</h1>
-        <p className="text-muted-foreground mt-2">
-          Control how and when you receive notifications
-        </p>
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="mb-8 space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="p-3 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20">
+            <Bell className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold">Notification Settings</h1>
+            <p className="text-muted-foreground mt-1">
+              Control how and when you receive notifications
+            </p>
+          </div>
+        </div>
+        
+        {/* Quick Toggle */}
+        <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+          <div className="flex items-center gap-3">
+            {preferences.emailNotifications || preferences.pushNotifications ? (
+              <Bell className="w-5 h-5 text-green-600 dark:text-green-400" />
+            ) : (
+              <BellOff className="w-5 h-5 text-muted-foreground" />
+            )}
+            <div>
+              <p className="font-medium">All Notifications</p>
+              <p className="text-sm text-muted-foreground">
+                {preferences.emailNotifications || preferences.pushNotifications 
+                  ? 'Notifications are enabled' 
+                  : 'All notifications are disabled'}
+              </p>
+            </div>
+          </div>
+          <Switch
+            checked={preferences.emailNotifications || preferences.pushNotifications}
+            onCheckedChange={(checked) => {
+              setPreferences(prev => ({
+                ...prev,
+                emailNotifications: checked,
+                pushNotifications: false // Don't auto-enable push
+              }));
+            }}
+          />
+        </div>
       </div>
 
-      <div className="space-y-6">
-        {/* Notification Types */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Notification Types</CardTitle>
-            <CardDescription>
-              Choose which notifications you want to receive
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+      <Tabs defaultValue="types" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="types">Types</TabsTrigger>
+          <TabsTrigger value="delivery">Delivery</TabsTrigger>
+          <TabsTrigger value="timing">Timing</TabsTrigger>
+          <TabsTrigger value="sound">Sound</TabsTrigger>
+        </TabsList>
+        <TabsContent value="types" className="space-y-6">
+          {/* Frequency Setting */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Volume2 className="w-5 h-5" />
+                Notification Frequency
+              </CardTitle>
+              <CardDescription>
+                Control how often you receive notifications
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { value: 'minimal', label: 'Minimal', description: 'Only important notifications' },
+                  { value: 'normal', label: 'Normal', description: 'Balanced notifications' },
+                  { value: 'all', label: 'All', description: 'Every notification' }
+                ].map((freq) => (
+                  <button
+                    key={freq.value}
+                    onClick={() => setPreferences(prev => ({ ...prev, notificationFrequency: freq.value }))}
+                    className={`p-4 rounded-lg border-2 transition-all ${
+                      preferences.notificationFrequency === freq.value
+                        ? 'border-primary bg-primary/10'
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                  >
+                    <p className="font-medium mb-1">{freq.label}</p>
+                    <p className="text-xs text-muted-foreground">{freq.description}</p>
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Notification Types */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Notification Types</CardTitle>
+              <CardDescription>
+                Choose which notifications you want to receive
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="dailyReminders">Daily Reminders</Label>
@@ -143,6 +227,7 @@ export default function NotificationSettingsPage() {
                 id="dailyReminders"
                 checked={preferences.dailyReminders}
                 onCheckedChange={() => handleToggle('dailyReminders')}
+                aria-label="Toggle daily reminders"
               />
             </div>
 
@@ -203,8 +288,9 @@ export default function NotificationSettingsPage() {
             </div>
           </CardContent>
         </Card>
+      </TabsContent>
 
-        {/* Delivery Methods */}
+      <TabsContent value="delivery">
         <Card>
           <CardHeader>
             <CardTitle>Delivery Methods</CardTitle>
@@ -242,8 +328,9 @@ export default function NotificationSettingsPage() {
             </div>
           </CardContent>
         </Card>
+      </TabsContent>
 
-        {/* Timing Preferences */}
+      <TabsContent value="timing">
         <Card>
           <CardHeader>
             <CardTitle>Timing Preferences</CardTitle>
@@ -321,9 +408,73 @@ export default function NotificationSettingsPage() {
             </div>
           </CardContent>
         </Card>
+      </TabsContent>
 
-        {/* Save Button */}
-        <div className="flex justify-end">
+      <TabsContent value="sound">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Volume2 className="w-5 h-5" />
+              Sound Settings
+            </CardTitle>
+            <CardDescription>
+              Configure notification sounds
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="soundEnabled">Enable Sounds</Label>
+                <p className="text-sm text-muted-foreground">
+                  Play sounds for notifications
+                </p>
+              </div>
+              <Switch
+                id="soundEnabled"
+                checked={preferences.soundEnabled}
+                onCheckedChange={() => handleToggle('soundEnabled')}
+              />
+            </div>
+
+            {preferences.soundEnabled && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="soundVolume">Volume</Label>
+                  <span className="text-sm text-muted-foreground">{preferences.soundVolume}%</span>
+                </div>
+                <Slider
+                  id="soundVolume"
+                  value={[preferences.soundVolume]}
+                  onValueChange={(value) => setPreferences(prev => ({ ...prev, soundVolume: value[0] }))}
+                  max={100}
+                  step={10}
+                  className="w-full"
+                />
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <VolumeX className="w-3 h-3" /> Quiet
+                  </span>
+                  <span className="flex items-center gap-1">
+                    Loud <Volume2 className="w-3 h-3" />
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div className="p-4 rounded-lg bg-muted/50">
+              <p className="text-sm text-muted-foreground">
+                <strong>Tip:</strong> Test your notification sound by clicking the bell icon in the header.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* Save Button */}
+        <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/20">
+          <p className="text-sm text-muted-foreground">
+            Changes will take effect immediately
+          </p>
           <Button onClick={savePreferences} disabled={saving}>
             {saving ? (
               <>
@@ -333,12 +484,12 @@ export default function NotificationSettingsPage() {
             ) : (
               <>
                 <Save className="mr-2 h-4 w-4" />
-                Save Preferences
+                Save All Settings
               </>
             )}
           </Button>
         </div>
-      </div>
+      </Tabs>
     </div>
   );
 }

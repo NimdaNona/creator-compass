@@ -679,9 +679,17 @@ export function ResourceLibrary() {
                   {filteredItems.length > 0 ? (
                     filteredItems.map((item) => renderEquipmentCard(item, level))
                   ) : (
-                    <div className="col-span-full text-center py-8 text-muted-foreground">
-                      No items found for the current filters
-                    </div>
+                    <Card className="col-span-full p-8 text-center bg-gradient-to-br from-muted/50 to-muted/30 border-dashed animate-fadeIn">
+                      <div className="space-y-3">
+                        <div className="w-12 h-12 mx-auto rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
+                          <Filter className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <p className="text-sm font-medium">No equipment found</p>
+                        <p className="text-xs text-muted-foreground">
+                          Try adjusting your filters or search terms
+                        </p>
+                      </div>
+                    </Card>
                   )}
                 </div>
               </div>

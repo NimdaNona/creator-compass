@@ -288,16 +288,38 @@ export function SavedIdeas() {
 
       {/* Saved Ideas */}
       {filteredIdeas.length === 0 ? (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <Save className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="font-medium mb-2">No saved ideas yet</h3>
-            <p className="text-sm text-muted-foreground">
-              {searchQuery || filterPlatform !== 'all' || filterStatus !== 'all'
-                ? 'No ideas match your filters'
-                : 'Generate and save ideas to build your content library'}
-            </p>
-          </CardContent>
+        <Card className="p-12 text-center bg-gradient-to-br from-muted/50 to-muted/30 border-dashed animate-fadeIn">
+          <div className="space-y-4">
+            <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center animate-pulse">
+              <Save className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-2">
+                {searchQuery || filterPlatform !== 'all' || filterStatus !== 'all'
+                  ? 'No ideas match your filters'
+                  : 'No saved ideas yet'}
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                {searchQuery || filterPlatform !== 'all' || filterStatus !== 'all'
+                  ? 'Try adjusting your search or filters to find what you\'re looking for'
+                  : 'Generate and save content ideas to build your creative library'}
+              </p>
+            </div>
+            {(searchQuery || filterPlatform !== 'all' || filterStatus !== 'all') && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSearchQuery('');
+                  setFilterPlatform('all');
+                  setFilterStatus('all');
+                }}
+                className="text-sm"
+              >
+                Clear filters
+              </Button>
+            )}
+          </div>
         </Card>
       ) : (
         <div className="grid gap-4">

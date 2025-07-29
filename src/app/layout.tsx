@@ -14,6 +14,9 @@ import { RealtimeNotificationProvider } from "@/components/notifications/Realtim
 import { ProfileLoader } from "@/components/providers/ProfileLoader";
 import { NavigationGuard } from "@/components/navigation/NavigationGuard";
 import { AIAssistantProvider } from "@/components/providers/AIAssistantProvider";
+import { PerformanceProvider } from "@/components/providers/PerformanceProvider";
+import { InstallPrompt, UpdateNotification, OfflineIndicator } from "@/components/pwa/InstallPrompt";
+import { Toaster } from "@/components/ui/sonner";
 // Error boundary handled at page level since root layout is server component
 
 const inter = Inter({
@@ -126,32 +129,44 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#6b46c1" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
       <body className={`${inter.className} antialiased min-h-screen flex flex-col`}>
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary text-primary-foreground px-4 py-2 rounded-md z-50">
+          Skip to main content
+        </a>
         <SessionProvider>
           <ThemeProvider>
             <ProfileLoader>
               <NavigationGuard>
                 <PWAProvider>
-                  <NotificationProvider>
-                    <RealtimeNotificationProvider>
-                      <div className="flex flex-col min-h-screen">
-                        <Header />
-                        <main className="flex-1 pb-20 md:pb-0">
-                          {children}
-                        </main>
-                        <Footer className="hidden md:block" />
-                      </div>
-                      <BottomNav />
-                      <CelebrationSystem />
-                      <SmartUpgradeTrigger />
-                      <AIAssistantProvider />
-                    </RealtimeNotificationProvider>
-                  </NotificationProvider>
+                  <PerformanceProvider>
+                    <NotificationProvider>
+                      <RealtimeNotificationProvider>
+                        <div className="flex flex-col min-h-screen">
+                          <Header />
+                          <main id="main-content" className="flex-1 pb-20 md:pb-0" tabIndex={-1}>
+                            {children}
+                          </main>
+                          <Footer className="hidden md:block" />
+                        </div>
+                        <BottomNav />
+                        <CelebrationSystem />
+                        <SmartUpgradeTrigger />
+                        <AIAssistantProvider />
+                        <InstallPrompt />
+                        <UpdateNotification />
+                        <OfflineIndicator />
+                        <Toaster />
+                      </RealtimeNotificationProvider>
+                    </NotificationProvider>
+                  </PerformanceProvider>
                 </PWAProvider>
               </NavigationGuard>
             </ProfileLoader>
