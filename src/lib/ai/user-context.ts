@@ -126,10 +126,10 @@ export class UserContextService {
         timeCommitment = '',
       } = onboardingResponses;
 
-      // Parse equipment, goals, and challenges from text responses
-      const equipmentList = this.parseListFromText(equipment);
-      const goalsList = this.parseListFromText(goals);
-      const challengesList = this.parseListFromText(challenges);
+      // Parse equipment, goals, and challenges from text responses or arrays
+      const equipmentList = Array.isArray(equipment) ? equipment : this.parseListFromText(equipment);
+      const goalsList = Array.isArray(goals) ? goals : this.parseListFromText(goals);
+      const challengesList = Array.isArray(challenges) ? challenges : this.parseListFromText(challenges);
 
       // Update or create UserAIProfile
       const db = await this.getDb();
