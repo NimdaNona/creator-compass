@@ -252,6 +252,7 @@ model UsageTracking {
   count     Int      @default(0)
   limit     Int
   resetAt   DateTime
+  lastUsedAt DateTime @default(now()) // Track when feature was last used
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
@@ -750,6 +751,8 @@ model UserAIProfile {
   contentStyle     String?  // Preferred content style
   personalityTraits String[] // For tone matching
   aiAssessment     Json?    // Full AI assessment data
+  onboardingCompleted Boolean @default(false) // Track if onboarding is complete
+  onboardingData   Json?    // Full onboarding responses
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   

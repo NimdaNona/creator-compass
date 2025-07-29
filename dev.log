@@ -1,0 +1,464 @@
+
+> creator-compass@0.1.0 dev
+> next dev --turbopack
+
+   ▲ Next.js 15.3.5 (Turbopack)
+   - Local:        http://localhost:3001
+   - Network:      http://10.255.255.254:3001
+   - Environments: .env.local, .env
+
+ ✓ Starting...
+ ○ Compiling middleware ...
+ ✓ Compiled middleware in 783ms
+ ✓ Ready in 15s
+ ⚠ Webpack is configured while Turbopack is not, which may cause problems.
+ ⚠ See instructions if you need to configure Turbopack:
+  https://nextjs.org/docs/app/api-reference/next-config-js/turbo
+
+ ○ Compiling /api/auth/[...nextauth] ...
+ ✓ Compiled /api/auth/[...nextauth] in 2.5s
+[next-auth][warn][DEBUG_ENABLED] 
+https://next-auth.js.org/warnings#debug_enabled
+ GET /api/auth/signin?callbackUrl=%2Fapi%2Fhealth 302 in 10351ms
+ ○ Compiling /auth/signin ...
+ ✓ Compiled /auth/signin in 13s
+ GET /auth/signin?callbackUrl=http%3A%2F%2Flocalhost%3A3001%2Fapi%2Fhealth 200 in 14031ms
+ ○ Compiling /api/ai/test-db ...
+ ✓ Compiled /api/ai/test-db in 1339ms
+[Test DB] Starting test
+[Test DB] db exists: true
+[Test DB] db.user exists: true
+[Test DB] User count: 8
+[Test DB] conversationManager exists: true
+[ConversationManager] Creating conversation for user: test-user-123
+[ConversationManager] Database error: TypeError: Cannot read properties of undefined (reading 'create')
+    at ConversationManager.createConversation (src/lib/ai/conversation.ts:41:32)
+    at async GET (src/app/api/ai/test-db/route.ts:48:23)
+  39 |       try {
+  40 |         const db = await this.getDb();
+> 41 |         await db.aiConversation.create({
+     |                                ^
+  42 |           data: {
+  43 |             id: conversation.id,
+  44 |             userId,
+[Test DB] Test conversation created: conv_1753377139160_hr09n5kqv
+ GET /api/ai/test-db 200 in 2860ms
+ ○ Compiling /api/ai/chat-simple ...
+ ✓ Compiled /api/ai/chat-simple in 1398ms
+[Simple Chat API] Request received
+[Simple Chat API] Creating new conversation for user: onboarding-u7xepo1wo
+[ConversationManager] Creating conversation for user: onboarding-u7xepo1wo
+[Simple Chat API] Created conversation: conv_1753377141152_3bhef0w1p
+[Simple Chat API] Processing message
+[ConversationManager] processUserMessage - getting conversation
+[ConversationManager] Error loading conversation: TypeError: Cannot read properties of undefined (reading 'findUnique')
+    at ConversationManager.getConversation (src/lib/ai/conversation.ts:67:53)
+    at async ConversationManager.processUserMessage (src/lib/ai/conversation.ts:144:36)
+    at async POST (src/app/api/ai/chat-simple/route.ts:82:21)
+  65 |     try {
+  66 |       const db = await this.getDb();
+> 67 |       const dbConversation = await db.aiConversation.findUnique({
+     |                                                     ^
+  68 |       where: { id: conversationId },
+  69 |     });
+  70 |
+ POST /api/ai/chat-simple 200 in 2732ms
+[ConversationManager] Error loading conversation: TypeError: Cannot read properties of undefined (reading 'findUnique')
+    at ConversationManager.getConversation (src/lib/ai/conversation.ts:67:53)
+    at async ConversationManager.addMessage (src/lib/ai/conversation.ts:95:25)
+    at async ConversationManager.processUserMessage (src/lib/ai/conversation.ts:161:6)
+    at async POST (src/app/api/ai/chat-simple/route.ts:82:21)
+  65 |     try {
+  66 |       const db = await this.getDb();
+> 67 |       const dbConversation = await db.aiConversation.findUnique({
+     |                                                     ^
+  68 |       where: { id: conversationId },
+  69 |     });
+  70 |
+[ConversationManager] processUserMessage error: Error: Conversation not found
+    at ConversationManager.addMessage (src/lib/ai/conversation.ts:96:29)
+    at async ConversationManager.processUserMessage (src/lib/ai/conversation.ts:161:6)
+    at async POST (src/app/api/ai/chat-simple/route.ts:82:21)
+  94 |   ): Promise<void> {
+  95 |     const conversation = await this.getConversation(conversationId);
+> 96 |     if (!conversation) throw new Error('Conversation not found');
+     |                             ^
+  97 |
+  98 |     const message: ConversationMessage = {
+  99 |       role,
+[ConversationManager] Error stack: Error: Conversation not found
+    at ConversationManager.addMessage (file:///mnt/c/Projects/CreatorCompass/creator-compass/.next/server/chunks/%5Broot-of-the-server%5D__bf37a738._.js:1501:34)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ConversationManager.processUserMessage (file:///mnt/c/Projects/CreatorCompass/creator-compass/.next/server/chunks/%5Broot-of-the-server%5D__bf37a738._.js:1553:17)
+    at async POST (/mnt/c/Projects/CreatorCompass/creator-compass/.next/server/chunks/[root-of-the-server]__2f6f9fe7._.js:2963:26)
+    at async AppRouteRouteModule.do (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:26:34112)
+    at async AppRouteRouteModule.handle (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:26:41338)
+    at async doRender (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/base-server.js:1518:42)
+    at async DevServer.renderToResponseWithComponentsImpl (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/base-server.js:1920:28)
+    at async DevServer.renderPageComponent (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/base-server.js:2408:24)
+    at async DevServer.renderToResponseImpl (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/base-server.js:2445:32)
+    at async DevServer.pipeImpl (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/base-server.js:1008:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/next-server.js:305:17)
+    at async DevServer.handleRequestImpl (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/base-server.js:900:17)
+    at async /mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/dev/next-dev-server.js:371:20
+    at async Span.traceAsyncFn (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/dev/next-dev-server.js:368:24)
+    at async invokeRender (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/lib/router-server.js:237:21)
+    at async handleRequest (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/lib/router-server.js:428:24)
+    at async requestHandlerImpl (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/lib/router-server.js:452:13)
+    at async Server.requestListener (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/lib/start-server.js:158:13)
+[Simple Chat API] Error: Error: Conversation not found
+    at ConversationManager.addMessage (src/lib/ai/conversation.ts:96:29)
+    at async ConversationManager.processUserMessage (src/lib/ai/conversation.ts:161:6)
+    at async POST (src/app/api/ai/chat-simple/route.ts:82:21)
+  94 |   ): Promise<void> {
+  95 |     const conversation = await this.getConversation(conversationId);
+> 96 |     if (!conversation) throw new Error('Conversation not found');
+     |                             ^
+  97 |
+  98 |     const message: ConversationMessage = {
+  99 |       role,
+ GET /api/auth/signin?callbackUrl=%2Fapi%2Fhealth 302 in 430ms
+ GET /auth/signin?callbackUrl=http%3A%2F%2Flocalhost%3A3001%2Fapi%2Fhealth 200 in 554ms
+[Test DB] Starting test
+[Test DB] db exists: true
+[Test DB] db.user exists: true
+[Test DB] User count: 8
+[Test DB] conversationManager exists: true
+[ConversationManager] Creating conversation for user: test-user-123
+[ConversationManager] Database error: TypeError: Cannot read properties of undefined (reading 'create')
+    at ConversationManager.createConversation (src/lib/ai/conversation.ts:41:32)
+    at async GET (src/app/api/ai/test-db/route.ts:48:23)
+  39 |       try {
+  40 |         const db = await this.getDb();
+> 41 |         await db.aiConversation.create({
+     |                                ^
+  42 |           data: {
+  43 |             id: conversation.id,
+  44 |             userId,
+[Test DB] Test conversation created: conv_1753377272816_2adogpm03
+ GET /api/ai/test-db 200 in 638ms
+[Simple Chat API] Request received
+[Simple Chat API] Creating new conversation for user: onboarding-zw9q0lrhq
+[ConversationManager] Creating conversation for user: onboarding-zw9q0lrhq
+[Simple Chat API] Created conversation: conv_1753377273526_tpp1n9itr
+[Simple Chat API] Processing message
+[ConversationManager] processUserMessage - getting conversation
+[ConversationManager] Error loading conversation: TypeError: Cannot read properties of undefined (reading 'findUnique')
+    at ConversationManager.getConversation (src/lib/ai/conversation.ts:67:53)
+    at async ConversationManager.processUserMessage (src/lib/ai/conversation.ts:144:36)
+    at async POST (src/app/api/ai/chat-simple/route.ts:82:21)
+  65 |     try {
+  66 |       const db = await this.getDb();
+> 67 |       const dbConversation = await db.aiConversation.findUnique({
+     |                                                     ^
+  68 |       where: { id: conversationId },
+  69 |     });
+  70 |
+[ConversationManager] Error loading conversation: TypeError: Cannot read properties of undefined (reading 'findUnique')
+    at ConversationManager.getConversation (src/lib/ai/conversation.ts:67:53)
+    at async ConversationManager.addMessage (src/lib/ai/conversation.ts:95:25)
+    at async ConversationManager.processUserMessage (src/lib/ai/conversation.ts:161:6)
+    at async POST (src/app/api/ai/chat-simple/route.ts:82:21)
+  65 |     try {
+  66 |       const db = await this.getDb();
+> 67 |       const dbConversation = await db.aiConversation.findUnique({
+     |                                                     ^
+  68 |       where: { id: conversationId },
+  69 |     });
+  70 |
+[ConversationManager] processUserMessage error: Error: Conversation not found
+    at ConversationManager.addMessage (src/lib/ai/conversation.ts:96:29)
+    at async ConversationManager.processUserMessage (src/lib/ai/conversation.ts:161:6)
+    at async POST (src/app/api/ai/chat-simple/route.ts:82:21)
+  94 |   ): Promise<void> {
+  95 |     const conversation = await this.getConversation(conversationId);
+> 96 |     if (!conversation) throw new Error('Conversation not found');
+     |                             ^
+  97 |
+  98 |     const message: ConversationMessage = {
+  99 |       role,
+[ConversationManager] Error stack: Error: Conversation not found
+    at ConversationManager.addMessage (file:///mnt/c/Projects/CreatorCompass/creator-compass/.next/server/chunks/%5Broot-of-the-server%5D__bf37a738._.js:1501:34)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ConversationManager.processUserMessage (file:///mnt/c/Projects/CreatorCompass/creator-compass/.next/server/chunks/%5Broot-of-the-server%5D__bf37a738._.js:1553:17)
+    at async POST (/mnt/c/Projects/CreatorCompass/creator-compass/.next/server/chunks/[root-of-the-server]__2f6f9fe7._.js:2963:26)
+    at async AppRouteRouteModule.do (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:26:34112)
+    at async AppRouteRouteModule.handle (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:26:41338)
+    at async doRender (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/base-server.js:1518:42)
+    at async DevServer.renderToResponseWithComponentsImpl (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/base-server.js:1920:28)
+    at async DevServer.renderPageComponent (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/base-server.js:2408:24)
+    at async DevServer.renderToResponseImpl (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/base-server.js:2445:32)
+    at async DevServer.pipeImpl (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/base-server.js:1008:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/next-server.js:305:17)
+    at async DevServer.handleRequestImpl (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/base-server.js:900:17)
+    at async /mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/dev/next-dev-server.js:371:20
+    at async Span.traceAsyncFn (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/dev/next-dev-server.js:368:24)
+    at async invokeRender (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/lib/router-server.js:237:21)
+    at async handleRequest (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/lib/router-server.js:428:24)
+    at async requestHandlerImpl (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/lib/router-server.js:452:13)
+    at async Server.requestListener (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/lib/start-server.js:158:13)
+[Simple Chat API] Error: Error: Conversation not found
+    at ConversationManager.addMessage (src/lib/ai/conversation.ts:96:29)
+    at async ConversationManager.processUserMessage (src/lib/ai/conversation.ts:161:6)
+    at async POST (src/app/api/ai/chat-simple/route.ts:82:21)
+  94 |   ): Promise<void> {
+  95 |     const conversation = await this.getConversation(conversationId);
+> 96 |     if (!conversation) throw new Error('Conversation not found');
+     |                             ^
+  97 |
+  98 |     const message: ConversationMessage = {
+  99 |       role,
+ POST /api/ai/chat-simple 500 in 4208ms
+ ○ Compiling /api/ai/chat-v2 ...
+ ✓ Compiled /api/ai/chat-v2 in 1901ms
+[Chat API v2] Processing request {
+  hasApiKey: true,
+  keyLength: 164,
+  isOnboarding: true,
+  dbExists: true,
+  dbType: 'object',
+  dbHasUser: true
+}
+[Chat API v2] Starting stream processing
+[Chat API v2] Processing message with conversationManager
+[ConversationManager] processMessage called with: {
+  conversationId: null,
+  message: 'Hello!...',
+  userId: 'onboarding-cew5xx3oe',
+  context: { type: 'onboarding', step: 'welcome' }
+}
+[ConversationManager] Created new conversation: conv_1753377279698_v01sreq7d
+[ConversationManager] Built messages: 2 messages
+[ConversationManager] System prompt length: 2568
+[ConversationManager] Getting chat completion stream...
+[Chat API v2] Response stream type: object
+[Chat API v2] Processing async generator
+[ConversationManager] Starting to process stream chunks...
+[ConversationManager] Got chunk: 2 chars
+[Chat API v2] Sending chunk: 2 chars
+[ConversationManager] Got chunk: 6 chars
+[Chat API v2] Sending chunk: 6 chars
+[ConversationManager] Got chunk: 1 chars
+[Chat API v2] Sending chunk: 1 chars
+[ConversationManager] Got chunk: 8 chars
+[Chat API v2] Sending chunk: 8 chars
+[ConversationManager] Got chunk: 3 chars
+[Chat API v2] Sending chunk: 3 chars
+[ConversationManager] Got chunk: 8 chars
+[Chat API v2] Sending chunk: 8 chars
+[ConversationManager] Got chunk: 3 chars
+[Chat API v2] Sending chunk: 3 chars
+[ConversationManager] Got chunk: 4 chars
+[Chat API v2] Sending chunk: 4 chars
+[ConversationManager] Got chunk: 1 chars
+[Chat API v2] Sending chunk: 1 chars
+[ConversationManager] Got chunk: 3 chars
+[Chat API v2] Sending chunk: 3 chars
+[ConversationManager] Got chunk: 2 chars
+[Chat API v2] Sending chunk: 2 chars
+[ConversationManager] Got chunk: 2 chars
+[Chat API v2] Sending chunk: 2 chars
+[ConversationManager] Got chunk: 5 chars
+[Chat API v2] Sending chunk: 5 chars
+[ConversationManager] Got chunk: 3 chars
+[Chat API v2] Sending chunk: 3 chars
+[ConversationManager] Got chunk: 6 chars
+[Chat API v2] Sending chunk: 6 chars
+[ConversationManager] Got chunk: 4 chars
+[Chat API v2] Sending chunk: 4 chars
+[ConversationManager] Got chunk: 8 chars
+[Chat API v2] Sending chunk: 8 chars
+[ConversationManager] Got chunk: 8 chars
+[Chat API v2] Sending chunk: 8 chars
+[ConversationManager] Got chunk: 3 chars
+[Chat API v2] Sending chunk: 3 chars
+[ConversationManager] Got chunk: 5 chars
+[Chat API v2] Sending chunk: 5 chars
+[ConversationManager] Got chunk: 8 chars
+[Chat API v2] Sending chunk: 8 chars
+[ConversationManager] Got chunk: 8 chars
+[Chat API v2] Sending chunk: 8 chars
+[ConversationManager] Got chunk: 1 chars
+[Chat API v2] Sending chunk: 1 chars
+[ConversationManager] Got chunk: 3 chars
+[Chat API v2] Sending chunk: 3 chars
+[ConversationManager] Got chunk: 6 chars
+[Chat API v2] Sending chunk: 6 chars
+[ConversationManager] Got chunk: 1 chars
+[Chat API v2] Sending chunk: 1 chars
+[ConversationManager] Got chunk: 6 chars
+[Chat API v2] Sending chunk: 6 chars
+[ConversationManager] Got chunk: 4 chars
+[Chat API v2] Sending chunk: 4 chars
+[ConversationManager] Got chunk: 5 chars
+[Chat API v2] Sending chunk: 5 chars
+[ConversationManager] Got chunk: 3 chars
+[Chat API v2] Sending chunk: 3 chars
+[ConversationManager] Got chunk: 6 chars
+[Chat API v2] Sending chunk: 6 chars
+[ConversationManager] Got chunk: 5 chars
+[Chat API v2] Sending chunk: 5 chars
+[ConversationManager] Got chunk: 11 chars
+[Chat API v2] Sending chunk: 11 chars
+[ConversationManager] Got chunk: 6 chars
+[Chat API v2] Sending chunk: 6 chars
+[ConversationManager] Got chunk: 1 chars
+[Chat API v2] Sending chunk: 1 chars
+[ConversationManager] Got chunk: 4 chars
+[Chat API v2] Sending chunk: 4 chars
+[ConversationManager] Got chunk: 4 chars
+[Chat API v2] Sending chunk: 4 chars
+[ConversationManager] Got chunk: 2 chars
+[Chat API v2] Sending chunk: 2 chars
+[ConversationManager] Got chunk: 9 chars
+[Chat API v2] Sending chunk: 9 chars
+[ConversationManager] Got chunk: 1 chars
+[Chat API v2] Sending chunk: 1 chars
+[ConversationManager] Got chunk: 13 chars
+[Chat API v2] Sending chunk: 13 chars
+[ConversationManager] Got chunk: 1 chars
+[Chat API v2] Sending chunk: 1 chars
+[ConversationManager] Got chunk: 3 chars
+[Chat API v2] Sending chunk: 3 chars
+[ConversationManager] Got chunk: 9 chars
+[Chat API v2] Sending chunk: 9 chars
+[ConversationManager] Got chunk: 8 chars
+[Chat API v2] Sending chunk: 8 chars
+[ConversationManager] Got chunk: 1 chars
+[Chat API v2] Sending chunk: 1 chars
+[ConversationManager] Stream marked as done
+[ConversationManager] Stream complete, full response: 214 chars
+[Chat API v2] Sending done signal
+ POST /api/ai/chat-v2 200 in 4418ms
+[Simple Chat API] Request received
+[Simple Chat API] Creating new conversation for user: onboarding-1qcjfr3tq
+[ConversationManager] Creating conversation for user: onboarding-1qcjfr3tq
+[Simple Chat API] Created conversation: conv_1753377282247_661vdz37z
+[Simple Chat API] Processing message
+[ConversationManager] processUserMessage - getting conversation
+[ConversationManager] Error loading conversation: TypeError: Cannot read properties of undefined (reading 'findUnique')
+    at ConversationManager.getConversation (src/lib/ai/conversation.ts:67:53)
+    at async ConversationManager.processUserMessage (src/lib/ai/conversation.ts:144:36)
+    at async POST (src/app/api/ai/chat-simple/route.ts:82:21)
+  65 |     try {
+  66 |       const db = await this.getDb();
+> 67 |       const dbConversation = await db.aiConversation.findUnique({
+     |                                                     ^
+  68 |       where: { id: conversationId },
+  69 |     });
+  70 |
+[ConversationManager] Error loading conversation: TypeError: Cannot read properties of undefined (reading 'findUnique')
+    at ConversationManager.getConversation (src/lib/ai/conversation.ts:67:53)
+    at async ConversationManager.addMessage (src/lib/ai/conversation.ts:95:25)
+    at async ConversationManager.processUserMessage (src/lib/ai/conversation.ts:161:6)
+    at async POST (src/app/api/ai/chat-simple/route.ts:82:21)
+  65 |     try {
+  66 |       const db = await this.getDb();
+> 67 |       const dbConversation = await db.aiConversation.findUnique({
+     |                                                     ^
+  68 |       where: { id: conversationId },
+  69 |     });
+  70 |
+[ConversationManager] processUserMessage error: Error: Conversation not found
+    at ConversationManager.addMessage (src/lib/ai/conversation.ts:96:29)
+    at async ConversationManager.processUserMessage (src/lib/ai/conversation.ts:161:6)
+    at async POST (src/app/api/ai/chat-simple/route.ts:82:21)
+  94 |   ): Promise<void> {
+  95 |     const conversation = await this.getConversation(conversationId);
+> 96 |     if (!conversation) throw new Error('Conversation not found');
+     |                             ^
+  97 |
+  98 |     const message: ConversationMessage = {
+  99 |       role,
+[ConversationManager] Error stack: Error: Conversation not found
+    at ConversationManager.addMessage (file:///mnt/c/Projects/CreatorCompass/creator-compass/.next/server/chunks/%5Broot-of-the-server%5D__bf37a738._.js:1501:34)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ConversationManager.processUserMessage (file:///mnt/c/Projects/CreatorCompass/creator-compass/.next/server/chunks/%5Broot-of-the-server%5D__bf37a738._.js:1553:17)
+    at async POST (/mnt/c/Projects/CreatorCompass/creator-compass/.next/server/chunks/[root-of-the-server]__2f6f9fe7._.js:2963:26)
+    at async AppRouteRouteModule.do (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:26:34112)
+    at async AppRouteRouteModule.handle (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:26:41338)
+    at async doRender (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/base-server.js:1518:42)
+    at async DevServer.renderToResponseWithComponentsImpl (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/base-server.js:1920:28)
+    at async DevServer.renderPageComponent (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/base-server.js:2408:24)
+    at async DevServer.renderToResponseImpl (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/base-server.js:2445:32)
+    at async DevServer.pipeImpl (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/base-server.js:1008:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/next-server.js:305:17)
+    at async DevServer.handleRequestImpl (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/base-server.js:900:17)
+    at async /mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/dev/next-dev-server.js:371:20
+    at async Span.traceAsyncFn (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/dev/next-dev-server.js:368:24)
+    at async invokeRender (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/lib/router-server.js:237:21)
+    at async handleRequest (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/lib/router-server.js:428:24)
+    at async requestHandlerImpl (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/lib/router-server.js:452:13)
+    at async Server.requestListener (/mnt/c/Projects/CreatorCompass/creator-compass/node_modules/next/dist/server/lib/start-server.js:158:13)
+[Simple Chat API] Error: Error: Conversation not found
+    at ConversationManager.addMessage (src/lib/ai/conversation.ts:96:29)
+    at async ConversationManager.processUserMessage (src/lib/ai/conversation.ts:161:6)
+    at async POST (src/app/api/ai/chat-simple/route.ts:82:21)
+  94 |   ): Promise<void> {
+  95 |     const conversation = await this.getConversation(conversationId);
+> 96 |     if (!conversation) throw new Error('Conversation not found');
+     |                             ^
+  97 |
+  98 |     const message: ConversationMessage = {
+  99 |       role,
+ POST /api/ai/chat-simple 500 in 2236ms
+[Simple Chat API] Request received
+ POST /api/ai/chat-simple 401 in 435ms
+[Simple Chat API] Request received
+[Simple Chat API] Error: Error [ZodError]: [
+  {
+    "code": "too_small",
+    "minimum": 1,
+    "type": "string",
+    "inclusive": true,
+    "exact": false,
+    "message": "String must contain at least 1 character(s)",
+    "path": [
+      "message"
+    ]
+  }
+]
+    at POST (src/app/api/ai/chat-simple/route.ts:23:85)
+  21 |     
+  22 |     const body = await request.json();
+> 23 |     const { conversationId, message, includeKnowledge, context } = chatRequestSchema.parse(body);
+     |                                                                                     ^
+  24 |
+  25 |     // Allow unauthenticated access for onboarding flow
+  26 |     const isOnboarding = context?.type === 'onboarding'; {
+  issues: [Array],
+  addIssue: [Function (anonymous)],
+  addIssues: [Function (anonymous)]
+}
+ POST /api/ai/chat-simple 400 in 535ms
+[Simple Chat API] Request received
+[Simple Chat API] Error: Error [ZodError]: [
+  {
+    "code": "too_big",
+    "maximum": 1000,
+    "type": "string",
+    "inclusive": true,
+    "exact": false,
+    "message": "String must contain at most 1000 character(s)",
+    "path": [
+      "message"
+    ]
+  }
+]
+    at POST (src/app/api/ai/chat-simple/route.ts:23:85)
+  21 |     
+  22 |     const body = await request.json();
+> 23 |     const { conversationId, message, includeKnowledge, context } = chatRequestSchema.parse(body);
+     |                                                                                     ^
+  24 |
+  25 |     // Allow unauthenticated access for onboarding flow
+  26 |     const isOnboarding = context?.type === 'onboarding'; {
+  issues: [Array],
+  addIssue: [Function (anonymous)],
+  addIssues: [Function (anonymous)]
+}
+ POST /api/ai/chat-simple 400 in 1952ms
+[?25h

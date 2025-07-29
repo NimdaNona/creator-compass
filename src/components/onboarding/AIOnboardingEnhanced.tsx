@@ -11,6 +11,9 @@ import { Sparkles, Send, Loader2, Youtube, Music2, Gamepad2,
   TrendingUp, Users, DollarSign, Brain, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { getPlatformById, getNicheById } from '@/lib/data';
+import { useAppStore } from '@/store/useAppStore';
+import type { UserProgress } from '@/types';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -107,6 +110,7 @@ export function AIOnboardingEnhanced({
   selectedNiche,
   setSelectedNiche,
 }: AIOnboardingEnhancedProps) {
+  const { setProgress, setOnboardingComplete } = useAppStore();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
@@ -159,6 +163,77 @@ export function AIOnboardingEnhanced({
         break;
       default:
         setQuickOptions([]);
+    }
+  };
+
+  const saveOnboardingData = async () => {
+    try {
+      const response = await fetch('/api/ai/onboarding/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversationId,
+          responses: collectedResponses,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('[Onboarding] Save error:', errorData);
+        throw new Error(errorData.error || 'Failed to save onboarding data');
+      }
+
+      const result = await response.json();
+      console.log('[Onboarding] Data saved successfully:', result);
+      
+      // Ensure platform and niche are set via the parent component's handlers
+      // The parent component expects string IDs and converts them to objects
+      if (selectedPlatform) {
+        setSelectedPlatform(selectedPlatform); // This calls the parent's handler which converts to object
+      }
+      
+      if (selectedNiche) {
+        setSelectedNiche(selectedNiche); // This calls the parent's handler which converts to object
+      }
+
+      // Create initial progress object
+      if (selectedPlatform && selectedNiche) {
+        
+        const initialProgress: UserProgress = {
+          userId: result.userId || 'guest',
+          selectedPlatform: selectedPlatform, // Keep as string ID for UserProgress
+          selectedNiche: selectedNiche,       // Keep as string ID for UserProgress
+          currentPhase: 1,
+          currentWeek: 1,
+          startDate: new Date(),
+          completedTasks: [],
+          streakDays: 0,
+          totalPoints: 0,
+          achievements: [],
+          lastUpdated: new Date()
+        };
+        
+        setProgress(initialProgress);
+        setOnboardingComplete(true);
+      }
+      
+      toast({
+        title: "Onboarding Complete",
+        description: "Your creator profile has been saved successfully!",
+        variant: "default",
+      });
+
+      // Navigate to dashboard after a short delay
+      setTimeout(() => {
+        onComplete();
+      }, 1000);
+    } catch (error) {
+      console.error('[Onboarding] Failed to save data:', error);
+      toast({
+        title: "Save Error",
+        description: "Failed to save your onboarding data. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -344,6 +419,9 @@ export function AIOnboardingEnhanced({
                 setQuickOptions([]);
                 // Ensure isLoading is set to false so the button appears
                 setIsLoading(false);
+                
+                // Save onboarding data to database
+                saveOnboardingData();
               }
             } catch (e) {
               console.error('Error parsing SSE data:', e);

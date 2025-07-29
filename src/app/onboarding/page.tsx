@@ -14,6 +14,7 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Compass } from 'lucide-react';
 import { HydratedStore } from '@/components/store/HydratedStore';
+import { getNicheById, platforms } from '@/lib/data';
 
 function OnboardingContent() {
   const router = useRouter();
@@ -149,10 +150,18 @@ function OnboardingContent() {
           {useEnhancedAI ? (
             <AIOnboardingEnhanced 
               onComplete={handleAIComplete}
-              selectedPlatform={selectedPlatform}
-              setSelectedPlatform={setSelectedPlatform}
-              selectedNiche={selectedNiche}
-              setSelectedNiche={setSelectedNiche}
+              selectedPlatform={selectedPlatform?.id || ''}
+              setSelectedPlatform={(platformId: string) => {
+                const platform = platforms[platformId];
+                if (platform) setSelectedPlatform(platform);
+              }}
+              selectedNiche={selectedNiche?.id || ''}
+              setSelectedNiche={(nicheId: string) => {
+                if (selectedPlatform) {
+                  const niche = getNicheById(selectedPlatform.id, nicheId);
+                  if (niche) setSelectedNiche(niche);
+                }
+              }}
             />
           ) : (
             <AIOnboarding onComplete={handleAIComplete} />

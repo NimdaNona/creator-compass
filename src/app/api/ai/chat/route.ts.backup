@@ -1,0 +1,2 @@
+// Backup of original route.ts before fixing Turbopack issue
+// This file has both POST and GET exports which causes Turbopack parsing error
