@@ -126,6 +126,7 @@ export function AIOnboardingEnhanced({
   const [quickOptions, setQuickOptions] = useState<QuickOption[]>(CREATOR_LEVELS);
   const [selectedEquipment, setSelectedEquipment] = useState<string[]>([]);
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
+  const [selectedChallenges, setSelectedChallenges] = useState<string[]>([]);
   
   // Store all responses collected during onboarding
   const [collectedResponses, setCollectedResponses] = useState<Record<string, any>>({});
@@ -280,6 +281,9 @@ export function AIOnboardingEnhanced({
       if (selectedGoals.length > 0) {
         responses.goals = selectedGoals;
       }
+      if (selectedChallenges.length > 0) {
+        responses.challenges = selectedChallenges;
+      }
 
       // Update collected responses state
       setCollectedResponses(responses);
@@ -391,37 +395,39 @@ export function AIOnboardingEnhanced({
                   setError('No response received. Please try again.');
                   return;
                 }
-              }
-
-              // Update step based on AI response
-              if (assistantMessage.toLowerCase().includes('platform') && !assistantMessage.toLowerCase().includes('which platform')) {
-                setCurrentStep('platform');
-                updateQuickOptions('platform');
-              } else if (assistantMessage.toLowerCase().includes('content') && assistantMessage.toLowerCase().includes('type')) {
-                setCurrentStep('niche');
-                updateQuickOptions('niche');
-              } else if (assistantMessage.toLowerCase().includes('equipment')) {
-                setCurrentStep('equipment');
-                updateQuickOptions('equipment');
-              } else if (assistantMessage.toLowerCase().includes('goals') && !assistantMessage.toLowerCase().includes('time')) {
-                setCurrentStep('goals');
-                updateQuickOptions('goals');
-              } else if (assistantMessage.toLowerCase().includes('time') && assistantMessage.toLowerCase().includes('dedicate')) {
-                setCurrentStep('time');
-                updateQuickOptions('time');
-              } else if (assistantMessage.toLowerCase().includes('challenges') || assistantMessage.toLowerCase().includes('concerns')) {
-                setCurrentStep('challenges');
-                updateQuickOptions('challenges');
-              } else if (assistantMessage.toLowerCase().includes('roadmap is ready') || 
-                        assistantMessage.toLowerCase().includes('everything i need') ||
-                        assistantMessage.toLowerCase().includes('start my creator journey')) {
-                setCurrentStep('complete');
-                setQuickOptions([]);
-                // Ensure isLoading is set to false so the button appears
-                setIsLoading(false);
                 
-                // Save onboarding data to database
-                saveOnboardingData();
+                // Update step based on AI response AFTER the response is complete
+                if (assistantMessage.toLowerCase().includes('platform') && !assistantMessage.toLowerCase().includes('which platform')) {
+                  setCurrentStep('platform');
+                  updateQuickOptions('platform');
+                } else if (assistantMessage.toLowerCase().includes('content') && assistantMessage.toLowerCase().includes('type')) {
+                  setCurrentStep('niche');
+                  updateQuickOptions('niche');
+                } else if (assistantMessage.toLowerCase().includes('equipment')) {
+                  setCurrentStep('equipment');
+                  updateQuickOptions('equipment');
+                } else if (assistantMessage.toLowerCase().includes('goals') && !assistantMessage.toLowerCase().includes('time')) {
+                  setCurrentStep('goals');
+                  updateQuickOptions('goals');
+                } else if (assistantMessage.toLowerCase().includes('time') && assistantMessage.toLowerCase().includes('dedicate')) {
+                  setCurrentStep('time');
+                  updateQuickOptions('time');
+                } else if (assistantMessage.toLowerCase().includes('challenges') || assistantMessage.toLowerCase().includes('concerns')) {
+                  setCurrentStep('challenges');
+                  updateQuickOptions('challenges');
+                } else if (assistantMessage.toLowerCase().includes('roadmap is ready') || 
+                          assistantMessage.toLowerCase().includes('everything i need') ||
+                          assistantMessage.toLowerCase().includes('start my creator journey') ||
+                          assistantMessage.toLowerCase().includes('personalized dashboard') ||
+                          (assistantMessage.toLowerCase().includes('click') && assistantMessage.toLowerCase().includes('button'))) {
+                  setCurrentStep('complete');
+                  setQuickOptions([]);
+                  // Ensure isLoading is set to false so the button appears
+                  setIsLoading(false);
+                  
+                  // Save onboarding data to database
+                  saveOnboardingData();
+                }
               }
             } catch (e) {
               console.error('Error parsing SSE data:', e);
@@ -476,6 +482,14 @@ export function AIOnboardingEnhanced({
       return;
     }
 
+    if (currentStep === 'challenges') {
+      const newChallenges = selectedChallenges.includes(option.value)
+        ? selectedChallenges.filter(c => c !== option.value)
+        : [...selectedChallenges, option.value];
+      setSelectedChallenges(newChallenges);
+      return;
+    }
+
     // For single-select options
     if (currentStep === 'platform') {
       setSelectedPlatform(option.value);
@@ -498,6 +512,13 @@ export function AIOnboardingEnhanced({
       ? `My goals are: ${selectedGoals.join(', ')}`
       : "I'm still figuring out my goals";
     sendMessage(goalsText);
+  };
+
+  const handleChallengesSubmit = () => {
+    const challengesText = selectedChallenges.length > 0
+      ? `My challenges are: ${selectedChallenges.join(', ')}`
+      : "I'm still figuring out my challenges";
+    sendMessage(challengesText);
   };
 
   const isComplete = currentStep === 'complete';
@@ -571,7 +592,8 @@ export function AIOnboardingEnhanced({
                   key={option.value}
                   variant={
                     (currentStep === 'equipment' && selectedEquipment.includes(option.value)) ||
-                    (currentStep === 'goals' && selectedGoals.includes(option.value))
+                    (currentStep === 'goals' && selectedGoals.includes(option.value)) ||
+                    (currentStep === 'challenges' && selectedChallenges.includes(option.value))
                       ? 'default'
                       : 'outline'
                   }
@@ -583,11 +605,15 @@ export function AIOnboardingEnhanced({
                   {option.label}
                 </Button>
               ))}
-              {(currentStep === 'equipment' || currentStep === 'goals') && (
+              {(currentStep === 'equipment' || currentStep === 'goals' || currentStep === 'challenges') && (
                 <Button
                   variant="secondary"
                   size="sm"
-                  onClick={currentStep === 'equipment' ? handleEquipmentSubmit : handleGoalsSubmit}
+                  onClick={
+                    currentStep === 'equipment' ? handleEquipmentSubmit : 
+                    currentStep === 'goals' ? handleGoalsSubmit :
+                    handleChallengesSubmit
+                  }
                   className="ml-auto"
                 >
                   Continue →
